@@ -58,18 +58,17 @@ def make_system(A, x, b, formats=None):
     if formats is None:
         pass
     elif formats == ['csr']:
-        if sparse.isspmatrix_csr(A):
+        if sparse.issparse(A) and A.format == 'csr':
             pass
-        elif sparse.isspmatrix_bsr(A):
+        elif sparse.issparse(A) and A.format == 'bsr':
             A = A.tocsr()
         else:
             warn('implicit conversion to CSR', sparse.SparseEfficiencyWarning)
-            A = sparse.csr_matrix(A)
+            A = sparse.csr_array(A)
+    elif sparse.issparse(A) and A.format in formats:
+        pass
     else:
-        if sparse.isspmatrix(A) and A.format in formats:
-            pass
-        else:
-            A = sparse.csr_matrix(A).asformat(formats[0])
+        A = sparse.csr_array(A).asformat(formats[0])
 
     if not isinstance(x, np.ndarray):
         raise ValueError('expected numpy array for argument x')
@@ -103,7 +102,7 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
 
     Parameters
     ----------
-    A : csr_matrix, bsr_matrix
+    A : csr_array, bsr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -132,11 +131,11 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
     >>> from pyamg.util.linalg import norm
     >>> import numpy as np
     >>> A = poisson((10,10), format='csr')
-    >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
+    >>> x0 = np.zeros((A.shape[0],1))
     >>> sor(A, x0, b, 1.33, iterations=10)
-    >>> print(f'{norm(b-A*x0):2.4}')
-    3.039
+    >>> print(f'{norm(b-A@x0):2.4}')
+    2.013
     >>> #
     >>> # Use SOR as the multigrid smoother
     >>> from pyamg import smoothed_aggregation_solver
@@ -151,16 +150,8 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
     """
     A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
 
-    x_old = np.empty_like(x)
-
     for _i in range(iterations):
-        x_old[:] = x
-
-        gauss_seidel(A, x, b, iterations=1, sweep=sweep)
-
-        x *= omega
-        x_old *= (1-omega)
-        x += x_old
+        gauss_seidel(A, x, b, iterations=1, sweep=sweep, omega=omega)
 
 
 def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
@@ -169,7 +160,7 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
 
     Parameters
     ----------
-    A : csr_matrix, bsr_matrix
+    A : csr_array, bsr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -220,7 +211,7 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> schwarz(A, x0, b, iterations=10)
-    >>> print(f'{norm(b-A*x0):2.4}')
+    >>> print(f'{norm(b-A@x0):2.4}')
     0.1263
     >>> #
     >>> # Schwarz as the Multigrid Smoother
@@ -246,9 +237,6 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
         schwarz_parameters(A, subdomain, subdomain_ptr,
                            inv_subblock, inv_subblock_ptr)
 
-    if sweep not in ('forward', 'backward', 'symmetric'):
-        raise ValueError("valid sweep directions: 'forward', 'backward', and 'symmetric'")
-
     if sweep == 'forward':
         row_start, row_stop, row_step = 0, subdomain_ptr.shape[0]-1, 1
     elif sweep == 'backward':
@@ -262,6 +250,8 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
                     subdomain_ptr=subdomain_ptr, inv_subblock=inv_subblock,
                     inv_subblock_ptr=inv_subblock_ptr, sweep='backward')
         return
+    else:
+        raise ValueError("valid sweep directions: 'forward', 'backward', and 'symmetric'")
 
     # Call C code, need to make sure that subdomains are sorted and unique
     for _iter in range(iterations):
@@ -272,12 +262,12 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
                                          row_start, row_stop, row_step)
 
 
-def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
+def gauss_seidel(A, x, b, iterations=1, sweep='forward', omega=1.0):
     """Perform Gauss-Seidel iteration on the linear system Ax=b.
 
     Parameters
     ----------
-    A : csr_matrix, bsr_matrix
+    A : csr_array, bsr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -287,6 +277,8 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
         Number of iterations to perform
     sweep : {'forward','backward','symmetric'}
         Direction of sweep
+    omega : scalar
+        Damping parameter. If omega != 1.0, then the method is SOR.
 
     Returns
     -------
@@ -303,7 +295,7 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> gauss_seidel(A, x0, b, iterations=10)
-    >>> print(f'{norm(b-A*x0):2.4}')
+    >>> print(f'{norm(b-A@x0):2.4}')
     4.007
     >>> #
     >>> # Use Gauss-Seidel as the Multigrid Smoother
@@ -319,16 +311,13 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
     """
     A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
 
-    if sparse.isspmatrix_csr(A):
+    if sparse.issparse(A) and A.format == 'csr':
         blocksize = 1
     else:
         R, C = A.blocksize
         if R != C:
             raise ValueError('BSR blocks must be square')
         blocksize = R
-
-    if sweep not in ('forward', 'backward', 'symmetric'):
-        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
 
     if sweep == 'forward':
         row_start, row_stop, row_step = 0, int(len(x)/blocksize), 1
@@ -339,11 +328,18 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
             gauss_seidel(A, x, b, iterations=1, sweep='forward')
             gauss_seidel(A, x, b, iterations=1, sweep='backward')
         return
+    else:
+        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
 
-    if sparse.isspmatrix_csr(A):
-        for _iter in range(iterations):
-            amg_core.gauss_seidel(A.indptr, A.indices, A.data, x, b,
-                                  row_start, row_stop, row_step)
+    if sparse.issparse(A) and A.format == 'csr':
+        if omega != 1.0:
+            for _iter in range(iterations):
+                amg_core.sor_gauss_seidel(A.indptr, A.indices, A.data, x, b,
+                                      row_start, row_stop, row_step, omega)
+        else:
+            for _iter in range(iterations):
+                amg_core.gauss_seidel(A.indptr, A.indices, A.data, x, b,
+                                      row_start, row_stop, row_step)
     else:
         for _iter in range(iterations):
             amg_core.bsr_gauss_seidel(A.indptr, A.indices, np.ravel(A.data),
@@ -355,7 +351,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -381,7 +377,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> jacobi(A, x0, b, iterations=10, omega=1.0)
-    >>> print(f'{norm(b-A*x0):2.4}')
+    >>> print(f'{norm(b-A@x0):2.4}')
     5.835
     >>> #
     >>> # Use Jacobi as the Multigrid Smoother
@@ -408,7 +404,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     # Create uniform type, convert possibly complex scalars to length 1 arrays
     [omega] = type_prep(A.dtype, [omega])
 
-    if sparse.isspmatrix_csr(A):
+    if A.format == 'csr':
         for _iter in range(iterations):
             amg_core.jacobi(A.indptr, A.indices, A.data, x, b, temp,
                             row_start, row_stop, row_step, omega)
@@ -429,7 +425,7 @@ def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
 
     Parameters
     ----------
-    A : csr_matrix or bsr_matrix
+    A : csr_array or bsr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -460,7 +456,7 @@ def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> block_jacobi(A, x0, b, blocksize=4, iterations=10, omega=1.0)
-    >>> print(f'{norm(b-A*x0):2.4}')
+    >>> print(f'{norm(b-A@x0):2.4}')
     4.665
     >>> #
     >>> # Use block Jacobi as the Multigrid Smoother
@@ -509,7 +505,7 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
 
     Parameters
     ----------
-    A : csr_matrix, bsr_matrix
+    A : csr_array, bsr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -541,7 +537,7 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> block_gauss_seidel(A, x0, b, iterations=10, blocksize=4, sweep='symmetric')
-    >>> print(f'{norm(b-A*x0):2.4}')
+    >>> print(f'{norm(b-A@x0):2.4}')
     0.9583
     >>> #
     >>> # Use Gauss-Seidel as the Multigrid Smoother
@@ -566,9 +562,6 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
     elif (Dinv.shape[1] != blocksize) or (Dinv.shape[2] != blocksize):
         raise ValueError('Dinv and blocksize are incompatible')
 
-    if sweep not in ('forward', 'backward', 'symmetric'):
-        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
-
     if sweep == 'forward':
         row_start, row_stop, row_step = 0, int(len(x)/blocksize), 1
     elif sweep == 'backward':
@@ -580,6 +573,8 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
             block_gauss_seidel(A, x, b, iterations=1, sweep='backward',
                                blocksize=blocksize, Dinv=Dinv)
         return
+    else:
+        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
 
     for _iter in range(iterations):
         amg_core.block_gauss_seidel(A.indptr, A.indices, np.ravel(A.data),
@@ -609,7 +604,7 @@ def polynomial(A, x, b, coefficients, iterations=1):
 
     Notes
     -----
-    The smoother has the form  x[:] = x + p(A) (b - A*x) where p(A) is a
+    The smoother has the form  x[:] = x + p(A) (b - A@x) where p(A) is a
     polynomial in A whose scalar coefficients are specified (in descending
     order) by argument 'coefficients'.
 
@@ -625,7 +620,7 @@ def polynomial(A, x, b, coefficients, iterations=1):
     Here, Horner's Rule is applied to avoid computing A^k directly.
 
     For efficience, the method detects the case x = 0 one matrix-vector
-    product is avoided (since (b - A*x) is b).
+    product is avoided (since (b - A@x) is b).
 
     Examples
     --------
@@ -654,12 +649,12 @@ def polynomial(A, x, b, coefficients, iterations=1):
         if norm(x) == 0:
             residual = b
         else:
-            residual = b - A*x
+            residual = b - A @ x
 
         h = coefficients[0]*residual
 
         for c in coefficients[1:]:
-            h = c*residual + A*h
+            h = c*residual + A@h
 
         x += h
 
@@ -675,7 +670,7 @@ def gauss_seidel_indexed(A, x, b, indices, iterations=1, sweep='forward'):
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -716,9 +711,6 @@ def gauss_seidel_indexed(A, x, b, indices, iterations=1, sweep='forward'):
     # if indices.max() >= A.shape[0]
     #     raise ValueError('row index (%d) is invalid' % indices.max())
 
-    if sweep not in ('forward', 'backward', 'symmetric'):
-        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
-
     if sweep == 'forward':
         row_start, row_stop, row_step = 0, len(indices), 1
     elif sweep == 'backward':
@@ -730,6 +722,8 @@ def gauss_seidel_indexed(A, x, b, indices, iterations=1, sweep='forward'):
             gauss_seidel_indexed(A, x, b, indices, iterations=1,
                                  sweep='backward')
         return
+    else:
+        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
 
     for _iter in range(iterations):
         amg_core.gauss_seidel_indexed(A.indptr, A.indices, A.data,
@@ -744,7 +738,7 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -783,7 +777,7 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> jacobi_ne(A, x0, b, iterations=10, omega=2.0/3.0)
-    >>> print(f'{norm(b-A*x0):2.4}')
+    >>> print(f'{norm(b-A@x0):2.4}')
     49.39
     >>> #
     >>> # Use NE Jacobi as the Multigrid Smoother
@@ -812,7 +806,7 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
     [omega] = type_prep(A.dtype, [omega])
 
     for _i in range(iterations):
-        delta = (np.ravel(b - A*x)*np.ravel(Dinv)).astype(A.dtype)
+        delta = (np.ravel(b - A@x)*np.ravel(Dinv)).astype(A.dtype)
         amg_core.jacobi_ne(A.indptr, A.indices, A.data,
                            x, b, delta, temp, row_start,
                            row_stop, row_step, omega)
@@ -826,7 +820,7 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -867,7 +861,7 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> gauss_seidel_ne(A, x0, b, iterations=10, sweep='symmetric')
-    >>> print(f'{norm(b-A*x0):2.4}')
+    >>> print(f'{norm(b-A@x0):2.4}')
     8.476
     >>> #
     >>> # Use NE Gauss-Seidel as the Multigrid Smoother
@@ -887,9 +881,6 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
     if Dinv is None:
         Dinv = np.ravel(get_diagonal(A, norm_eq=2, inv=True))
 
-    if sweep not in ('forward', 'backward', 'symmetric'):
-        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
-
     if sweep == 'forward':
         row_start, row_stop, row_step = 0, len(x), 1
     elif sweep == 'backward':
@@ -901,6 +892,8 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
             gauss_seidel_ne(A, x, b, iterations=1, sweep='backward',
                             omega=omega, Dinv=Dinv)
         return
+    else:
+        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
 
     for _i in range(iterations):
         amg_core.gauss_seidel_ne(A.indptr, A.indices, A.data,
@@ -914,7 +907,7 @@ def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -952,7 +945,7 @@ def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
     >>> x0 = np.zeros((A.shape[0],1))
     >>> b = np.ones((A.shape[0],1))
     >>> gauss_seidel_nr(A, x0, b, iterations=10, sweep='symmetric')
-    >>> print(f'{norm(b-A*x0):2.4}')
+    >>> print(f'{norm(b-A@x0):2.4}')
     8.45
     >>> #
     >>> # Use NR Gauss-Seidel as the Multigrid Smoother
@@ -972,9 +965,6 @@ def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
     if Dinv is None:
         Dinv = np.ravel(get_diagonal(A, norm_eq=1, inv=True))
 
-    if sweep not in ('forward', 'backward', 'symmetric'):
-        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
-
     if sweep == 'forward':
         col_start, col_stop, col_step = 0, len(x), 1
     elif sweep == 'backward':
@@ -986,9 +976,11 @@ def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
             gauss_seidel_nr(A, x, b, iterations=1, sweep='backward',
                             omega=omega, Dinv=Dinv)
         return
+    else:
+        raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
 
     # Calculate initial residual
-    r = b - A*x
+    r = b - A @ x
 
     for _i in range(iterations):
         amg_core.gauss_seidel_nr(A.indptr, A.indices, A.data,
@@ -1018,7 +1010,16 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
 
     Parameters
     ----------
-    A {csr_matrix}
+    A : csr_array
+        System matrix for relaxation
+    subdomain : array
+        Indices of each subdomain must be sorted over each subdomain
+    subdomain_ptr : array
+        Pointer array indicating where each subdomain starts and stops
+    inv_subblock : array
+        Inverse of each diagonal block of A, stored in row major
+    inv_subblock_ptr : array
+        Pointer array into Tx indicating where the diagonal blocks start and stop
 
     Returns
     -------
@@ -1085,7 +1086,7 @@ def jacobi_indexed(A, x, b, indices, iterations=1, omega=1.0):
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -1123,7 +1124,7 @@ def jacobi_indexed(A, x, b, indices, iterations=1, omega=1.0):
     # Create uniform type, convert possibly complex scalars to length 1 arrays
     [omega] = type_prep(A.dtype, [omega])
 
-    if sparse.isspmatrix_csr(A):
+    if sparse.issparse(A) and A.format == 'csr':
         for _iter in range(iterations):
             amg_core.jacobi_indexed(A.indptr, A.indices, A.data, x, b, indices, omega)
     else:
@@ -1143,14 +1144,14 @@ def cf_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
 
     CF Jacobi executes
 
-        xc = (1-omega)xc + omega*Dff^{-1}(bc - Acf*xf - Acc*xc)
-        xf = (1-omega)xf + omega*Dff^{-1}(bf - Aff*xf - Afc*xc)
+        xc = (1-omega)xc + omega*Dff^{-1}(bc - Acf@xf - Acc@xc)
+        xf = (1-omega)xf + omega*Dff^{-1}(bf - Aff@xf - Afc@xc)
 
     where xf is x restricted to F-points, and likewise for c subscripts.
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -1172,6 +1173,7 @@ def cf_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
     Returns
     -------
     Nothing, x will be modified in place.
+
     """
     A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
 
@@ -1181,7 +1183,7 @@ def cf_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
     # Create uniform type, convert possibly complex scalars to length 1 arrays
     [omega] = type_prep(A.dtype, [omega])
 
-    if sparse.isspmatrix_csr(A):
+    if A.format == 'csr':
         for _iter in range(iterations):
             for _citer in range(c_iterations):
                 amg_core.jacobi_indexed(A.indptr, A.indices, A.data, x, b, Cpts, omega)
@@ -1207,14 +1209,14 @@ def fc_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
 
     FC Jacobi executes
 
-        xf = (1-omega)xf + omega*Dff^{-1}(bf - Aff*xf - Afc*xc)
-        xc = (1-omega)xc + omega*Dff^{-1}(bc - Acf*xf - Acc*xc)
+        xf = (1-omega)xf + omega*Dff^{-1}(bf - Aff@xf - Afc@xc)
+        xc = (1-omega)xc + omega*Dff^{-1}(bc - Acf@xf - Acc@xc)
 
     where xf is x restricted to F-points, and likewise for c subscripts.
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -1236,6 +1238,7 @@ def fc_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
     Returns
     -------
     Nothing, x will be modified in place.
+
     """
     A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
 
@@ -1245,7 +1248,7 @@ def fc_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
     # Create uniform type, convert possibly complex scalars to length 1 arrays
     [omega] = type_prep(A.dtype, [omega])
 
-    if sparse.isspmatrix_csr(A):
+    if sparse.issparse(A) and A.format == 'csr':
         for _iter in range(iterations):
             for _fiter in range(f_iterations):
                 amg_core.jacobi_indexed(A.indptr, A.indices, A.data, x, b, Fpts, omega)
@@ -1271,15 +1274,15 @@ def cf_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
 
     CF block Jacobi executes
 
-        xc = (1-omega)xc + omega*Dff^{-1}(bc - Acf*xf - Acc*xc)
-        xf = (1-omega)xf + omega*Dff^{-1}(bf - Aff*xf - Afc*xc)
+        xc = (1-omega)xc + omega*Dff^{-1}(bc - Acf@xf - Acc@xc)
+        xf = (1-omega)xf + omega*Dff^{-1}(bf - Aff@xf - Afc@xc)
 
     where xf is x restricted to F-blocks, and Dff^{-1} the block inverse
     of the block diagonal Dff, and likewise for c subscripts.
 
     Parameters
     ----------
-    A : csr_matrix or bsr_matrix
+    A : csr_array or bsr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)
@@ -1342,15 +1345,15 @@ def fc_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
 
     FC block Jacobi executes
 
-        xf = (1-omega)xf + omega*Dff^{-1}(bf - Aff*xf - Afc*xc)
-        xc = (1-omega)xc + omega*Dff^{-1}(bc - Acf*xf - Acc*xc)
+        xf = (1-omega)xf + omega*Dff^{-1}(bf - Aff@xf - Afc@xc)
+        xc = (1-omega)xc + omega*Dff^{-1}(bc - Acf@xf - Acc@xc)
 
     where xf is x restricted to F-blocks, and Dff^{-1} the block inverse
     of the block diagonal Dff, and likewise for c subscripts.
 
     Parameters
     ----------
-    A : csr_matrix or bsr_matrix
+    A : csr_array or bsr_array
         Sparse NxN matrix
     x : ndarray
         Approximate solution (length N)

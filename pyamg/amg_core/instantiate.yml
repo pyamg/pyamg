@@ -9,6 +9,7 @@ instantiate:
     - householder_hornerscheme
     - apply_givens
     - gauss_seidel
+    - sor_gauss_seidel
     - bsr_gauss_seidel
     - jacobi
     - bsr_jacobi

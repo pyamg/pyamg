@@ -38,7 +38,7 @@ def demo():
 
     # Plot convergence history
     try:
-        import matplotlib.pyplot as plt  # pylint: disable=import-outside-toplevel
+        import matplotlib.pyplot as plt  # noqa: PLC0415
         plt.figure()
         plt.title('Convergence History')
         plt.xlabel('Iteration')

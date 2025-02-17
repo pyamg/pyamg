@@ -2,7 +2,7 @@
 
 
 import numpy as np
-from scipy.sparse import isspmatrix_csr, bsr_matrix
+from scipy.sparse import issparse, bsr_array
 from pyamg import amg_core
 
 
@@ -11,12 +11,12 @@ def fit_candidates(AggOp, B, tol=1e-10):
 
     Parameters
     ----------
-    AggOp : csr_matrix
+    AggOp : csr_array
         Describes the sparsity pattern of the tentative prolongator.
-        Has dimension (#blocks, #aggregates)
+        Has dimension (#blocks, #aggregates).
     B : array
         The near-nullspace candidates stored in column-wise fashion.
-        Has dimension (#blocks * blocksize, #candidates)
+        Has dimension (#blocks * blocksize, #candidates).
     tol : scalar
         Threshold for eliminating local basis functions.
         If after orthogonalization a local basis function Q[:, j] is small,
@@ -24,7 +24,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
 
     Returns
     -------
-    (Q, R) : (bsr_matrix, array)
+    (bsr_array, array)
         The tentative prolongator Q is a sparse block matrix with dimensions
         (#blocks * blocksize, #aggregates * #candidates) formed by dense blocks
         of size (blocksize, #candidates).  The coarse level candidates are
@@ -39,7 +39,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
     -----
         Assuming that each row of AggOp contains exactly one non-zero entry,
         i.e. all unknowns belong to an aggregate, then Q and R satisfy the
-        relationship B = Q*R.  In other words, the near-nullspace candidates
+        relationship B = Q@R.  In other words, the near-nullspace candidates
         are represented exactly by the tentative prolongator.
 
         If AggOp contains rows with no non-zero entries, then the range of the
@@ -57,10 +57,10 @@ def fit_candidates(AggOp, B, tol=1e-10):
 
     Examples
     --------
-    >>> from scipy.sparse import csr_matrix
+    >>> from scipy.sparse import csr_array
     >>> from pyamg.aggregation.tentative import fit_candidates
     >>> # four nodes divided into two aggregates
-    ... AggOp = csr_matrix( [[1, 0],
+    ... AggOp = csr_array( [[1, 0],
     ...                      [1, 0],
     ...                      [0, 1],
     ...                      [0, 1]] )
@@ -95,7 +95,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
            [1.41421356, 3.53553391],
            [0.        , 0.70710678]])
     >>> # aggregation excludes the third node
-    ... AggOp = csr_matrix( [[1, 0],
+    ... AggOp = csr_array( [[1, 0],
     ...                      [1, 0],
     ...                      [0, 0],
     ...                      [0, 1]] )
@@ -114,8 +114,8 @@ def fit_candidates(AggOp, B, tol=1e-10):
            [1.        ]])
 
     """
-    if not isspmatrix_csr(AggOp):
-        raise TypeError('expected csr_matrix for argument AggOp')
+    if not issparse(AggOp) or AggOp.format != 'csr':
+        raise TypeError('expected csr_array for argument AggOp')
 
     B = np.asarray(B)
     if B.dtype not in ['float32', 'float64', 'complex64', 'complex128']:
@@ -144,7 +144,7 @@ def fit_candidates(AggOp, B, tol=1e-10):
        AggOp_csc.indptr, AggOp_csc.indices, Qx.ravel(),
        B.ravel(), R.ravel(), tol)
 
-    Q = bsr_matrix((Qx.swapaxes(1, 2).copy(), AggOp_csc.indices,
+    Q = bsr_array((Qx.swapaxes(1, 2).copy(), AggOp_csc.indices,
                     AggOp_csc.indptr), shape=(K2*N_coarse, K1*N_fine))
     Q = Q.T.tobsr()
     R = R.reshape(-1, K2)

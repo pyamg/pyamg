@@ -16,6 +16,9 @@ authors:
   - name: Jacob Schroder
     orcid: 0000-0002-1076-9206
     affiliation: 3
+  - name: Ben Southworth
+    orcid: 0000-0002-0283-4928
+    affiliation: 4
 affiliations:
  - name: Google, Mountain View, CA, USA
    index: 1
@@ -23,9 +26,11 @@ affiliations:
    index: 2
  - name: Department of Mathematics and Statistics, University of New Mexico, Albuquerque, NM USA 87131
    index: 3
+ - name: Los Alamos National Laboratory, Los Alamos, NM USA 87545
+   index: 4
 software_repository_url:
  - https://github.com/pyamg/pyamg
-date: 22 January 2022
+date: 17 April 2023
 bibliography: paper.bib
 ---
 \fvset{frame=lines}
@@ -49,12 +54,14 @@ are both dramatically improved.
 `PyAMG` constructs multigrid solvers for use as a
 preconditioner in this setting.  A summary of multigrid and algebraic multigrid
 solvers can be found in @encamg, in @encmg, and in @amgintro; a detailed description can be found
-in @mgtutorial and @mgbook.
+in @mgtutorial and @mgbook. PyAMG provides a comprehensive suite of AMG
+solvers (see Methods), which is beneficial because many AMG
+solvers are specialized for particular problem types.
 
 # Summary
 
 The overarching goals of `PyAMG` include both readability and performance.
-This includes readable implementations of popular variations of AMG (see the
+This includes readable implementations of many popular variations of AMG (see the
 Methods section), the ability to reproduce results in the literature, and a user-friendly
 interface to AMG allowing straightforward access to the variety of AMG parameters
 in the method(s). Additionally, pure Python implementations are not efficient for many sparse matrix
@@ -64,8 +71,8 @@ memory) intensive kernels are typically expressed in C++ and wrapped through PyB
 interface and error handling is implemented directly in Python (more in the next section). 
 \medskip
 
-In the end, the goal of `PyAMG` is to provide quick access, rapid prototyping of new AMG solvers,
-and performant execution of AMG methods.  The extensive PyAMG 
+In the end, the goal of `PyAMG` is to provide quick access, rapid prototyping of new AMG solvers, including easy comparison with many existing variations of AMG in the literature,
+and performant execution of AMG methods. The extensive PyAMG 
 [Examples](https://github.com/pyamg/pyamg-examples) page highlights many of the package's
 advanced AMG capabilities, e.g., for Hermitian, complex, nonsymmetric, and other challenging system types. 
 It is important to note that many other AMG packages exist, mainly with a focus on parallelism and performance, rather than quick access and rapid prototyping.
@@ -103,22 +110,31 @@ with PyBind11.  Roughly 26\% of PyAMG is in C++, with the rest in Python.
 
 # Methods
 
-`PyAMG` implements several base AMG methods, each with a range of options.  The base forms
+`PyAMG` implements among the most wide-ranging suites of base AMG methods, each with a range of options.  The base forms
 for a solver include
 
 - `ruge_stuben_solver()`: the classical form of C/F-type AMG [@cfamg:1987];
 - `smoothed_aggregation_solver()`: smoothed aggregation based AMG as introduced in [@aggamg:1996];
+- `pairwise_solver()`: pairwise (unsmoothed) aggregation based AMG as introduced in [@notay:2010];
 - `adaptive_sa_solver()`: a so-called adaptive form of smoothed aggregation from [@adaptiveamg:2005]; and
 - `rootnode_solver()`: the root-node AMG method from [@rootnodeamg:2017], applicable also to some nonsymmetric systems.
+- `air_solver()`: the nonsymmetric AMG method based on approximate ideal restriction (AIR) from [@air1; @air2], which is highly effective for many upwind discretizations of advection-dominated problems.
+
 
 In each of these, the *base* algorithm is available but defaults may be
 modified for robustness.  Options such as the default pre/postsmoother or smoothing the
-input candidate vectors (in the case of smoothed aggregation AMG), can be
+input candidate vectors (in the case of smoothed aggregation or root-node AMG), can be
 modified to tune the solver.  In addition, several cycles are available,
-including the standard V and W cycles, for the solve phase.  The resulting
+including the standard V, F, and W cycles, for the solve phase.  The resulting
 method can also be used as a preconditioner within the Krylov
 methods available in `PyAMG` or with SciPy's Krylov methods.  The methods in
-`PyAMG` (generally) support complex data types and nonsymmetric matrices.  
+`PyAMG` generally support complex data types and nonsymmetric matrices. 
+All `MultiLevel` objects provide a detailed measure of the grid complexity
+(number of unknowns on all levels / number of unknowns on the finest level),
+operator complexity (number of nonzeros in the matrix on all levels /
+number of nonzeros in the matrix on the finest level), and cycle complexity 
+(approximate cost in floating point operations (FLOPs) of a single
+multigrid cycle relative to a single matrix-vector multiply). 
 
 # Example
 
@@ -127,29 +143,27 @@ Poisson problem, $-\Delta u = f$, given in matrix form as $A x = b$.  The
 AMG setup phase is called with
 ```{.python .numberLines}
 import pyamg
-A = pyamg.gallery.poisson((10000,10000), format='csr')
+A = pyamg.gallery.poisson((1000,1000), format='csr')
 ml = pyamg.smoothed_aggregation_solver(A, max_coarse=10)
 ```
-For this case, with 100M unknowns, the following multilevel hierarchy
+For this case, with 1M unknowns, the following multilevel hierarchy
 is generated for smoothed aggregation (using `print(ml)`):
 ```
 MultilevelSolver
-Number of Levels:     9
-Operator Complexity:  1.338
-Grid Complexity:      1.188
+Number of Levels:     7
+Operator Complexity:   1.338
+Grid Complexity:       1.188
 Coarse Solver:        'pinv'
   level   unknowns     nonzeros
-     0   100000000    499960000 [74.76%]
-     1    16670000    149993328 [22.43%]
-     2     1852454     16670676 [2.49%]
-     3      205859      1852805 [0.28%]
-     4       22924       208516 [0.03%]
-     5        2539        23563 [0.00%]
-     6         289         2789 [0.00%]
-     7          34          332 [0.00%]
-     8           4           16 [0.00%]
+     0     1000000      4996000 [74.75%]
+     1      167000      1499328 [22.43%]
+     2       18579       167051 [2.50%]
+     3        2086        18870 [0.28%]
+     4         233         2109 [0.03%]
+     5          28          248 [0.00%]
+     6           3            9 [0.00%]
 ```
-In this case, the hierarchy consists of nine levels, with SciPy's pseudoinverse (`pinv`)
+In this case, the hierarchy consists of seven levels, with SciPy's pseudoinverse (`pinv`)
 being used on the coarsest level. Also displayed is the ratio of unknowns (nonzeros) on all levels
 compared to the fine level, also known as the grid (operator) complexity.
 
@@ -159,9 +173,12 @@ import numpy as np
 x0 = np.random.rand(A.shape[0])
 b = np.zeros(A.shape[0])
 res = []
-x = ml.solve(b, x0, tol=1e-8, residuals=res)
+x = ml.solve(b, x0, tol=1e-10, residuals=res)
 ```
 This leads to the residual history shown in \autoref{fig:example}.
+Additional examples can be found at
+[github.com/pyamg/pyamg-examples](https://github.com/pyamg/pyamg-examples),
+including examples with classical AMG using AIR, building solvers with rootnode, and nonsymmetric use cases.
 
 ![Algebraic multigrid convergence (relative residual).\label{fig:example}](example.pdf)
 

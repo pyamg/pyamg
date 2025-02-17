@@ -1,4 +1,4 @@
-check for non-negative weigths in A
+check for non-negative weights in A
 
 tests:
 - 6 node undirected, unit length

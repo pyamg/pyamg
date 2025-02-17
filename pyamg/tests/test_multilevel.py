@@ -18,7 +18,7 @@ class TestMultilevel(TestCase):
     def test_coarse_grid_solver(self):
         cases = []
 
-        cases.append(sparse.csr_matrix(np.diag(np.arange(1, 5, dtype=float))))
+        cases.append(sparse.csr_array(np.diag(np.arange(1, 5, dtype=float))))
         cases.append(poisson((4,), format='csr'))
         cases.append(poisson((4, 4), format='csr'))
 
@@ -36,11 +36,11 @@ class TestMultilevel(TestCase):
                 b = np.arange(A.shape[0], dtype=A.dtype)
 
                 x = s(A, b)
-                assert_almost_equal(A*x, b)
+                assert_almost_equal(A@x, b)
 
                 # subsequent calls use cached data
                 x = s(A, b)
-                assert_almost_equal(A*x, b)
+                assert_almost_equal(A@x, b)
 
     def test_aspreconditioner(self):
         from pyamg import smoothed_aggregation_solver
@@ -55,16 +55,16 @@ class TestMultilevel(TestCase):
 
         for cycle in ['V', 'W', 'F']:
             M = ml.aspreconditioner(cycle=cycle)
-            x, info = cg(A, b, tol=1e-8, maxiter=30, M=M, atol='legacy')
+            x, _info = cg(A, b, M=M, rtol=1e-8, maxiter=30, atol=0)
             # cg satisfies convergence in the preconditioner norm
-            assert precon_norm(b - A*x, ml) < 1e-8*precon_norm(b, ml)
+            assert precon_norm(b - A@x, ml) < 1e-8*precon_norm(b, ml)
 
         for cycle in ['AMLI']:
             M = ml.aspreconditioner(cycle=cycle)
             res = []
-            x, info = fgmres(A, b, tol=1e-8, maxiter=30, M=M, residuals=res)
+            x, _info = fgmres(A, b, tol=1e-8, maxiter=30, M=M, residuals=res)
             # fgmres satisfies convergence in the 2-norm
-            assert np.linalg.norm(b - A*x) < 1e-8*np.linalg.norm(b)
+            assert np.linalg.norm(b - A@x) < 1e-8*np.linalg.norm(b)
 
     def test_accel(self):
         from pyamg import smoothed_aggregation_solver
@@ -78,40 +78,32 @@ class TestMultilevel(TestCase):
 
         # cg halts based on the preconditioner norm
         for accel in ['cg', cg]:
-            x = ml.solve(b, maxiter=30, tol=1e-8, accel=accel)
-            assert precon_norm(b - A*x, ml) < 1e-8*precon_norm(b, ml)
             residuals = []
-            x = ml.solve(b, maxiter=30, tol=1e-8, residuals=residuals,
-                         accel=accel)
-            assert precon_norm(b - A*x, ml) < 1e-8*precon_norm(b, ml)
-            # print residuals
-            assert_almost_equal(precon_norm(b - A*x, ml), residuals[-1])
+            x = ml.solve(b, maxiter=30, tol=1e-8, residuals=residuals, accel=accel)
+            assert precon_norm(b - A@x, ml) < 1e-8*precon_norm(b, ml)
+            assert_almost_equal(precon_norm(b - A@x, ml), residuals[-1])
 
         # cgs and bicgstab use the Euclidean norm
         for accel in ['bicgstab', 'cgs', bicgstab]:
-            x = ml.solve(b, maxiter=30, tol=1e-8, accel=accel)
-            assert np.linalg.norm(b - A*x) < 1e-8*np.linalg.norm(b)
             residuals = []
-            x = ml.solve(b, maxiter=30, tol=1e-8, residuals=residuals,
-                         accel=accel)
-            assert np.linalg.norm(b - A*x) < 1e-8*np.linalg.norm(b)
-            # print residuals
-            assert_almost_equal(np.linalg.norm(b - A*x), residuals[-1])
+            x = ml.solve(b, maxiter=30, tol=1e-8, residuals=residuals, accel=accel)
+            assert np.linalg.norm(b - A@x) < 1e-8*np.linalg.norm(b)
+            assert_almost_equal(np.linalg.norm(b - A@x), residuals[-1])
 
     def test_cycle_complexity(self):
         # four levels
         levels = []
         levels.append(MultilevelSolver.Level())
-        levels[0].A = sparse.csr_matrix(np.ones((10, 10)))
-        levels[0].P = sparse.csr_matrix(np.ones((10, 5)))
+        levels[0].A = sparse.csr_array(np.ones((10, 10)))
+        levels[0].P = sparse.csr_array(np.ones((10, 5)))
         levels.append(MultilevelSolver.Level())
-        levels[1].A = sparse.csr_matrix(np.ones((5, 5)))
-        levels[1].P = sparse.csr_matrix(np.ones((5, 3)))
+        levels[1].A = sparse.csr_array(np.ones((5, 5)))
+        levels[1].P = sparse.csr_array(np.ones((5, 3)))
         levels.append(MultilevelSolver.Level())
-        levels[2].A = sparse.csr_matrix(np.ones((3, 3)))
-        levels[2].P = sparse.csr_matrix(np.ones((3, 2)))
+        levels[2].A = sparse.csr_array(np.ones((3, 3)))
+        levels[2].P = sparse.csr_array(np.ones((3, 2)))
         levels.append(MultilevelSolver.Level())
-        levels[3].A = sparse.csr_matrix(np.ones((2, 2)))
+        levels[3].A = sparse.csr_array(np.ones((2, 2)))
 
         # one level hierarchy
         mg = MultilevelSolver(levels[:1])
@@ -146,13 +138,13 @@ class TestComplexMultilevel(TestCase):
     def test_coarse_grid_solver(self):
         cases = []
 
-        cases.append(sparse.csr_matrix(np.diag(np.arange(1, 5))))
+        cases.append(sparse.csr_array(np.diag(np.arange(1, 5))))
         cases.append(poisson((4,), format='csr'))
         cases.append(poisson((4, 4), format='csr'))
 
         # Make cases complex
         cases = [G+1e-5j*G for G in cases]
-        cases = [0.5*(G + G.H) for G in cases]
+        cases = [0.5*(G + G.T.conjugate()) for G in cases]
 
         # method should be almost exact for small matrices
         for A in cases:
@@ -162,8 +154,8 @@ class TestComplexMultilevel(TestCase):
                 b = np.arange(A.shape[0], dtype=A.dtype)
 
                 x = s(A, b)
-                assert_almost_equal(A*x, b)
+                assert_almost_equal(A@x, b)
 
                 # subsequent calls use cached data
                 x = s(A, b)
-                assert_almost_equal(A*x, b)
+                assert_almost_equal(A@x, b)

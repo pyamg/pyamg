@@ -1,3 +1,4 @@
+docutils>=0.18.1,<0.21
 numpydoc
 m2r2
 numpy

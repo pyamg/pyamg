@@ -7,14 +7,46 @@ sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('.'))
 
 extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.intersphinx',
               'sphinx.ext.viewcode',
+              'sphinx.ext.coverage',
+              'sphinx.ext.doctest',
               'sphinx.ext.autosummary',
               'sphinx.ext.mathjax',
               'sphinx_automodapi.automodapi',
               'm2r2',
-              'numpydoc']
+              'numpydoc'
+             ]
 
+numpydoc_xref_param_type = True
+numpydoc_xref_aliases = {
+    'csr_array': 'scipy.sparse.csr_array',
+}
 numpydoc_show_inherited_class_members = False
+numpydoc_validation_checks = {'all',
+                              # summary should start immediately after the opening quotes
+                              'GL01',
+                              # closing quotes should on the line after the last
+                              'GL02',
+                              # do not leave a blank line at the end of a docstring
+                              'GL03',
+                              # no extended summary found
+                              'ES01',
+                              # no See Also found
+                              'SA01',
+                              # no Examples found
+                              'EX01',
+                              # missing see also description
+                              'SA04',
+                             }
+numpydoc_validation_exclude = {'pyamg.amg_core',
+                               'pyamg.util.upcast',
+                               'pyamg.util.make_system',
+                               'pyamg.strength.ode_strength_of_connection',
+                               'pyamg.multilevel.multilevel_solver',
+                               'pyamg.multilevel.GenericSolver.__repr__',
+                               'pyamg.multilevel.MultilevelSolver.__repr__',
+                              }
 
 autodoc_default_options = {
     'members': True,
@@ -80,6 +112,14 @@ texinfo_documents = [
      author, 'PyAMG', 'Algebraic Multigrid Solvers in Python.',
      'Miscellaneous'),
 ]
+
+python_version = '.'.join(map(str, sys.version_info[0:2]))
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/' + python_version, None),
+    'matplotlib': ('https://matplotlib.org', None),
+    'numpy': ('https://numpy.org/doc/stable', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy', None),
+}
 
 
 def autodoc_skip_member(_app, _what, name, _obj, skip, _options):

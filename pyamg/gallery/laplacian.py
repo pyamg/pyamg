@@ -10,17 +10,28 @@ from .stencil import stencil_grid
 def poisson(grid, dtype=float, format=None, type='FD'):
     """Return a sparse matrix for the N-dimensional Poisson problem.
 
-    The matrix represents a finite Difference approximation to the
+    The matrix represents a finite difference approximation to the
     Poisson problem on a regular n-dimensional grid with unit grid
     spacing and Dirichlet boundary conditions.
 
     The last dimension is iterated over first: z, then y, then x.
-    This should be used with np.mgrid() or np.ndenumerate.
+    This should be used with :meth:`nupy.mgrid` or :meth:`numpy.ndenumerate`.
 
     Parameters
     ----------
     grid : tuple of integers
-        grid dimensions e.g. (100,100)
+        Grid dimensions e.g. (100,100).
+    dtype : dtype
+        Target dtype.
+    format : str
+        Sparse array format to return, e.g. "csr", "coo", etc.
+    type : str
+        Discretization type, either finite difference (FD) or finite element (FE).
+
+    Returns
+    -------
+    sparray
+        Sparse matrix.
 
     Notes
     -----
@@ -44,6 +55,7 @@ def poisson(grid, dtype=float, format=None, type='FD'):
            [-1.,  0.,  0.,  4., -1.,  0.],
            [ 0., -1.,  0., -1.,  4., -1.],
            [ 0.,  0., -1.,  0., -1.,  4.]])
+
     """
     grid = tuple(grid)
 
@@ -76,31 +88,29 @@ def gauge_laplacian(npts, spacing=1.0, beta=0.1):
     Parameters
     ----------
     npts : int
-        number of pts in x and y directions
-
+        Number of pts in x and y directions.
     spacing : float
-        grid spacing between points
-
+        Grid spacing between points.
     beta : float
-        temperature
-        Note that if beta=0, then we get the typical 5pt Laplacian stencil
+        Temperature.
+        If beta=0, then the result is the typical 5pt Laplacian stencil.
 
     Returns
     -------
-    A : csr matrix
-        A is Hermitian positive definite for beta > 0.0
-        A is Symmetric semi-definite for beta = 0.0
-
-    Examples
-    --------
-    >>> from pyamg.gallery import gauge_laplacian
-    >>> A = gauge_laplacian(10)
+    csr_array
+        A is Hermitian positive definite for ``beta > 0.0``.
+        A is Symmetric semi-definite for ``beta = 0.0``.
 
     References
     ----------
     .. [1] MacLachlan, S. and Oosterlee, C.,
        "Algebraic Multigrid Solvers for Complex-Valued Matrices",
        Vol. 30, SIAM J. Sci. Comp, 2008
+
+    Examples
+    --------
+    >>> from pyamg.gallery import gauge_laplacian
+    >>> A = gauge_laplacian(10)
 
     """
     # The gauge Laplacian has the same sparsity structure as a normal
@@ -175,8 +185,8 @@ def gauge_laplacian(npts, spacing=1.0, beta=0.1):
 
     # Construct Final Matrix
     data = np.hstack((A.data, np.array(new_data)))
-    row = np.hstack((A.row, np.array(new_r)))
-    col = np.hstack((A.col, np.array(new_c)))
-    A = sp.sparse.coo_matrix((data, (row, col)), shape=(N*N, N*N)).tocsr()
+    row = np.hstack((A.row, np.array(new_r, dtype=A.row.dtype)))
+    col = np.hstack((A.col, np.array(new_c, dtype=A.row.dtype)))
+    A = sp.sparse.coo_array((data, (row, col)), shape=(N*N, N*N)).tocsr()
 
     return (1.0/spacing**2)*A

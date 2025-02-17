@@ -23,7 +23,7 @@ class TestPairwise(TestCase):
 
                 np.random.seed(0)  # make tests repeatable
                 x = np.random.rand(A.shape[0])
-                b = A*np.random.rand(A.shape[0])
+                b = A@np.random.rand(A.shape[0])
 
                 ml = pairwise_solver(A, aggregate=agg, max_coarse=10)
 

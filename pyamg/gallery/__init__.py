@@ -20,19 +20,26 @@ from .laplacian import poisson, gauge_laplacian
 from .stencil import stencil_grid
 from .mesh import regular_triangle_mesh
 from .diffusion import diffusion_stencil_2d
+from .advection import advection_2d
 
-from .random_sparse import sprand
+from .random_sparse import sprand  # note: could use scipy.sparse.random_array
 from .demo import demo
 
 __all__ = [
-    'elasticity', 'laplacian', 'stencil', 'diffusion',
-    'linear_elasticity', 'linear_elasticity_p1',
-    'load_example',
-    'poisson', 'gauge_laplacian',
-    'stencil_grid',
-    'regular_triangle_mesh',
-    'diffusion_stencil_2d',
-    'sprand',
+    'advection_2d',
     'demo',
     'fem',
+    'diffusion',
+    'diffusion_stencil_2d',
+    'elasticity',
+    'gauge_laplacian',
+    'laplacian',
+    'linear_elasticity',
+    'linear_elasticity_p1',
+    'load_example',
+    'poisson',
+    'regular_triangle_mesh',
+    'sprand',
+    'stencil',
+    'stencil_grid',
 ]

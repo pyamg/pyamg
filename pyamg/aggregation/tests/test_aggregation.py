@@ -1,14 +1,13 @@
 """Test smoothed aggregation solver."""
 import warnings
 import numpy as np
-from numpy.testing import TestCase, assert_approx_equal,\
+from numpy.testing import TestCase, assert_approx_equal, \
     assert_array_almost_equal
 from scipy import sparse
-import scipy.linalg as sla
 from scipy.sparse import SparseEfficiencyWarning
 
 from pyamg.util.utils import diag_sparse
-from pyamg.gallery import poisson, linear_elasticity,\
+from pyamg.gallery import poisson, linear_elasticity, \
     gauge_laplacian, load_example
 from pyamg.aggregation.aggregation import smoothed_aggregation_solver
 
@@ -28,14 +27,12 @@ class TestParameters(TestCase):
             np.random.seed(1883275855)  # make tests repeatable
 
             x = np.random.rand(A.shape[0])
-            b = A * np.random.rand(A.shape[0])
+            b = A @ np.random.rand(A.shape[0])
 
             residuals = []
-            x_sol = ml.solve(b, x0=x, maxiter=30, tol=1e-10,
-                             residuals=residuals)
+            x_sol = ml.solve(b, x0=x, maxiter=30, tol=1e-10, residuals=residuals)
             del x_sol
-            convergence_ratio =\
-                (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
+            convergence_ratio = (residuals[-1] / residuals[0])**(1.0 / len(residuals))
             assert convergence_ratio < 0.9
 
     def test_strength_of_connection(self):
@@ -94,10 +91,10 @@ class TestComplexParameters(TestCase):
         # There are better near nullspace vectors than the default,
         #   but a constant should give a convergent solver, nonetheless.
         A = poisson((100,), format='csr')
-        A = A + 1.0j * sparse.eye(A.shape[0], A.shape[1])
+        A = A + 1.0j * sparse.eye_array(A.shape[0], A.shape[1])
         self.cases.append((A, None))
         A = poisson((10, 10), format='csr')
-        A = A + 1.0j * sparse.eye(A.shape[0], A.shape[1])
+        A = A + 1.0j * sparse.eye_array(A.shape[0], A.shape[1])
         self.cases.append((A, None))
 
     def run_cases(self, opts):
@@ -107,14 +104,12 @@ class TestComplexParameters(TestCase):
             np.random.seed(776825606)  # make tests repeatable
 
             x = np.random.rand(A.shape[0]) + 1.0j * np.random.rand(A.shape[0])
-            b = A * np.random.rand(A.shape[0])
+            b = A @ np.random.rand(A.shape[0])
             residuals = []
 
-            x_sol = ml.solve(b, x0=x, maxiter=30, tol=1e-10,
-                             residuals=residuals)
+            x_sol = ml.solve(b, x0=x, maxiter=30, tol=1e-10, residuals=residuals)
             del x_sol
-            convergence_ratio =\
-                (residuals[-1] / residuals[0]) ** (1.0 / len(residuals))
+            convergence_ratio = (residuals[-1] / residuals[0])**(1.0 / len(residuals))
             assert convergence_ratio < 0.9
 
     def test_strength_of_connection(self):
@@ -205,7 +200,7 @@ class TestSolverPerformance(TestCase):
             np.random.seed(3009521727)  # make tests repeatable
 
             x = np.random.rand(A.shape[0])
-            b = A * np.random.rand(A.shape[0])
+            b = A @ np.random.rand(A.shape[0])
 
             residuals = []
             x_sol = ml.solve(b, x0=x, maxiter=20, tol=1e-10,
@@ -230,14 +225,14 @@ class TestSolverPerformance(TestCase):
         D = D.tocsr()
         D_inv = diag_sparse(1.0 / D.data)
 
-        # DAD = D * A * D
+        # DAD = D @ A @ D
 
         B = np.ones((A.shape[0], 1))
 
         # TODO force 2 level method and check that result is the same
         kwargs = {'max_coarse': 1, 'max_levels': 2, 'coarse_solver': 'splu'}
 
-        sa = smoothed_aggregation_solver(D * A * D, D_inv * B, **kwargs)
+        sa = smoothed_aggregation_solver(D @ A @ D, D_inv @ B, **kwargs)
 
         residuals = []
         x_sol = sa.solve(b, x0=x, maxiter=10, tol=1e-12, residuals=residuals)
@@ -317,7 +312,7 @@ class TestSolverPerformance(TestCase):
                 np.random.seed(3849986793)
                 x = np.random.rand(n,)
                 y = np.random.rand(n,)
-                out = (np.dot(P * x, y), np.dot(x, P * y))
+                out = (np.dot(P @ x, y), np.dot(x, P @ y))
                 # print("smoother = %s %g %g" % (smoother, out[0], out[1]))
                 assert_approx_equal(out[0], out[1])
 
@@ -328,7 +323,7 @@ class TestSolverPerformance(TestCase):
         B = data['B']
         np.random.seed(355704255)
         x0 = np.random.rand(A.shape[0])
-        b = A * np.random.rand(A.shape[0])
+        b = A @ np.random.rand(A.shape[0])
         # solver parameters
         smooth = ('energy', {'krylov': 'gmres'})
         SA_build_args = {'max_coarse': 25, 'coarse_solver': 'pinv',
@@ -400,12 +395,7 @@ class TestSolverPerformance(TestCase):
                                     'gauss_seidel'))
         coarse_solver_pairs.append(('gauss_seidel', 'jacobi'))
         coarse_solver_pairs.append(('cg', ('cg', {'tol': 10.0})))
-        # scipy >= 1.7: pinv takes 'rtol'
-        # scipy <  1.7: pinv takes 'cond'
-        kword = 'rtol'
-        if kword not in sla.pinv.__code__.co_varnames:
-            kword = 'cond'
-        coarse_solver_pairs.append(('pinv', ('pinv', {kword: 1.0})))
+        coarse_solver_pairs.append(('pinv', ('pinv', {'rtol': 1.0})))
 
         for coarse1, coarse2 in coarse_solver_pairs:
             r1 = []
@@ -446,6 +436,7 @@ class TestComplexSolverPerformance(TestCase):
         "Algebraic Multigrid Solvers for Complex-Valued Matrices",
             Maclachlan, Oosterlee,
          Vol. 30, SIAM J. Sci. Comp, 2008
+
     """
 
     def setUp(self):
@@ -453,7 +444,7 @@ class TestComplexSolverPerformance(TestCase):
 
         # Test 1
         A = poisson((5000,), format='csr')
-        Ai = A + 1.0j * sparse.eye(A.shape[0], A.shape[1])
+        Ai = A + 1.0j * sparse.eye_array(A.shape[0], A.shape[1])
         self.cases.append((Ai, None, 0.12, 'symmetric',
                            ('jacobi', {'omega': 4.0 / 3.0})))
         self.cases.append((Ai, None, 0.12, 'symmetric',
@@ -461,7 +452,7 @@ class TestComplexSolverPerformance(TestCase):
 
         # Test 2
         A = poisson((71, 71), format='csr')
-        Ai = A + (0.625 / 0.01) * 1j * sparse.eye(A.shape[0], A.shape[1])
+        Ai = A + (0.625 / 0.01) * 1j * sparse.eye_array(A.shape[0], A.shape[1])
         self.cases.append((Ai, None, 1e-3, 'symmetric',
                            ('jacobi', {'omega': 4.0 / 3.0})))
         self.cases.append((Ai, None, 1e-3, 'symmetric',
@@ -491,7 +482,7 @@ class TestComplexSolverPerformance(TestCase):
     def test_basic(self):
         """Check that method converges at a reasonable rate."""
         for A, B, c_factor, symmetry, smooth in self.cases:
-            A = sparse.csr_matrix(A)
+            A = sparse.csr_array(A)
 
             ml = smoothed_aggregation_solver(A, B, symmetry=symmetry,
                                              smooth=smooth, max_coarse=10)
@@ -499,7 +490,7 @@ class TestComplexSolverPerformance(TestCase):
             np.random.seed(2113979713)  # make tests repeatable
 
             x = np.random.rand(A.shape[0]) + 1.0j * np.random.rand(A.shape[0])
-            b = A * np.random.rand(A.shape[0])
+            b = A @ np.random.rand(A.shape[0])
             residuals = []
 
             x_sol = ml.solve(b, x0=x, maxiter=20, tol=1e-10,
@@ -521,7 +512,7 @@ class TestComplexSolverPerformance(TestCase):
         B = data['B']
         np.random.seed(28082572)
         x0 = np.random.rand(A.shape[0]) + 1.0j * np.random.rand(A.shape[0])
-        b = A * np.random.rand(A.shape[0]) + 1.0j * (A * np.random.rand(A.shape[0]))
+        b = A @ np.random.rand(A.shape[0]) + 1.0j * (A @ np.random.rand(A.shape[0]))
         # solver parameters
         smooth = ('energy', {'krylov': 'gmres'})
         SA_build_args = {'max_coarse': 25, 'coarse_solver': 'pinv',

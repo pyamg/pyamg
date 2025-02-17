@@ -9,12 +9,12 @@ def _rand_sparse(m, n, density):
     """Construct base function for sprand, sprandn."""
     nnz = max(min(int(m*n*density), m*n), 0)
 
-    row = np.random.randint(low=0, high=m-1, size=nnz)
-    col = np.random.randint(low=0, high=n-1, size=nnz)
+    row = np.random.randint(low=0, high=m-1, size=nnz, dtype=np.int32)
+    col = np.random.randint(low=0, high=n-1, size=nnz, dtype=np.int32)
     data = np.ones(nnz, dtype=float)
 
     # duplicate (i,j) entries will be summed together
-    return sp.sparse.csr_matrix((data, (row, col)), shape=(m, n))
+    return sp.sparse.csr_array((data, (row, col)), shape=(m, n))
 
 
 def sprand(m, n, density, format='csr'):
@@ -22,17 +22,18 @@ def sprand(m, n, density, format='csr'):
 
     Parameters
     ----------
-    m, n : int
-        shape of the result
+    m, n : int, int
+        Shape of the result.
     density : float
-        target a matrix with nnz(A) = m*n*density, 0<=density<=1
-    format : string
-        sparse matrix format to return, e.g. 'csr', 'coo', etc.
+        Target a matrix density with ``nnz(A) = m*n*density`` and
+        ``0<=density<=1``.
+    format : str
+        Sparse array format to return, e.g. 'csr', 'coo', etc.
 
     Returns
     -------
-    A : sparse matrix
-        m x n sparse matrix
+    sparray
+        Sparse matrix of size (m, n).
 
     Examples
     --------

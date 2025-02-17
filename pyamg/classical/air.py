@@ -2,7 +2,7 @@
 
 from copy import deepcopy
 import numpy as np
-from scipy.sparse import isspmatrix_csr, isspmatrix_bsr
+from scipy.sparse import issparse
 
 from ..multilevel import MultilevelSolver
 from ..relaxation.smoothing import change_smoothers
@@ -10,7 +10,7 @@ from ..strength import (classical_strength_of_connection,
                         symmetric_strength_of_connection, evolution_strength_of_connection,
                         distance_strength_of_connection, algebraic_distance,
                         affinity_distance, energy_based_strength_of_connection)
-from ..util.utils import filter_matrix_rows
+from ..util.utils import filter_matrix_rows, asfptype
 from ..classical.interpolate import (direct_interpolation, classical_interpolation,
                                      injection_interpolation, one_point_interpolation,
                                      local_air)
@@ -34,10 +34,10 @@ def air_solver(A,
 
     Parameters
     ----------
-    A : csr_matrix
-        Square (non)symmetric matrix in CSR format
-    strength : ['symmetric', 'classical', 'evolution', 'distance',
-                'algebraic_distance','affinity', 'energy_based', None]
+    A : csr_array
+        Square (non)symmetric matrix in CSR format.
+    strength : {'symmetric', 'classical', 'evolution', 'distance', \
+               'algebraic_distance','affinity', 'energy_based', None}
         Method used to determine the strength of connection between unknowns
         of the linear system.  Method-specific parameters may be passed in
         using a tuple, e.g. strength=('symmetric',{'theta' : 0.25 }). If
@@ -45,32 +45,64 @@ def air_solver(A,
     CF : {string} : default 'RS' with second pass
         Method used for coarse grid selection (C/F splitting)
         Supported methods are RS, PMIS, PMISc, CLJP, CLJPc, and CR.
-    interpolation : {string} : default 'one_point'
+    interpolation : str
         Options include 'direct', 'classical', 'inject' and 'one-point'.
-    restrict : {string} : default distance-2 AIR, with theta = 0.05.
+    restrict : str
         Option is 'air' for local approximate ideal restriction (lAIR),
-        with inner options specifying degree, strength tolerance, etc.
-    presmoother : {string or dict} : default None
+        with inner options specifying degree, strength tolerance, etc..
+    presmoother : str
         Method used for presmoothing at each level.  Method-specific parameters
         may be passed in using a tuple.
-    postsmoother : {string or dict}
+    postsmoother : str
         Postsmoothing method with the same usage as presmoother.
         postsmoother=('fc_jacobi', ... ) with 2 F-sweeps, 1 C-sweep is default.
     filter_operator : (bool, tol) : default None
         Remove small entries in operators on each level if True. Entries are
-        considered "small" if |a_ij| < tol |a_ii|.
-    max_levels: {integer} : default 20
+        considered *small* if `|a_ij| < tol |a_ii|`.
+    max_levels : {integer} : default 20
         Maximum number of levels to be used in the multilevel solver.
-    max_coarse: {integer} : default 20
+    max_coarse : {integer} : default 20
         Maximum number of variables permitted on the coarse grid.
-    keep: {bool} : default False
-        Flag to indicate keeping strength of connection matrix (C) in
-        hierarchy.
+    keep : bool
+        Flag to indicate keeping strength of connection matrix (C) in hierarchy.
+    **kwargs : dict
+        Extra keywords passed to the Multilevel class.
 
     Returns
     -------
-    ml : multilevel_solver
-        Multigrid hierarchy of matrices and prolongation operators
+    MultilevelSolver
+        Multigrid hierarchy of matrices and prolongation operators.
+
+    See Also
+    --------
+    pyamg.multilevel.MultilevelSolver,
+    pyamg.aggregation.smoothed_aggregation_solver,
+    pyamg.aggregation.rootnode_solver,
+    ruge_stuben_solver
+
+    Notes
+    -----
+    `coarse_solver` is an optional argument and is the solver used at the
+    coarsest grid.  The default is a pseudo-inverse.  Most simply,
+    coarse_solver can be one of {'splu', 'lu', 'cholesky, 'pinv',
+    'gauss_seidel'}.  Additionally, `coarse_solver` may be a tuple
+    `(fn, args)`, where `fn` is a string such as 'splu' or a callable
+    function, and args is a dictionary of arguments to be passed to fn.
+    See [3]_ for additional details.
+
+    References
+    ----------
+    .. [1] Manteuffel, T. A., Münzenmaier, S., Ruge, J., & Southworth, B. S.
+           (2019). Nonsymmetric reduction-based algebraic multigrid. SIAM
+           Journal on Scientific Computing, 41(5), S242-S268.
+
+    .. [2] Manteuffel, T. A., Ruge, J., & Southworth, B. S. (2018).
+           Nonsymmetric algebraic multigrid based on local approximate ideal
+           restriction (lAIR). SIAM Journal on Scientific Computing, 40(6),
+           A4105-A4130.
+
+    .. [3] Trottenberg, U.; Oosterlee, C. W. & Schüller, A. (2001),
+           Multigrid, Vol. 33, Academic Press.
 
     Examples
     --------
@@ -79,36 +111,9 @@ def air_solver(A,
     >>> A = poisson((10,),format='csr')
     >>> ml = air_solver(A,max_coarse=3)
 
-    Notes
-    -----
-    "coarse_solver" is an optional argument and is the solver used at the
-    coarsest grid.  The default is a pseudo-inverse.  Most simply,
-    coarse_solver can be one of ['splu', 'lu', 'cholesky, 'pinv',
-    'gauss_seidel', ... ].  Additionally, coarse_solver may be a tuple
-    (fn, args), where fn is a string such as ['splu', 'lu', ...] or a callable
-    function, and args is a dictionary of arguments to be passed to fn.
-    See [2001TrOoSc]_ for additional details.
-
-
-    References
-    ----------
-    [1] Manteuffel, T. A., Münzenmaier, S., Ruge, J., & Southworth, B. S.
-    (2019). Nonsymmetric reduction-based algebraic multigrid. SIAM
-    Journal on Scientific Computing, 41(5), S242-S268.
-
-    [2] Manteuffel, T. A., Ruge, J., & Southworth, B. S. (2018).
-    Nonsymmetric algebraic multigrid based on local approximate ideal
-    restriction (lAIR). SIAM Journal on Scientific Computing, 40(6),
-    A4105-A4130.
-
-    See Also
-    --------
-    aggregation.smoothed_aggregation_solver, multilevel_solver,
-    aggregation.rootnode_solver, ruge_stuben_solver
-
     """
     # preprocess A
-    A = A.asfptype()
+    A = asfptype(A)
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
     if np.iscomplexobj(A.data):
@@ -224,12 +229,12 @@ def extend_hierarchy(levels, strength, CF, interpolation, restrict, filter_opera
     levels[-1].R = R                               # restriction operator
 
     # RAP = R*(A*P)
-    A = R * A * P
+    A = R @ A @ P
 
     # Make sure coarse-grid operator is in correct sparse format
-    if (isspmatrix_csr(P) and (not isspmatrix_csr(A))):
+    if issparse(P) and P.format == 'csr' and issparse(A) and A.format != 'csr':
         A = A.tocsr()
-    elif (isspmatrix_bsr(P) and (not isspmatrix_bsr(A))):
+    elif issparse(P) and P.format == 'bsr' and issparse(A) and A.format != 'bsr':
         A = A.tobsr()
 
     levels.append(MultilevelSolver.Level())

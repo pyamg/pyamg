@@ -76,7 +76,7 @@ class TestGaugeLaplacian(TestCase):
 
         for A, beta in cases:
             # Check Hermitian
-            diff = A - A.H
+            diff = A - A.T.conjugate()
             assert_equal(diff.data, np.array([]))
 
             # Check for definiteness

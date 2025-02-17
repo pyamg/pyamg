@@ -17,31 +17,34 @@ def minimal_residual(A, b, x0=None, tol=1e-5,
     Parameters
     ----------
     A : array, matrix, sparse matrix, LinearOperator
-        n x n, linear system to solve
+        Linear system of size (n,n) to solve.
     b : array, matrix
-        right hand side, shape is (n,) or (n,1)
+        Right-hand side of size (n,) or (n,1).
     x0 : array, matrix
-        initial guess, default is a vector of zeros
+        Initial guess, default is a vector of zeros.
     tol : float
         Tolerance for stopping criteria, let r=r_k
-        ||M r|| < tol ||M b||
+
+            ||M r|| < tol ||M b||
+
         if ||b||=0, then set ||M b||=1 for these tests.
     maxiter : int
-        maximum number of iterations allowed
+        Maximum number of iterations allowed.
     M : array, matrix, sparse matrix, LinearOperator
-        n x n, inverted preconditioner, i.e. solve M A x = M b.
+        Inverted preconditioner of size (n,n), i.e. solve M A x = M b.
     callback : function
         User-supplied function is called after each iteration as
-        callback(xk), where xk is the current solution vector
+        callback(xk), where xk is the current solution vector.
     residuals : list
-        preconditioned residual history in the 2-norm,
-        including the initial preconditioned residual
+        Preconditioned residual history in the 2-norm,
+        including the initial preconditioned residual.
 
     Returns
     -------
-    (xk, info)
-    xk : an updated guess after k iterations to the solution of Ax = b
-    info : halting status
+    array
+        Updated guess after k iterations to the solution of Ax = b.
+    int
+        Halting status
 
             ==  =======================================
             0   successful exit
@@ -50,13 +53,18 @@ def minimal_residual(A, b, x0=None, tol=1e-5,
             <0  numerical breakdown, or illegal input
             ==  =======================================
 
+    See Also
+    --------
+    _steepest_descent
+
     Notes
     -----
     The LinearOperator class is in scipy.sparse.linalg.
     Use this class if you prefer to define A or M as a mat-vec routine
     as opposed to explicitly constructing the matrix.
 
-    ..
+    The algorithm::
+
         minimal residual algorithm:      Preconditioned version:
         r = b - A x                      r = b - A x, z = M r
         while not converged:             while not converged:
@@ -65,9 +73,11 @@ def minimal_residual(A, b, x0=None, tol=1e-5,
             x = x + alpha r                  x = x + alpha z
             r = r - alpha p                  z = z - alpha p
 
-    See Also
-    --------
-    _steepest_descent
+    References
+    ----------
+    .. [1] Yousef Saad, "Iterative Methods for Sparse Linear Systems,
+       Second Edition", SIAM, pp. 137--142, 2003
+       http://www-users.cs.umn.edu/~saad/books.html
 
     Examples
     --------
@@ -78,14 +88,8 @@ def minimal_residual(A, b, x0=None, tol=1e-5,
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = minimal_residual(A,b, maxiter=2, tol=1e-8)
-    >>> print(f'{norm(b - A*x):.6}')
+    >>> print(f'{norm(b - A@x):.6}')
     7.26369
-
-    References
-    ----------
-    .. [1] Yousef Saad, "Iterative Methods for Sparse Linear Systems,
-       Second Edition", SIAM, pp. 137--142, 2003
-       http://www-users.cs.umn.edu/~saad/books.html
 
     """
     A, M, x, b, postprocess = make_system(A, M, x0, b)

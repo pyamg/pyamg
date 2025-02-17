@@ -17,13 +17,35 @@ from .aggregation import smoothed_aggregation_solver, rootnode_solver, pairwise_
 from .gallery import demo
 from .blackbox import solve, solver, solver_configuration
 
-__all__ = ['__version_tuple__', '__version__',
-           'aggregation', 'amg_core', 'classical', 'gallery', 'krylov', 'relaxation',
-           'util', 'vis',
-           'blackbox', 'graph', 'graph_ref', 'multilevel', 'strength',
-           'air_solver', 'coarse_grid_solver', 'multilevel_solver', 'MultilevelSolver',
-           'ruge_stuben_solver', 'smoothed_aggregation_solver', 'rootnode_solver',
-           'pairwise_solver', 'demo', 'solve', 'solver', 'solver_configuration']
+__all__ = [
+    'MultilevelSolver',
+    '__version__',
+    '__version_tuple__',
+    'aggregation',
+    'air_solver',
+    'amg_core',
+    'blackbox',
+    'classical',
+    'coarse_grid_solver',
+    'demo',
+    'gallery',
+    'graph',
+    'graph_ref',
+    'krylov',
+    'multilevel',
+    'multilevel_solver',
+    'pairwise_solver',
+    'relaxation',
+    'rootnode_solver',
+    'ruge_stuben_solver',
+    'smoothed_aggregation_solver',
+    'solve',
+    'solver',
+    'solver_configuration',
+    'strength',
+    'util',
+    'vis',
+]
 
 __all__ += ['test']
 
@@ -42,7 +64,7 @@ m = re.match(r'(\d+)\.(\d+).*', np.__version__)
 npver = [int(m.group(1)), int(m.group(2))]
 if npver[0] < npmin[0] or (npver[0] == npmin[0] and npver[1] < npmin[1]):
     warnings.warn(f'Numpy {npmin} or above is recommended for this version of'
-                  f'PyAMG (detected version {npver})', UserWarning)
+                  f'PyAMG (detected version {npver})', UserWarning, stacklevel=2)
 
 spreq = '0.11'
 spmin = [int(j) for j in spreq.split('.')]
@@ -50,10 +72,10 @@ m = re.match(r'(\d+)\.(\d+).*', sp.__version__)
 spver = [int(m.group(1)), int(m.group(2))]
 if spver[0] < spmin[0] or (spver[0] == spmin[0] and spver[1] < spmin[1]):
     warnings.warn(f'SciPy {spmin} or above is recommended for this version of'
-                  f'PyAMG (detected version {spver})', UserWarning)
+                  f'PyAMG (detected version {spver})', UserWarning, stacklevel=2)
 
 
-def test(verbose=False):
+def test(verbose=False):  # noqa: PT028
     """Test runner for pytest.
 
     Parameters
@@ -62,9 +84,9 @@ def test(verbose=False):
         Turn on verbose output.
 
     """
-    import sys     # pylint: disable=import-outside-toplevel
+    import sys     # noqa: PLC0415
     try:
-        import pytest  # pylint: disable=import-outside-toplevel
+        import pytest  # noqa: PLC0415
     except ModuleNotFoundError as e:
         raise ModuleNotFoundError('pytest is not installed and is needed for test()') from e
 

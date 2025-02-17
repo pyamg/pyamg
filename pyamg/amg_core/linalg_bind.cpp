@@ -168,21 +168,22 @@ PYBIND11_MODULE(linalg, m) {
         py::arg("AA").noconvert(), py::arg("m"), py::arg("n"), py::arg("TransA"),
 R"pbdoc(
 Replace each block of A with a Moore-Penrose pseudoinverse of that block.
+
 Routine is designed to invert many small matrices at once.
 
 Parameters
 ----------
 AA : array
-    (m, n, n) array, assumed to be "raveled" and in row major form
+    Array of size (m, n, n), assumed to be "raveled" and in row major form.
 m,n : int
-    dimensions of AA
+    Dimensions of AA.
 TransA : char
     'T' or 'F'.  Decides whether to transpose each nxn block
     of A before inverting.  If using Python array, should be 'T'.
 
 Returns
 -------
-AA : array
+None
     AA is modified in place with the pseduoinverse replacing each
     block of AA.  AA is returned in row-major form for Python
 
@@ -218,7 +219,7 @@ Examples
     m.def("csc_scale_columns", &_csc_scale_columns<int, double>,
         py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert(),
 R"pbdoc(
-Scale the columns of a CSC matrix *in place*
+Scale the columns of a CSC matrix *in place*.
 
 ..
   A[:,i] *= X[i]
@@ -234,7 +235,7 @@ https://github.com/scipy/scipy/blob/master/scipy/sparse/sparsetools/csr.h)pbdoc"
     m.def("csc_scale_rows", &_csc_scale_rows<int, double>,
         py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert(),
 R"pbdoc(
-Scale the rows of a CSC matrix *in place*
+Scale the rows of a CSC matrix *in place*.
 
 ..
   A[i,:] *= X[i]
@@ -252,26 +253,29 @@ https://github.com/scipy/scipy/blob/master/scipy/sparse/sparsetools/csr.h)pbdoc"
     m.def("filter_matrix_rows", &_filter_matrix_rows<int, std::complex<double>, double>,
         py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("lump"),
 R"pbdoc(
-Filter matrix rows by diagonal entry, that is set A_ij = 0 if::
+Filter matrix rows by diagonal entry.
+
+That is set A_ij = 0 if::
 
    |A_ij| < theta * |A_ii|
 
 Parameters
 ----------
 num_rows : int
-    number of rows in A
+    Number of rows in A.
 theta : float
-    stength of connection tolerance
+    Strength of connection tolerance.
 Ap : array
-    CSR row pointer
+    CSR row pointer.
 Aj : array
-    CSR index array
+    CSR index array.
 Ax : array
-    CSR data array
+    CSR data array.
 
 Returns
 -------
-Nothing, Ax is modified in place)pbdoc");
+None
+    Nothing, Ax is modified in place.)pbdoc");
 
 }
 

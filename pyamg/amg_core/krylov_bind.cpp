@@ -106,7 +106,7 @@ PYBIND11_MODULE(krylov, m) {
     m.def("apply_householders", &_apply_householders<int, std::complex<double>, double>,
         py::arg("z").noconvert(), py::arg("B").noconvert(), py::arg("n"), py::arg("start"), py::arg("stop"), py::arg("step"),
 R"pbdoc(
-Apply Householder reflectors in B to z
+Apply Householder reflectors in B to z.
 
 Implements the below python
 
@@ -118,23 +118,23 @@ Implements the below python
 Parameters
 ----------
 z : array
-    length n vector to be operated on
+    Vector of length n to be operated on.
 B : array
-    n x m matrix of householder reflectors
-    must be in row major form
+    Matrix of size (n,n) of Householder reflectors. Must be in row major form.
 n : int
-    dimensionality of z
+    Dimensionality of z.
 start, stop, step : int
-    control the choice of vectors in B to use
+    Control the choice of vectors in B to use.
 
 Returns
 -------
-z is modified in place to reflect the application of
-the Householder reflectors, B[:,range(start,stop,step)]
+None
+    z is modified in place to reflect the application of
+    the Householder reflectors, ``B[:,range(start,stop,step)]``.
 
 Notes
 -----
-Principle calling routine is gmres(...) and fgmres(...) in krylov.py)pbdoc");
+Principle calling routines are gmres and fgmres.)pbdoc");
 
     m.def("householder_hornerscheme", &_householder_hornerscheme<int, float, float>,
         py::arg("z").noconvert(), py::arg("B").noconvert(), py::arg("y").noconvert(), py::arg("n"), py::arg("start"), py::arg("stop"), py::arg("step"));
@@ -145,6 +145,8 @@ Principle calling routine is gmres(...) and fgmres(...) in krylov.py)pbdoc");
     m.def("householder_hornerscheme", &_householder_hornerscheme<int, std::complex<double>, double>,
         py::arg("z").noconvert(), py::arg("B").noconvert(), py::arg("y").noconvert(), py::arg("n"), py::arg("start"), py::arg("stop"), py::arg("step"),
 R"pbdoc(
+Householder Horner Scheme.
+
 For use after gmres is finished iterating and the least squares
 solution has been found.  This routine maps the solution back to
 the original space via the Householder reflectors.
@@ -166,30 +168,28 @@ Implements the below python
 Parameters
 ----------
 z : array
-    length n vector to be operated on
+    Vector of length n to be operated on.
 B : array
-    n x m matrix of householder reflectors
-    must be in row major form
+    Matrix of size (n,m) of householder reflectors. Must be in row major form.
 y : array
-    solution to the reduced system at the end of GMRES
+    Solution to the reduced system at the end of GMRES.
 n : int
-    dimensionality of z
+    Dimensionality of z.
 start, stop, step : int
-    control the choice of vectors in B to use
+    Control the choice of vectors in B to use.
 
 Returns
 -------
-z is modified in place to reflect the application of
-the Householder reflectors, B[:,range(start,stop,step)],
-and the inclusion of values in y.
+None
+    z is modified in place to reflect the application of
+    the Householder reflectors, B[:,range(start,stop,step)],
+    and the inclusion of values in y.
 
 Notes
 -----
-Principle calling routine is gmres(...) and fgmres(...) in krylov.py
+Principle calling routine are gmres and fgmres.
 
-References
-----------
-See pages 164-167 in Saad, "Iterative Methods for Sparse Linear Systems")pbdoc");
+See pages 164-167 in Saad, "Iterative Methods for Sparse Linear Systems".)pbdoc");
 
     m.def("apply_givens", &_apply_givens<int, float, float>,
         py::arg("B").noconvert(), py::arg("x").noconvert(), py::arg("n"), py::arg("nrot"));
@@ -200,30 +200,30 @@ See pages 164-167 in Saad, "Iterative Methods for Sparse Linear Systems")pbdoc")
     m.def("apply_givens", &_apply_givens<int, std::complex<double>, double>,
         py::arg("B").noconvert(), py::arg("x").noconvert(), py::arg("n"), py::arg("nrot"),
 R"pbdoc(
-Apply the first nrot Givens rotations in B to x
+Apply the first nrot Givens rotations in B to x.
 
 Parameters
 ----------
 x : array
-    n-vector to be operated on
+    Vector of length n to be operated on.
 B : array
-    Each 4 entries represent a Givens rotation
-    length nrot*4
+    Each 4 entries represent a Givens rotation. Length nrot*4.
 n : int
-    dimensionality of x
+    Dimensionality of x.
 nrot : int
-    number of rotations in B
+    Number of rotations in B.
 
 Returns
 -------
-x is modified in place to reflect the application of the nrot
-rotations in B.  It is assumed that the first rotation operates on
-degrees of freedom 0 and 1.  The second rotation operates on dof's 1 and 2,
-and so on
+None
+    x is modified in place to reflect the application of the nrot
+    rotations in B.  It is assumed that the first rotation operates on
+    degrees of freedom 0 and 1.  The second rotation operates on dof's 1 and 2,
+    and so on.
 
 Notes
 -----
-Principle calling routine is gmres(...) and fgmres(...) in krylov.py)pbdoc");
+Principle calling routines are gmres and fgmres.)pbdoc");
 
 }
 

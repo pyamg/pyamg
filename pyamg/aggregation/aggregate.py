@@ -14,20 +14,24 @@ def standard_aggregation(C):
 
     Parameters
     ----------
-    C : csr_matrix
-        strength of connection matrix
+    C : csr_array
+        Strength of connection matrix.
 
     Returns
     -------
-    AggOp : csr_matrix
-        aggregation operator which determines the sparsity pattern
-        of the tentative prolongator
-    Cpts : array
-        array of Cpts, i.e., Cpts[i] = root node of aggregate i
+    csr_array
+        Aggregation operator which determines the sparsity pattern
+        of the tentative prolongator.
+    array
+        Array of Cpts, i.e., Cpts[i] = root node of aggregate i.
+
+    See Also
+    --------
+    amg_core.standard_aggregation
 
     Examples
     --------
-    >>> from scipy.sparse import csr_matrix
+    >>> from scipy.sparse import csr_array
     >>> from pyamg.gallery import poisson
     >>> from pyamg.aggregation.aggregate import standard_aggregation
     >>> A = poisson((4,), format='csr')   # 1D mesh with 4 vertices
@@ -41,7 +45,7 @@ def standard_aggregation(C):
            [1, 0],
            [0, 1],
            [0, 1]], dtype=int8)
-    >>> A = csr_matrix([[1,0,0],[0,1,1],[0,1,1]])
+    >>> A = csr_array([[1,0,0],[0,1,1],[0,1,1]])
     >>> A.toarray()                      # first vertex is isolated
     array([[1, 0, 0],
            [0, 1, 1],
@@ -51,13 +55,9 @@ def standard_aggregation(C):
            [1],
            [1]], dtype=int8)
 
-    See Also
-    --------
-    amg_core.standard_aggregation
-
     """
-    if not sparse.isspmatrix_csr(C):
-        raise TypeError('expected csr_matrix')
+    if not sparse.issparse(C) or C.format != 'csr':
+        raise TypeError('expected csr_array')
 
     if C.shape[0] != C.shape[1]:
         raise ValueError('expected square matrix')
@@ -76,7 +76,7 @@ def standard_aggregation(C):
     # no nodes aggregated
     if num_aggregates == 0:
         # return all zero matrix and no Cpts
-        return sparse.csr_matrix((num_rows, 1), dtype='int8'),\
+        return sparse.csr_array((num_rows, 1), dtype='int8'), \
             np.array([], dtype=index_type)
 
     shape = (num_rows, num_aggregates)
@@ -87,12 +87,12 @@ def standard_aggregation(C):
         row = np.arange(num_rows, dtype=index_type)[mask]
         col = Tj[mask]
         data = np.ones(len(col), dtype='int8')
-        return sparse.coo_matrix((data, (row, col)), shape=shape).tocsr(), Cpts
+        return sparse.coo_array((data, (row, col)), shape=shape).tocsr(), Cpts
 
     # all nodes aggregated
     Tp = np.arange(num_rows+1, dtype=index_type)
     Tx = np.ones(len(Tj), dtype='int8')
-    return sparse.csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
+    return sparse.csr_array((Tx, Tj, Tp), shape=shape), Cpts
 
 
 def naive_aggregation(C):
@@ -100,20 +100,31 @@ def naive_aggregation(C):
 
     Parameters
     ----------
-    C : csr_matrix
-        strength of connection matrix
+    C : csr_array
+        Strength of connection matrix.
 
     Returns
     -------
-    AggOp : csr_matrix
-        aggregation operator which determines the sparsity pattern
-        of the tentative prolongator
-    Cpts : array
-        array of Cpts, i.e., Cpts[i] = root node of aggregate i
+    csr_array
+        Aggregation operator which determines the sparsity pattern
+        of the tentative prolongator.
+    array
+        Array of Cpts, i.e., Cpts[i] = root node of aggregate i.
+
+    See Also
+    --------
+    amg_core.naive_aggregation
+
+    Notes
+    -----
+    Differs from standard aggregation.  Each dof is considered.  If it has been
+    aggregated, skip over.  Otherwise, put dof and any unaggregated neighbors
+    in an aggregate.  Results in possibly much higher complexities than
+    standard aggregation.
 
     Examples
     --------
-    >>> from scipy.sparse import csr_matrix
+    >>> from scipy.sparse import csr_array
     >>> from pyamg.gallery import poisson
     >>> from pyamg.aggregation.aggregate import naive_aggregation
     >>> A = poisson((4,), format='csr')   # 1D mesh with 4 vertices
@@ -127,7 +138,7 @@ def naive_aggregation(C):
            [1, 0],
            [0, 1],
            [0, 1]], dtype=int8)
-    >>> A = csr_matrix([[1,0,0],[0,1,1],[0,1,1]])
+    >>> A = csr_array([[1,0,0],[0,1,1],[0,1,1]])
     >>> A.toarray()                      # first vertex is isolated
     array([[1, 0, 0],
            [0, 1, 1],
@@ -137,20 +148,9 @@ def naive_aggregation(C):
            [0, 1],
            [0, 1]], dtype=int8)
 
-    See Also
-    --------
-    amg_core.naive_aggregation
-
-    Notes
-    -----
-    Differs from standard aggregation.  Each dof is considered.  If it has been
-    aggregated, skip over.  Otherwise, put dof and any unaggregated neighbors
-    in an aggregate.  Results in possibly much higher complexities than
-    standard aggregation.
-
     """
-    if not sparse.isspmatrix_csr(C):
-        raise TypeError('expected csr_matrix')
+    if not sparse.issparse(C) or C.format != 'csr':
+        raise TypeError('expected csr_array')
 
     if C.shape[0] != C.shape[1]:
         raise ValueError('expected square matrix')
@@ -169,13 +169,13 @@ def naive_aggregation(C):
 
     if num_aggregates == 0:
         # all zero matrix
-        return sparse.csr_matrix((num_rows, 1), dtype='int8'), Cpts
+        return sparse.csr_array((num_rows, 1), dtype='int8'), Cpts
 
     shape = (num_rows, num_aggregates)
     # all nodes aggregated
     Tp = np.arange(num_rows+1, dtype=index_type)
     Tx = np.ones(len(Tj), dtype='int8')
-    return sparse.csr_matrix((Tx, Tj, Tp), shape=shape), Cpts
+    return sparse.csr_array((Tx, Tj, Tp), shape=shape), Cpts
 
 
 def pairwise_aggregation(A, matchings=2, theta=0.25,
@@ -184,7 +184,7 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
 
     Parameters
     ----------
-    A : csr_matrix or bsr_matrix
+    A : csr_array or bsr_array
         level matrix
     matchings : int, default 2
         number of times to perform pairwise aggregation; each
@@ -202,7 +202,7 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
 
     Examples
     --------
-    >>> from scipy.sparse import csr_matrix
+    >>> from scipy.sparse import csr_array
     >>> from pyamg.gallery import poisson
     >>> from pyamg.aggregation.aggregate import pairwise_aggregation
     >>> A = poisson((4,), format='csr')   # 1D mesh with 4 vertices
@@ -231,13 +231,14 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
     [0] Notay, Y. (2010). An aggregation-based algebraic multigrid
     method. Electronic transactions on numerical analysis, 37(6),
     123-146.
+
     """
     # Get SOC matrix
-    if not (sparse.isspmatrix_bsr(A) or sparse.isspmatrix_csr(A)):
+    if not sparse.issparse(A) or A.format not in ('bsr', 'csr'):
         try:
             A = A.tocsr()
             warn('Implicit conversion of A to csr', sparse.SparseEfficiencyWarning)
-        except BaseException as e:
+        except Exception as e:
             raise TypeError('Invalid matrix type, must be CSR or BSR.') from e
 
     index_type = A.indptr.dtype
@@ -249,7 +250,7 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
     for i in range(0, matchings):
 
         # Compute SOC matrix for this matching
-        if sparse.isspmatrix_bsr(A):
+        if sparse.issparse(A) and A.format == 'bsr':
             C = classical_strength_of_connection(A=Ac, theta=theta, block=True, norm=norm)
         else:
             C = classical_strength_of_connection(A=Ac, theta=theta, block=False, norm=norm)
@@ -269,28 +270,27 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
         # Construct sparse T
         if num_aggregates == 0:
             # all zero matrix
-            T_temp = sparse.csr_matrix((num_rows, 1), dtype='int8')
+            T_temp = sparse.csr_array((num_rows, 1), dtype='int8')
             warn('No pairwise aggregates found, T = 0.')
         else:
             shape = (num_rows, num_aggregates)
             Tp = np.arange(num_rows+1, dtype=index_type)
             # If A is not BSR
-            if not sparse.isspmatrix_bsr(A):
+            if not sparse.issparse(A) or A.format != 'bsr':
                 Tx = np.ones(len(Tj), dtype='int8')
-                T_temp = sparse.csr_matrix((Tx, Tj, Tp), shape=shape)
+                T_temp = sparse.csr_array((Tx, Tj, Tp), shape=shape)
             else:
                 shape = (shape[0]*A.blocksize[0], shape[1]*A.blocksize[1])
                 Tx = np.array(len(Tj)*[np.identity(A.blocksize[0])], dtype='int8')
-                T_temp = sparse.bsr_matrix((Tx, Tj, Tp), blocksize=A.blocksize, shape=shape)
+                T_temp = sparse.bsr_array((Tx, Tj, Tp), blocksize=A.blocksize, shape=shape)
 
         # Form aggregation matrix, need to make sure is CSR/BSR
         if i == 0:
             T = T_temp
+        elif sparse.issparse(A) and A.format == 'bsr':
+            T = sparse.bsr_array(T @ T_temp)
         else:
-            if sparse.isspmatrix_bsr(A):
-                T = sparse.bsr_matrix(T * T_temp)
-            else:
-                T = sparse.csr_matrix(T * T_temp)
+            T = sparse.csr_array(T @ T_temp)
 
         # Break loop if zero aggregates were found
         if num_aggregates == 0:
@@ -298,10 +298,10 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
 
         # Form coarse grid operator for next matching
         if i < (matchings-1):
-            if sparse.isspmatrix_csr(T_temp):
-                Ac = T_temp.T.tocsr() * Ac * T_temp
+            if sparse.issparse(T_temp) and T_temp.format == 'csr':
+                Ac = T_temp.T.tocsr() @ Ac @ T_temp
             else:
-                Ac = T_temp.T * Ac * T_temp
+                Ac = T_temp.T @ Ac @ T_temp
 
     # Convert T to dtype int if only used for aggregation
     if compute_P:
@@ -315,32 +315,34 @@ def lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5):
 
     Parameters
     ----------
-    C : csr_matrix
-        strength of connection matrix
+    C : csr_array
+        Strength of connection matrix.
     ratio : scalar
         Fraction of nodes to be aggregate (centers).  ratio=0.1 is
-        a coarsening by 10
+        a coarsening by 10.
     measure : ['unit','abs','inv',None]
         Distance measure to use and assigned to each edge graph.
 
-        For each nonzero value C[i,j]:
-        =======  ===========================
-        None     G[i,j] = C[i,j]
-        'abs'    G[i,j] = abs(C[i,j])
-        'inv'    G[i,j] = 1.0/abs(C[i,j])
-        'unit'   G[i,j] = 1
-        'sub'    G[i,j] = C[i,j] - min(C)
-        =======  ===========================
+        For each nonzero value C[i,j]::
+
+            =======  ===========================
+            None     G[i,j] = C[i,j]
+            'abs'    G[i,j] = abs(C[i,j])
+            'inv'    G[i,j] = 1.0/abs(C[i,j])
+            'unit'   G[i,j] = 1
+            'sub'    G[i,j] = C[i,j] - min(C)
+            =======  ===========================
+
     maxiter : int
-        Maximum number of iterations to perform
+        Maximum number of iterations to perform.
 
     Returns
     -------
-    AggOp : csr_matrix
-        aggregation operator which determines the sparsity pattern
-        of the tentative prolongator.  Node i is in cluster j if AggOp[i,j] = 1.
-    centers : array
-        array of centers or Cpts, i.e., Cpts[i] = root node of aggregate i
+    csr_array
+        Aggregation operator which determines the sparsity pattern
+        of the tentative prolongator. Node i is in cluster j if AggOp[i,j] = 1.
+    array
+        Array of centers or Cpts, i.e., Cpts[i] = root node of aggregate i.
 
     See Also
     --------
@@ -348,7 +350,7 @@ def lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5):
 
     Examples
     --------
-    >>> from scipy.sparse import csr_matrix
+    >>> from scipy.sparse import csr_array
     >>> from pyamg.gallery import poisson
     >>> from pyamg.aggregation.aggregate import lloyd_aggregation
     >>> A = poisson((4,), format='csr')   # 1D mesh with 4 vertices
@@ -366,16 +368,16 @@ def lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5):
     >>> Agg = lloyd_aggregation(A,ratio=0.5)[0].toarray()
 
     """
-    C = sparse.csr_matrix(C)
+    if not sparse.issparse(C) or C.format not in ('csc', 'csr'):
+        raise TypeError('Expected csr_array or csc_array.')
 
     if C.shape[0] != C.shape[1]:
         raise ValueError('graph should be a square matrix.')
 
-    n = C.shape[0]
-
     if ratio <= 0 or ratio > 1:
         raise ValueError('ratio must be > 0.0 and <= 1.0')
 
+    n = C.shape[0]
     naggs = int(min(max(ratio * n, 1), n))
 
     if measure is None:
@@ -411,12 +413,14 @@ def lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5):
     if clusters.min() < 0:
         warn('Lloyd clustering did not cluster every point')
 
-    row = (clusters >= 0).nonzero()[0]
+    row = (clusters >= 0).nonzero()[0].astype(C.indices.dtype)
     col = clusters[row]
+
     data = np.ones(len(row), dtype=np.int32)
-    AggOp = sparse.coo_matrix((data, (row, col)), shape=(n, naggs)).tocsr()
+    AggOp = sparse.coo_array((data, (row, col)), shape=(n, naggs)).tocsr()
 
     return AggOp, centers
+
 
 
 def balanced_lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5,
@@ -425,28 +429,30 @@ def balanced_lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5,
 
     Parameters
     ----------
-    C : csr_matrix
-        strength of connection matrix with positive weights
+    C : csr_array
+        Strength of connection matrix with positive weights.
     ratio : scalar
-        Fraction of nodes to be aggregate (centers).  ratio=0.1 is
-        a coarsening by 10
+        Fraction of nodes to be aggregate (centers).  ``ratio=0.1`` is
+        a coarsening by 10.
     naggs : int
-        Number of aggregates or clusters expected (default: C.shape[0] / 10)
+        Number of aggregates or clusters expected (default: ``C.shape[0] / 10``)
     measure : ['unit','abs','inv',None]
         Distance measure to use and assigned to each edge graph.
 
         For each nonzero value C[i,j]:
-        =======  ===========================
-        None     G[i,j] = C[i,j]
-        'abs'    G[i,j] = abs(C[i,j])
-        'inv'    G[i,j] = 1.0/abs(C[i,j])
-        'unit'   G[i,j] = 1
-        'sub'    G[i,j] = C[i,j] - min(C)
-        =======  ===========================
+
+            =======  ===========================
+            None     G[i,j] = C[i,j]
+            'abs'    G[i,j] = abs(C[i,j])
+            'inv'    G[i,j] = 1.0/abs(C[i,j])
+            'unit'   G[i,j] = 1
+            'sub'    G[i,j] = C[i,j] - min(C)
+            =======  ===========================
+
     maxiter : int
-        Maximum number of iterations to perform
+        Maximum number of iterations to perform.
     rebalance_iters : int
-        Number of rebalance iterations to perform in balanced Lloyd clustering
+        Number of rebalance iterations to perform in balanced Lloyd clustering.
     pad : float
         A pad for the measure with the sparsity of A.
     A : csr_matrix
@@ -454,11 +460,11 @@ def balanced_lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5,
 
     Returns
     -------
-    AggOp : csr_matrix
-        aggregation operator which determines the sparsity pattern
-        of the tentative prolongator.  Node i is in cluster j if AggOp[i,j] = 1.
-    centers : array
-        array of centers or Cpts, i.e., centers[i] = root node of aggregate i
+    csr_array
+        Aggregation operator, ``AggOp``, which determines the sparsity pattern
+        of the tentative prolongator.  Node i is in cluster j if ``AggOp[i,j] = 1``.
+    array
+        Array of centers or Cpts, i.e., centers[i] = root node of aggregate i.
 
     Notes
     -----
@@ -475,27 +481,27 @@ def balanced_lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5,
 
     Examples
     --------
+    >>> import numpy as np
     >>> import pyamg
     >>> from pyamg.aggregation.aggregate import balanced_lloyd_aggregation
     >>> data = pyamg.gallery.load_example('unit_square')
-    >>> G = data['A']
+    >>> G = data['A'].tocsr()
     >>> xy = data['vertices'][:,:2]
     >>> G.data[:] = np.ones(len(G.data))
-
     >>> np.random.seed(787888)
     >>> AggOp, seeds = balanced_lloyd_aggregation(G)
 
     """
-    C = sparse.csr_matrix(C)
-
     if C.shape[0] != C.shape[1]:
         raise ValueError('Graph should be a square matrix.')
 
-    n = C.shape[0]
+    if not sparse.issparse(C) or C.format not in ('csc', 'csr'):
+        raise TypeError('expected csr_array or csc_array')
 
     if ratio <= 0 or ratio > 1:
         raise ValueError('ratio must be > 0.0 and <= 1.0')
 
+    n = C.shape[0]
     naggs = int(min(max(ratio * n, 1), n))
 
     if pad is not None and measure == 'inv':
@@ -588,11 +594,10 @@ def metis_aggregation(C, ratio=0.1, measure=None):
     if C.shape[0] != C.shape[1]:
         raise ValueError('graph should be a square matrix.')
 
-    n = C.shape[0]
-
     if ratio <= 0 or ratio > 1:
         raise ValueError('ratio must be > 0.0 and <= 1.0')
 
+    n = C.shape[0]
     naggs = int(min(max(ratio * n, 1), n))
 
     if measure is None:

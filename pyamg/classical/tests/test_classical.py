@@ -6,7 +6,7 @@ import numpy as np
 from numpy.testing import TestCase, assert_equal, assert_almost_equal, \
     assert_array_almost_equal
 
-from scipy.sparse import csr_matrix, coo_matrix, SparseEfficiencyWarning
+from scipy.sparse import csr_array, coo_array, SparseEfficiencyWarning
 
 from pyamg.gallery import poisson, load_example
 from pyamg.strength import classical_strength_of_connection
@@ -24,7 +24,7 @@ class TestRugeStubenFunctions(TestCase):
         # random matrices
         np.random.seed(0)
         for N in [2, 3, 5]:
-            self.cases.append(csr_matrix(np.random.rand(N, N)))
+            self.cases.append(csr_array(np.random.rand(N, N)))
 
         # Poisson problems in 1D and 2D
         for N in [2, 3, 5, 7, 10, 11, 19]:
@@ -48,7 +48,7 @@ class TestRugeStubenFunctions(TestCase):
             S.data[:] = 1
 
             # check that all F-nodes are strongly connected to a C-node
-            assert (splitting + S*splitting).min() > 0
+            assert (splitting + S @ splitting).min() > 0
 
             # THIS IS NOT STRICTLY ENFORCED!
             # check that all strong connections S[i, j] satisfy either:
@@ -72,9 +72,9 @@ class TestRugeStubenFunctions(TestCase):
 
             # X now consists of strong F->F edges only
             #
-            # (S * S.T)[i, j] is the # of C nodes on which both i and j
+            # (S @ S.T)[i, j] is the # of C nodes on which both i and j
             # strongly depend (i.e. the number of k's where (2) holds)
-            # Y = (S*S.T) - X
+            # Y = (S @ S.T) - X
             # assert(Y.nnz == 0 or Y.data.min() > 0)
 
     def test_cljp_splitting(self):
@@ -89,7 +89,7 @@ class TestRugeStubenFunctions(TestCase):
             S.data[:] = 1
 
             # check that all F-nodes are strongly connected to a C-node
-            assert (splitting + S*splitting).min() > 0
+            assert (splitting + S @ splitting).min() > 0
 
     def test_cljpc_splitting(self):
         for A in self.cases:
@@ -103,7 +103,7 @@ class TestRugeStubenFunctions(TestCase):
             S.data[:] = 1
 
             # check that all F-nodes are strongly connected to a C-node
-            assert (splitting + S*splitting).min() > 0
+            assert (splitting + S @ splitting).min() > 0
 
     def test_direct_interpolation(self):
         for A in self.cases:
@@ -141,7 +141,7 @@ class TestRugeStubenFunctions(TestCase):
         from pyamg import amg_core
         # test removing an F-F connection without any strong C in between (4--2),
         # while keeping the F-f connection (4--6) which does have a strong C in between
-        C = csr_matrix(np.array([[2., 1., 0., 0., 0., 0.],
+        C = csr_array(np.array([[2., 1., 0., 0., 0., 0.],
                                  [1., 2., 1., 1., 0., 0.],
                                  [0., 1., 2., 0., 0., 0.],
                                  [0., 1., 0., 2., 1., 1.],
@@ -177,7 +177,7 @@ class TestSolverPerformance(TestCase):
 
                 np.random.seed(0)  # make tests repeatable
                 x = np.random.rand(A.shape[0])
-                b = A*np.random.rand(A.shape[0])  # zeros_like(x)
+                b = A @ np.random.rand(A.shape[0])  # zeros_like(x)
 
                 ml = ruge_stuben_solver(A, interpolation=interp, max_coarse=50)
 
@@ -217,8 +217,8 @@ def reference_direct_interpolation(A, S, splitting):
     S.data[:] = 1.0
     S = S.multiply(A)
 
-    A = coo_matrix(A)
-    S = coo_matrix(S)
+    A = coo_array(A)
+    S = coo_array(S)
 
     # remove diagonals
     mask = S.row != S.col
@@ -228,28 +228,28 @@ def reference_direct_interpolation(A, S, splitting):
 
     # strong C points
     c_mask = splitting[S.col] == 1
-    C_s = coo_matrix((S.data[c_mask], (S.row[c_mask], S.col[c_mask])),
+    C_s = coo_array((S.data[c_mask], (S.row[c_mask], S.col[c_mask])),
                      shape=S.shape)
 
     # strong F points
     # f_mask = ~c_mask
-    # F_s = coo_matrix((S.data[f_mask], (S.row[f_mask], S.col[f_mask])),
+    # F_s = coo_array((S.data[f_mask], (S.row[f_mask], S.col[f_mask])),
     #                shape=S.shape)
 
     # split A in to + and -
     mask = (A.data > 0) & (A.row != A.col)
-    A_pos = coo_matrix((A.data[mask], (A.row[mask], A.col[mask])),
+    A_pos = coo_array((A.data[mask], (A.row[mask], A.col[mask])),
                        shape=A.shape)
     mask = (A.data < 0) & (A.row != A.col)
-    A_neg = coo_matrix((A.data[mask], (A.row[mask], A.col[mask])),
+    A_neg = coo_array((A.data[mask], (A.row[mask], A.col[mask])),
                        shape=A.shape)
 
     # split C_S in to + and -
     mask = C_s.data > 0
-    C_s_pos = coo_matrix((C_s.data[mask], (C_s.row[mask], C_s.col[mask])),
+    C_s_pos = coo_array((C_s.data[mask], (C_s.row[mask], C_s.col[mask])),
                          shape=A.shape)
     mask = ~mask
-    C_s_neg = coo_matrix((C_s.data[mask], (C_s.row[mask], C_s.col[mask])),
+    C_s_neg = coo_array((C_s.data[mask], (C_s.row[mask], C_s.col[mask])),
                          shape=A.shape)
 
     sum_strong_pos = np.ravel(C_s_pos.sum(axis=1))
@@ -276,13 +276,13 @@ def reference_direct_interpolation(A, S, splitting):
     C_s_pos.data *= -beta[C_s_pos.row]/diag[C_s_pos.row]
 
     C_rows = splitting.nonzero()[0]
-    C_inject = coo_matrix((np.ones(sum(splitting)), (C_rows, C_rows)),
+    C_inject = coo_array((np.ones(sum(splitting)), (C_rows, C_rows)),
                           shape=A.shape)
 
     P = C_s_neg.tocsr() + C_s_pos.tocsr() + C_inject.tocsr()
 
     splitting_map = np.concatenate(([0], np.cumsum(splitting)))
-    P = csr_matrix((P.data, splitting_map[P.indices], P.indptr),
+    P = csr_array((P.data, splitting_map[P.indices], P.indptr),
                    shape=(P.shape[0], splitting_map[-1]))
 
     return P
@@ -363,4 +363,4 @@ def reference_classical_interpolation(A, S, splitting):
     for i in range(Pp[A.shape[0]]):
         Pj[i] = reorder[Pj[i]]
 
-    return csr_matrix((Px, Pj, Pp))
+    return csr_array((Px, Pj, Pp))

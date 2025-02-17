@@ -10,7 +10,7 @@ vis_aggregate_groups: visualize aggregation through groupins of edges, elements
 
 import warnings
 import numpy as np
-from scipy.sparse import csr_matrix, coo_matrix, triu
+from scipy.sparse import csr_array, coo_array, triu
 from .vtk_writer import write_basic_mesh, write_vtu
 
 
@@ -26,7 +26,7 @@ def vis_aggregate_groups(V, E2V, AggOp, mesh_type,
         coordinate array (N x D)
     E2V : {array}
         element index array (Nel x Nelnodes)
-    AggOp : {csr_matrix}
+    AggOp : {csr_array}
         sparse matrix for the aggregate-vertex relationship (N x Nagg)
     mesh_type : {string}
         type of elements: vertex, tri, quad, tet, hex (all 3d)
@@ -74,7 +74,7 @@ def vis_aggregate_groups(V, E2V, AggOp, mesh_type,
         raise ValueError(f'Unknown mesh_type={mesh_type}')
     key = map_type_to_key[mesh_type]
 
-    AggOp = csr_matrix(AggOp)
+    AggOp = csr_array(AggOp)
 
     # remove elements with dirichlet BCs
     if E2V.max() >= AggOp.shape[0]:
@@ -111,8 +111,8 @@ def vis_aggregate_groups(V, E2V, AggOp, mesh_type,
     data = np.ones((len(col),))
     if len(row) != len(col):
         raise ValueError('Problem constructing vertex-to-vertex map')
-    V2V = coo_matrix((data, (row, col)), shape=(E2V.shape[0], E2V.max()+1))
-    V2V = V2V.T * V2V
+    V2V = coo_array((data, (row, col)), shape=(E2V.shape[0], E2V.max()+1))
+    V2V = V2V.T @ V2V
     V2V = triu(V2V, 1).tocoo()
 
     # get all the edges
@@ -125,7 +125,7 @@ def vis_aggregate_groups(V, E2V, AggOp, mesh_type,
     # 3.5 #
     # single node aggregates
     sums = np.array(AggOp.sum(axis=0)).ravel()
-    E2V_c = np.where(sums == 1)[0]
+    E2V_c = np.argwhere(np.isin(AggOp.indices, np.where(sums == 1)[0])).ravel()
     Nel_c = len(E2V_c)
 
     # 4 #
@@ -172,7 +172,7 @@ def vis_splitting(V, splitting, output='vtk', fname='output.vtu'):
 
         - writes a file (or opens a window) for each dof
 
-        - for Ndof>1, they are assumed orderd [...dof1..., ...dof2..., etc]
+        - for Ndof>1, they are assumed ordered [...dof1..., ...dof2..., etc]
 
     Examples
     --------
@@ -208,7 +208,7 @@ def vis_splitting(V, splitting, output='vtk', fname='output.vtu'):
     if len(a) < 2:
         fname1 = a[0]
         fname2 = '.vtu'
-    elif len(a) >= 2:
+    else:
         fname1 = ''.join(a[:-1])
         fname2 = a[-1]
 
@@ -229,7 +229,7 @@ def vis_splitting(V, splitting, output='vtk', fname='output.vtu'):
                              cdata=cdata, fname=new_fname)
         elif output == 'matplotlib':
             try:
-                import matplotlib.pyplot as plt  # pylint: disable=import-outside-toplevel
+                import matplotlib.pyplot as plt  # noqa: PLC0415
                 cdataF = np.where(cdata == 0)[0]
                 cdataC = np.where(cdata == 1)[0]
                 xC = V[cdataC, 0]
@@ -256,7 +256,7 @@ def check_input(V=None, E2V=None, AggOp=None, A=None, splitting=None, mesh_type=
         if not np.issubdtype(E2V.dtype, np.integer):
             raise ValueError('E2V should be of type integer')
         if E2V.min() != 0:
-            warnings.warn(f'Element indices begin at {E2V.min()}')
+            warnings.warn(f'Element indices begin at {E2V.min()}', stacklevel=2)
 
     if AggOp is not None and AggOp.shape[1] > AggOp.shape[0]:
         raise ValueError('AggOp should be of size N x Nagg')
@@ -279,4 +279,4 @@ def check_input(V=None, E2V=None, AggOp=None, A=None, splitting=None, mesh_type=
     if mesh_type is not None:
         valid_mesh_types = ('vertex', 'tri', 'quad', 'tet', 'hex')
         if mesh_type not in valid_mesh_types:
-            raise ValueError(f'mesh_type should be {" or ".join(valid_mesh_types)}')
+            raise ValueError(f'mesh_type should one of {valid_mesh_types}')

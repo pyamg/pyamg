@@ -42,7 +42,7 @@ def norm(x, pnorm='2'):
     x = np.ravel(x)
 
     if pnorm == '2':
-        return np.sqrt(np.inner(x.conj(), x).real)
+        return np.sqrt(np.inner(x.conj(), x).real)  # pylint: disable=no-member
 
     if pnorm == 'inf':
         return np.max(np.abs(x))
@@ -55,7 +55,7 @@ def infinity_norm(A):
 
     Parameters
     ----------
-    A : csr_matrix, csc_matrix, sparse, or numpy matrix
+    A : csr_array, csc_array, sparse, or numpy matrix
         Sparse or dense matrix
 
     Returns
@@ -76,24 +76,22 @@ def infinity_norm(A):
     Examples
     --------
     >>> import numpy as np
-    >>> from scipy.sparse import spdiags
+    >>> from scipy.sparse import diags_array
     >>> from pyamg.util.linalg import infinity_norm
     >>> n=10
     >>> e = np.ones((n,1)).ravel()
     >>> data = [ -1*e, 2*e, -1*e ]
-    >>> A = spdiags(data,[-1,0,1],n,n)
+    >>> A = diags_array(data, offsets=[-1, 0, 1], shape=(n,n))
     >>> print(infinity_norm(A))
     4.0
 
     """
-    if sparse.isspmatrix_csr(A) or sparse.isspmatrix_csc(A):
-        # avoid copying index and ptr arrays
-        abs_A = A.__class__((np.abs(A.data), A.indices, A.indptr),
-                            shape=A.shape)
-        return (abs_A * np.ones((A.shape[1]), dtype=A.dtype)).max()
-
-    if sparse.isspmatrix(A):
-        return (abs(A) * np.ones((A.shape[1]), dtype=A.dtype)).max()
+    if sparse.issparse(A):
+        if A.format in ('csc', 'csr'):
+            # avoid copying index and ptr arrays
+            abs_A = A.__class__((np.abs(A.data), A.indices, A.indptr), shape=A.shape)
+            return (abs_A @ np.ones((A.shape[1]), dtype=A.dtype)).max()
+        return (abs(A) @ np.ones((A.shape[1]), dtype=A.dtype)).max()
 
     return np.dot(np.abs(A), np.ones((A.shape[1],), dtype=A.dtype)).max()
 
@@ -131,7 +129,7 @@ def axpy(x, y, a=1.0):
 #    ----------
 #
 #    A : {dense or sparse matrix}
-#        E.g. csr_matrix, csc_matrix, ndarray, etc.
+#        E.g. csr_array, csc_array, ndarray, etc.
 #    tol : {scalar}
 #        Tolerance of approximation
 #    maxiter : {integer}
@@ -189,13 +187,13 @@ def _approximate_eigenvalues(A, maxiter, symmetric=None, initial_guess=None):
     # Important to type H based on v0, so that a real nonsymmetric matrix, can
     # have an imaginary initial guess for its Arnoldi Krylov space
     H = np.zeros((maxiter+1, maxiter),
-                 dtype=np.find_common_type([v0.dtype, A.dtype], []))
+                 dtype=np.result_type(v0.dtype, A.dtype))
 
     V = [v0]
 
     beta = 0.0
     for j in range(maxiter):
-        w = A * V[-1]
+        w = A @ V[-1]
 
         if symmetric:
             if j >= 1:
@@ -262,7 +260,7 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
     Parameters
     ----------
     A : {dense or sparse matrix}
-        E.g. csr_matrix, csc_matrix, ndarray, etc.
+        E.g. csr_array, csc_array, ndarray, etc.
     tol : {scalar}
         Relative tolerance of approximation, i.e., the error divided
         by the approximate spectral radius is compared to tol.
@@ -356,11 +354,9 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
             error = H[nvecs, nvecs-1] * evect[-1, max_index]
 
             # error is a fast way of calculating the following line
-            # error2 = ( A - ev[max_index]*sp.mat(
-            #           sp.eye(A.shape[0],A.shape[1])) )*\
-            #           ( sp.mat(sp.hstack(V[:-1]))*\
-            #           evect[:,max_index].reshape(-1,1) )
-            # print(str(error) + "    " + str(sp.linalg.norm(e2)))
+            # error2 = ( A - ev[max_index]*np.eye(A.shape[0],A.shape[1]) )* \
+            #          ( np.mat(np.hstack(V[:-1]))*evect[:,max_index].reshape(-1,1) )
+            # print(str(error) + "    " + str(np.linalg.norm(e2)))
 
             v0 = np.dot(np.hstack(V[:-1]), evect[:, max_index].reshape(-1, 1))
 
@@ -369,12 +365,12 @@ def approximate_spectral_radius(A, tol=0.01, maxiter=15, restart=5,
                 break
 
             if breakdown_flag:
-                warn(f'Breakdown occured in step {j}')
+                warn(f'Breakdown occurred in step {j}')
                 break
         # end j-loop
 
         rho = np.abs(ev[max_index])
-        if sparse.isspmatrix(A):
+        if sparse.issparse(A):
             A.rho = rho
 
         if return_vector:
@@ -391,7 +387,7 @@ def condest(A, maxiter=25, symmetric=False):
     Parameters
     ----------
     A   : {dense or sparse matrix}
-        e.g. array, matrix, csr_matrix, ...
+        e.g. array, matrix, csr_array, ...
     maxiter: {int}
         Max number of Arnoldi/Lanczos iterations
     symmetric : {bool}
@@ -443,7 +439,7 @@ def cond(A):
     Parameters
     ----------
     A   : {dense or sparse matrix}
-        e.g. array, matrix, csr_matrix, ...
+        e.g. array, matrix, csr_array, ...
 
     Returns
     -------
@@ -470,7 +466,7 @@ def cond(A):
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
 
-    if sparse.isspmatrix(A):
+    if sparse.issparse(A):
         A = A.toarray()
 
     U, Sigma, Vh = svd(A)
@@ -486,7 +482,7 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
     Parameters
     ----------
     A   : {dense or sparse matrix}
-        e.g. array, matrix, csr_matrix, ...
+        e.g. array, matrix, csr_array, ...
     fast_check : {bool}
         If True, use the heuristic < Ax, y> = < x, Ay>
         for random vectors x and y to check for conjugate symmetry.
@@ -522,22 +518,22 @@ def ishermitian(A, fast_check=True, tol=1e-6, verbose=False):
 
     """
     # convert to array type
-    if not sparse.isspmatrix(A):
+    if not sparse.issparse(A):
         A = np.asarray(A)
 
     if fast_check:
-        x = np.random.rand(A.shape[0], 1)
-        y = np.random.rand(A.shape[0], 1)
+        x = np.random.rand(A.shape[0])
+        y = np.random.rand(A.shape[0])
         if A.dtype == complex:
-            x = x + 1.0j*np.random.rand(A.shape[0], 1)
-            y = y + 1.0j*np.random.rand(A.shape[0], 1)
+            x = x + 1.0j*np.random.rand(A.shape[0])
+            y = y + 1.0j*np.random.rand(A.shape[0])
         xAy = np.dot((A.dot(x)).conjugate().T, y)
         xAty = np.dot(x.conjugate().T, A.dot(y))
         diff = float(np.abs(xAy - xAty) / np.sqrt(np.abs(xAy*xAty)))
 
     else:
         # compute the difference, A - A.conj().T
-        if sparse.isspmatrix(A):
+        if sparse.issparse(A):
             diff = np.ravel((A - A.conj().T).data)
         else:
             diff = np.ravel(A - A.conj().T)

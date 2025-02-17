@@ -19,8 +19,8 @@ def _mysign(x):
 
 
 def fgmres(A, b, x0=None, tol=1e-5,
-           restrt=None, maxiter=None,
-           M=None, callback=None, residuals=None):
+           restart=None, maxiter=None,
+           M=None, callback=None, residuals=None, restrt=None):
     """Flexible Generalized Minimum Residual Method (fGMRES).
 
     fGMRES iteratively refines the initial solution guess to the
@@ -30,43 +30,45 @@ def fgmres(A, b, x0=None, tol=1e-5,
     Parameters
     ----------
     A : array, matrix, sparse matrix, LinearOperator
-        n x n, linear system to solve
+        Linear system of size (n,n) to solve.
     b : array, matrix
-        right hand side, shape is (n,) or (n,1)
+        Right hand side of size (n,) or (n,1).
     x0 : array, matrix
-        initial guess, default is a vector of zeros
+        Initial guess, default is a vector of zeros.
     tol : float
         Tolerance for stopping criteria, let r=r_k
-        ||r|| < tol ||b||
+
+            ||r|| < tol ||b||
+
         if ||b||=0, then set ||b||=1 for these tests.
-    restrt : None, int
-        - if int, restrt is max number of inner iterations
-          and maxiter is the max number of outer iterations
-        - if None, do not restart GMRES, and max number of inner iterations
-          is maxiter
+    restart : None, int
+        - If int, restart is max number of inner iterations
+          and maxiter is the max number of outer iterations.
+        - If None, do not restart GMRES, and max number of inner iterations
+          is maxiter.
     maxiter : None, int
-        - if restrt is None, maxiter is the max number of inner iterations
-          and GMRES does not restart
-        - if restrt is int, maxiter is the max number of outer iterations,
-          and restrt is the max number of inner iterations
-        - defaults to min(n,40) if restart=None
+        - If restart is None, maxiter is the max number of inner iterations
+          and GMRES does not restart.
+        - If restart is int, maxiter is the max number of outer iterations,
+          and restart is the max number of inner iterations.
+        - Defaults to min(n,40) if ``restart=None``.
     M : array, matrix, sparse matrix, LinearOperator
-        n x n, inverted preconditioner, i.e. solve M A x = M b.
-        M need not be stationary for fgmres
+        Inverted preconditioner of size (n,n), i.e. solve M A x = M b.
+        M need not be stationary for ``fgmres``.
     callback : function
         User-supplied function is called after each iteration as
-        callback(xk), where xk is the current solution vector
+        ``callback(xk)``, where xk is the current solution vector.
     residuals : list
-        residual history in the 2-norm, including the initial residual
-    reorth : boolean
-        If True, then a check is made whether to re-orthogonalize the Krylov
-        space each GMRES iteration
+        Residual history in the 2-norm, including the initial residual.
+    restrt : None, int
+        Deprecated.  See restart.
 
     Returns
     -------
-    xk, info
-    xk : an updated guess after k iterations to the solution of Ax = b
-    info : halting status
+    array
+        Updated guess after k iterations to the solution of Ax = b.
+    int
+        Halting status
 
             ==  =======================================
             0   successful exit
@@ -81,13 +83,19 @@ def fgmres(A, b, x0=None, tol=1e-5,
     Use this class if you prefer to define A or M as a mat-vec routine
     as opposed to explicitly constructing the matrix.
 
-    fGMRES allows for non-stationary preconditioners, as opposed to GMRES
+    fGMRES allows for non-stationary preconditioners, as opposed to GMRES.
 
     For robustness, Householder reflections are used to orthonormalize
-    the Krylov Space
-    Givens Rotations are used to provide the residual norm each iteration
+    the Krylov Space.
+    Givens Rotations are used to provide the residual norm each iteration.
     Flexibility implies that the right preconditioner, M, can
-    vary from iteration to iteration
+    vary from iteration to iteration.
+
+    References
+    ----------
+    .. [1] Yousef Saad, "Iterative Methods for Sparse Linear Systems,
+       Second Edition", SIAM, pp. 151-172, pp. 272-275, 2003
+       http://www-users.cs.umn.edu/~saad/books.html
 
     Examples
     --------
@@ -98,16 +106,18 @@ def fgmres(A, b, x0=None, tol=1e-5,
     >>> A = poisson((10,10))
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = fgmres(A,b, maxiter=2, tol=1e-8)
-    >>> print(f'{norm(b - A*x):.6}')
+    >>> print(f'{norm(b - A@x):.6}')
     6.54282
 
-    References
-    ----------
-    .. [1] Yousef Saad, "Iterative Methods for Sparse Linear Systems,
-       Second Edition", SIAM, pp. 151-172, pp. 272-275, 2003
-       http://www-users.cs.umn.edu/~saad/books.html
-
     """
+    if restrt is not None:
+        if restart is not None:
+            raise ValueError('Only use restart, not restrt (deprecated).')
+        restart = restrt
+        msg = ('The keyword argument "restrt" is deprecated and will '
+               'be removed in 2024.   Use "restart" instead.')
+        warnings.warn(msg, DeprecationWarning, stacklevel=1)
+
     # Convert inputs to linear system, with error checking
     A, M, x, b, postprocess = make_system(A, M, x0, b)
     n = A.shape[0]
@@ -123,15 +133,15 @@ def fgmres(A, b, x0=None, tol=1e-5,
     #     then set max_inner=maxiter and max_outer=n
     # If restarts are set,
     #     then set max_inner=restart and max_outer=maxiter
-    if restrt:
+    if restart:
         if maxiter:
             max_outer = maxiter
         else:
             max_outer = 1
-        if restrt > n:
-            warn('Setting restrt to maximum allowed, n.')
-            restrt = n
-        max_inner = restrt
+        if restart > n:
+            warn('Setting restart to maximum allowed, n.')
+            restart = n
+        max_inner = restart
     else:
         max_outer = 1
         if maxiter is None:

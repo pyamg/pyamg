@@ -3,19 +3,18 @@
 
 from warnings import warn
 import numpy as np
-from scipy.sparse import csr_matrix, isspmatrix_csr, isspmatrix_bsr,\
-    SparseEfficiencyWarning
+from scipy.sparse import csr_array, issparse, SparseEfficiencyWarning
 
 from ..multilevel import MultilevelSolver
 from ..relaxation.smoothing import change_smoothers
 from ..relaxation.utils import relaxation_as_linear_operator
 from ..util.utils import scale_T, get_Cpt_params, \
     eliminate_diag_dom_nodes, get_blocksize, \
-    levelize_strength_or_aggregation, \
+    levelize_strength_or_aggregation, asfptype, \
     levelize_smooth_or_improve_candidates
-from ..strength import classical_strength_of_connection,\
-    symmetric_strength_of_connection, evolution_strength_of_connection,\
-    energy_based_strength_of_connection, distance_strength_of_connection,\
+from ..strength import classical_strength_of_connection, \
+    symmetric_strength_of_connection, evolution_strength_of_connection, \
+    energy_based_strength_of_connection, distance_strength_of_connection, \
     algebraic_distance, affinity_distance
 from .aggregate import standard_aggregation, naive_aggregation, \
     lloyd_aggregation, pairwise_aggregation
@@ -42,28 +41,28 @@ def rootnode_solver(A, B=None, BH=None,
 
     Parameters
     ----------
-    A : csr_matrix, bsr_matrix
-        Sparse NxN matrix in CSR or BSR format
+    A : csr_array, bsr_array
+        Sparse NxN matrix in CSR or BSR format.
 
-    B : None, array_like
+    B : None, array
         Right near-nullspace candidates stored in the columns of an NxK array.
-        K must be >= the blocksize of A (see reference [2011OlScTu]_). The default value
-        B=None is equivalent to choosing the constant over each block-variable,
-        B=np.kron(np.ones((A.shape[0]/get_blocksize(A), 1)), np.eye(get_blocksize(A)))
+        K must be >= the blocksize of A (see reference [2]_). The default value
+        ``B=None`` is equivalent to choosing the constant over each block-variable,
+        ``B=np.kron(np.ones((A.shape[0]/get_blocksize(A), 1)), np.eye(get_blocksize(A)))``.
 
-    BH : None, array_like
+    BH : None, array
         Left near-nullspace candidates stored in the columns of an NxK array.
         BH is only used if symmetry='nonsymmetric'.  K must be >= the
-        blocksize of A (see reference [2011OlScTu]_). The default value B=None is
+        blocksize of A (see reference [2]_). The default value B=None is
         equivalent to choosing the constant over each block-variable,
-        B=np.kron(np.ones((A.shape[0]/get_blocksize(A), 1)), np.eye(get_blocksize(A)))
+        ``B=np.kron(np.ones((A.shape[0]/get_blocksize(A), 1)), np.eye(get_blocksize(A)))``.
 
-    symmetry : string
-        'symmetric' refers to both real and complex symmetric
-        'hermitian' refers to both complex Hermitian and real Hermitian
-        'nonsymmetric' i.e. nonsymmetric in a hermitian sense
-        Note that for the strictly real case, symmetric and hermitian are
-        the same
+    symmetry : str
+        - 'symmetric' refers to both real and complex symmetric
+        - 'hermitian' refers to both complex Hermitian and real Hermitian
+        - 'nonsymmetric' i.e. nonsymmetric in a hermitian sense
+
+        Note that for the strictly real case, symmetric and hermitian are the same.
         Note that this flag does not denote definiteness of the operator.
 
     strength : list
@@ -81,16 +80,16 @@ def rootnode_solver(A, B=None, BH=None,
         ('energy',{'krylov' : 'gmres'}).  Only 'energy' and None are valid
         prolongation smoothing options.
 
-    presmoother : tuple, string, list
+    presmoother : tuple, str, list
         Defines the presmoother for the multilevel cycling.  The default block
         Gauss-Seidel option defaults to point-wise Gauss-Seidel, if the matrix
         is CSR or is a BSR matrix with blocksize of 1.  See notes below for
         varying this parameter on a per level basis.
 
-    postsmoother : tuple, string, list
+    postsmoother : tuple, str, list
         Same as presmoother, except defines the postsmoother.
 
-    improve_candidates : tuple, string, list
+    improve_candidates : tuple, str, list
         The ith entry defines the method used to improve the candidates B on
         level i.  If the list is shorter than max_levels, then the last entry
         will define the method for all levels lower.  If tuple or string, then
@@ -99,10 +98,10 @@ def rootnode_solver(A, B=None, BH=None,
         The list elements are relaxation descriptors of the form used for
         presmoother and postsmoother.  A value of None implies no action on B.
 
-    max_levels : integer
+    max_levels : int
         Maximum number of levels to be used in the multilevel solver.
 
-    max_coarse : integer
+    max_coarse : int
         Maximum number of variables permitted on the coarse grid.
 
     diagonal_dominance : bool, tuple
@@ -117,25 +116,30 @@ def rootnode_solver(A, B=None, BH=None,
         tentative prolongation (T), aggregation (AggOp), and arrays
         storing the C-points (Cpts) and F-points (Fpts) are kept at
         each level.
+    **kwargs : dict
+        Extra keywords passed to the Multilevel class
 
-    Other Parameters
-    ----------------
-    cycle_type : ['V','W','F']
-        Structrure of multigrid cycle
-    coarse_solver : ['splu', 'lu', 'cholesky, 'pinv', 'gauss_seidel', ... ]
-        Solver used at the coarsest level of the MG hierarchy.
-        Optionally, may be a tuple (fn, args), where fn is a string such as
-        ['splu', 'lu', ...] or a callable function, and args is a dictionary of
-        arguments to be passed to fn.
+        =============   =======================================================
+        cycle_type      ['V','W','F'], Structrure of multigrid cycle
+        coarse_solver   ['splu', 'lu', 'cholesky, 'pinv', 'gauss_seidel', ... ]
+                        Solver used at the coarsest level of the MG hierarchy.
+                        Optionally, may be a tuple (fn, args), where fn is a
+                        string such as ['splu', 'lu', ...] or a callable
+                        function, and args is a dictionary of arguments to be
+                        passed to fn.
+        =============   =======================================================
+
+        See MultiLevel class for more details.
 
     Returns
     -------
-    ml : MultilevelSolver
-        Multigrid hierarchy of matrices and prolongation operators
+    MultilevelSolver
+        Multigrid hierarchy of matrices and prolongation operators.
 
     See Also
     --------
-    MultilevelSolver, aggregation.smoothed_aggregation_solver,
+    MultilevelSolver
+    aggregation.smoothed_aggregation_solver
     classical.ruge_stuben_solver
 
     Notes
@@ -147,7 +151,7 @@ def rootnode_solver(A, B=None, BH=None,
            injection corresponds to the identity block.
 
          - Only smooth={'energy', None} is supported for prolongation
-           smoothing.  See reference [2011OlScTu]_ below for more details on why the
+           smoothing.  See reference [2]_ below for more details on why the
            'energy' prolongation smoother is the natural counterpart to
            root-node style SA.
 
@@ -188,7 +192,7 @@ def rootnode_solver(A, B=None, BH=None,
 
            For predefined strength of connection, use a list consisting of
            tuples of the form ('predefined', {'C' : C0}), where C0 is a
-           csr_matrix and each degree-of-freedom in C0 represents a supernode.
+           csr_array and each degree-of-freedom in C0 represents a supernode.
            For instance to predefine a three-level hierarchy, use
            [('predefined', {'C' : C0}), ('predefined', {'C' : C1}) ].
 
@@ -197,11 +201,24 @@ def rootnode_solver(A, B=None, BH=None,
            {'AggOp' : Agg0}), ('predefined', {'AggOp' : Agg1}) ], where the
            dimensions of A, Agg0 and Agg1 are compatible, i.e.  Agg0.shape[1] ==
            A.shape[0] and Agg1.shape[1] == Agg0.shape[0].  Each AggOp is a
-           csr_matrix.
+           csr_array.
 
            Because this is a root-nodes solver, if a member of the predefined
            aggregation list is predefined, it must be of the form
            ('predefined', {'AggOp' : Agg, 'Cnodes' : Cnodes}).
+
+    References
+    ----------
+    .. [1996VaMa] Vanek, P. and Mandel, J. and Brezina, M.,
+       "Algebraic Multigrid by Smoothed Aggregation for
+       Second and Fourth Order Elliptic Problems",
+       Computing, vol. 56, no. 3, pp. 179--196, 1996.
+       http://citeseer.ist.psu.edu/vanek96algebraic.html
+    .. [2] Olson, L. and Schroder, J. and Tuminaro, R.,
+       "A general interpolation strategy for algebraic
+       multigrid using energy minimization", SIAM Journal
+       on Scientific Computing (SISC), vol. 33, pp.
+       966--991, 2011.
 
     Examples
     --------
@@ -213,32 +230,19 @@ def rootnode_solver(A, B=None, BH=None,
     >>> b = np.ones((A.shape[0]))                   # RHS
     >>> ml = rootnode_solver(A)                     # AMG solver
     >>> M = ml.aspreconditioner(cycle='V')             # preconditioner
-    >>> x, info = cg(A, b, tol=1e-8, maxiter=30, M=M)   # solve with CG
-
-    References
-    ----------
-    .. [1996VaMa] Vanek, P. and Mandel, J. and Brezina, M.,
-       "Algebraic Multigrid by Smoothed Aggregation for
-       Second and Fourth Order Elliptic Problems",
-       Computing, vol. 56, no. 3, pp. 179--196, 1996.
-       http://citeseer.ist.psu.edu/vanek96algebraic.html
-    .. [2011OlScTu] Olson, L. and Schroder, J. and Tuminaro, R.,
-       "A general interpolation strategy for algebraic
-       multigrid using energy minimization", SIAM Journal
-       on Scientific Computing (SISC), vol. 33, pp.
-       966--991, 2011.
+    >>> x, info = cg(A, b, rtol=1e-8, maxiter=30, M=M)   # solve with CG
 
     """
-    if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
+    if not issparse(A) or A.format not in ('bsr', 'csr'):
         try:
-            A = csr_matrix(A)
+            A = csr_array(A)
             warn('Implicit conversion of A to CSR',
                  SparseEfficiencyWarning)
-        except BaseException as e:
-            raise TypeError('Argument A must have type csr_matrix, '
-                            'bsr_matrix, or be convertible to csr_matrix') from e
+        except Exception as e:
+            raise TypeError('Argument A must have type csr_array, '
+                            'bsr_array, or be convertible to csr_array') from e
 
-    A = A.asfptype()
+    A = asfptype(A)
 
     if symmetry not in ('symmetric', 'hermitian', 'nonsymmetric'):
         raise ValueError('Expected "symmetric", "nonsymmetric" '
@@ -323,7 +327,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     A = levels[-1].A
     B = levels[-1].B
     if A.symmetry == 'nonsymmetric':
-        AH = A.H.asformat(A.format)
+        AH = A.T.conjugate().asformat(A.format)
         BH = levels[-1].BH
 
     # Compute the strength-of-connection matrix C, where larger
@@ -351,7 +355,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     elif fn is None:
         C = A.tocsr()
     else:
-        raise ValueError(f'Unrecognized strength of connection method: {str(fn)}')
+        raise ValueError(f'Unrecognized strength of connection method: {fn!s}')
 
     # Avoid coarsening diagonally dominant rows
     flag, kwargs = unpack_arg(diagonal_dominance)
@@ -374,16 +378,16 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         AggOp = kwargs['AggOp'].tocsr()
         Cnodes = kwargs['Cnodes']
     else:
-        raise ValueError(f'Unrecognized aggregation method: {str(fn)}')
+        raise ValueError(f'Unrecognized aggregation method: {fn!s}')
 
     # Improve near nullspace candidates by relaxing on A B = 0
     fn, kwargs = unpack_arg(improve_candidates[len(levels)-1])
     if fn is not None:
         b = np.zeros((A.shape[0], 1), dtype=A.dtype)
-        B = relaxation_as_linear_operator((fn, kwargs), A, b) * B
+        B = relaxation_as_linear_operator((fn, kwargs), A, b) @ B
         levels[-1].B = B
         if A.symmetry == 'nonsymmetric':
-            BH = relaxation_as_linear_operator((fn, kwargs), AH, b) * BH
+            BH = relaxation_as_linear_operator((fn, kwargs), AH, b) @ BH
             levels[-1].BH = BH
 
     # Compute the tentative prolongator, T, which is a tentative interpolation
@@ -403,9 +407,9 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
 
     # Set coarse grid near nullspace modes as injected fine grid near
     # null-space modes
-    B = Cpt_params[1]['P_I'].T*levels[-1].B
+    B = Cpt_params[1]['P_I'].T@levels[-1].B
     if A.symmetry == 'nonsymmetric':
-        BH = Cpt_params[1]['P_I'].T*levels[-1].BH
+        BH = Cpt_params[1]['P_I'].T@levels[-1].BH
 
     # Smooth the tentative prolongator, so that it's accuracy is greatly
     # improved for algebraically smooth error.
@@ -416,14 +420,14 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     elif fn is None:
         P = T
     else:
-        raise ValueError(f'Unrecognized prolongation smoother method: {str(fn)}')
+        raise ValueError(f'Unrecognized prolongation smoother method: {fn!s}')
 
     # Compute the restriction matrix R, which interpolates from the fine-grid
     # to the coarse-grid.  If A is nonsymmetric, then R must be constructed
     # based on A.H.  Otherwise R = P.H or P.T.
     symmetry = A.symmetry
     if symmetry == 'hermitian':
-        R = P.H
+        R = P.T.conjugate()
     elif symmetry == 'symmetric':
         R = P.T
     elif symmetry == 'nonsymmetric':
@@ -431,11 +435,11 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         if fn == 'energy':
             R = energy_prolongation_smoother(AH, TH, C, BH, levels[-1].BH,
                                              Cpt_params=Cpt_params, **kwargs)
-            R = R.H
+            R = R.T.conjugate()
         elif fn is None:
-            R = T.H
+            R = T.T.conjugate()
         else:
-            raise ValueError(f'Unrecognized prolongation smoother method: {str(fn)}')
+            raise ValueError(f'Unrecognized prolongation smoother method: {fn!s}')
 
     if keep:
         levels[-1].C = C                         # strength of connection matrix
@@ -451,7 +455,7 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     levels[-1].Cpts = Cpt_params[1]['Cpts']      # Cpts (i.e., rootnodes)
 
     levels.append(MultilevelSolver.Level())
-    A = R * A * P                                # Galerkin operator
+    A = R @ A @ P                                # Galerkin operator
     A.symmetry = symmetry
     levels[-1].A = A
     levels[-1].B = B                             # right near nullspace candidates

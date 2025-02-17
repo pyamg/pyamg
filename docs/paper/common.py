@@ -1,17 +1,21 @@
+"""Common figure settings."""
 import matplotlib
 import numpy as np
-from cycler import cycler
 
 
 def set_figure(fontsize=9, width=251.0, heightratio=None, height=None):
-    r"""
+    r"""Set figure settings.
+
     Parameters
     ----------
     fontsize : float
-        sets the intended fontsize
-
+        Sets the intended fontsize
     width : float
-        sets the intended width in pts
+        Sets the intended width in pts
+    heightratio : float
+        Sets the ratio of the height
+    height : float
+        Sets the height
 
     Notes
     -----
@@ -21,11 +25,12 @@ def set_figure(fontsize=9, width=251.0, heightratio=None, height=None):
     alternatively, '\message{Column width: \the\columnwidth}' will print to the log
 
     \linewidth should be used in place of \columnwidth if the figure is used
-    within special enviroments (e.g. minipage)
+    within special environments (e.g. minipage)
 
     https://matplotlib.org/stable/tutorials/introductory/customizing.html
     https://scipy-cookbook.readthedocs.io/items/Matplotlib_LaTeX_Examples.html
     https://tex.stackexchange.com/questions/16942/difference-between-textwidth-linewidth-and-hsize
+
     """
     fig_width_pt = width
     inches_per_pt = 1.0/72.27               # Convert pt to inch

@@ -12,7 +12,7 @@ def canonical_graph(G):
     # convert to expected format
     # - remove diagonal entries
     # - all nonzero values = 1
-    G = sparse.coo_matrix(G)
+    G = sparse.coo_array(G)
 
     mask = G.row != G.col
     G.row = G.row[mask]
@@ -58,7 +58,7 @@ class TestClustering(TestCase):
         G[4, [0, 1, 2, 3, 5]] = 1
         G[5, [1, 2, 4]] = 1
         G[[0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 4, 5]] = [3, 5, 3, 3, 5, 3]
-        G = sparse.csr_matrix(G)
+        G = sparse.csr_array(G)
 
         case = {}
         case['id'] = 0
@@ -174,7 +174,7 @@ class TestClustering(TestCase):
         G[9, [5, 8]] = 1
         G[10, [9, 11]] = 1
         G[11, [9]] = 1
-        G = sparse.csr_matrix(G)
+        G = sparse.csr_array(G)
         np.random.seed(1664236979)
         G.data[:] = np.random.rand(len(G.data)) * 2
 

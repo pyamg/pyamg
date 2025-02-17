@@ -36,21 +36,26 @@ class TestScipy(TestCase):
             b = case['b']
             x0 = case['x0']
             tol = case['tol']
+            rtol = tol
+
+            kwargs = {'tol': tol, 'restart': 3, 'maxiter': 2}
 
             mgsres = []
-            _ = gmres_mgs(A, b, x0, residuals=mgsres,
-                          tol=tol, restrt=3, maxiter=2)
+            _ = gmres_mgs(A, b, x0, residuals=mgsres, **kwargs)
 
             hhres = []
-            _ = gmres_householder(A, b, x0, residuals=hhres,
-                                  tol=tol, restrt=3, maxiter=2)
+            _ = gmres_householder(A, b, x0, residuals=hhres, **kwargs)
 
             scipyres = []
             normb = np.linalg.norm(b)
             callback = partial(cb, normb=normb)
 
-            _ = sla.gmres(A, b, x0, callback=callback, callback_type='pr_norm',
-                          tol=tol, atol=0, restrt=3, maxiter=2)
+            # check if scipy gmres has rtol
+            kwargs['atol'] = 0
+            kwargs['rtol'] = rtol
+            del kwargs['tol']
+
+            _ = sla.gmres(A, b, x0, callback=callback, callback_type='pr_norm', **kwargs)
 
             assert_array_almost_equal(mgsres[1:], scipyres)
             assert_array_almost_equal(hhres[1:], scipyres)
