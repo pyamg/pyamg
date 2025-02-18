@@ -68,7 +68,6 @@ class TestClustering(TestCase):
                           'd': np.array([0., 1., 1., 1., 1., 0.], dtype=G.dtype)}
         cases_bellman_ford.append(case)
 
-        case = dict(case)
         del case['output']
         cases_bellman_ford_balanced.append(case)
 
@@ -190,6 +189,8 @@ class TestClustering(TestCase):
         ############################################################
         G = load_example('unit_square')['A'].tocsr()
         G.data[:] = 1.0
+        G.indptr.astype(np.int32, copy=False)
+        G.indices.astype(np.int32, copy=False)
 
         case = {}
         case['id'] = 4
@@ -206,7 +207,7 @@ class TestClustering(TestCase):
                           [2, 3],
                           [3, 2],
                           [2, 1],
-                          [1, 0]])
+                          [1, 0]], dtype=np.int32)
         w = np.array([1, 1, 1, 1, 1, 1], dtype=float)
         G = sparse.coo_array((w, (Edges[:, 0], Edges[:, 1])))
         G = G.tocsr()
@@ -229,7 +230,7 @@ class TestClustering(TestCase):
                           [0, 2],
                           [3, 2],
                           [1, 2],
-                          [4, 3]])
+                          [4, 3]], dtype=np.int32)
         w = np.array([2, 1, 2, 1, 4, 5, 3, 1], dtype=float)
         G = sparse.coo_array((w, (Edges[:, 0], Edges[:, 1])))
         G = G.tocsr()
@@ -288,8 +289,13 @@ class TestClustering(TestCase):
                 d[centers] = 0                                # distance = 0 at centers
                 m[centers] = np.arange(len(centers))          # number the membership
 
+                print(case['id'])
+                print(type(n))
+                print(G.indptr.dtype)
+                print(G.indices.dtype)
+                print(G.data.dtype)
                 amg_core.bellman_ford_balanced(n, G.indptr, G.indices, G.data, centers,
-                                               d, m, p, pc, s)
+                                               d, m, p, pc, s, True)
 
             if 'output' in case:
                 d_ref = case['output']['d']
