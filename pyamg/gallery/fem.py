@@ -679,11 +679,11 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
     # allocate sparse matrix arrays
     m = 3 if degree == 1 else 6
     AA = np.zeros((ne, m**2))
-    IA = np.zeros((ne, m**2), dtype=int)
-    JA = np.zeros((ne, m**2), dtype=int)
+    IA = np.zeros((ne, m**2), dtype=np.int32)
+    JA = np.zeros((ne, m**2), dtype=np.int32)
     bb = np.zeros((ne, m))
-    ib = np.zeros((ne, m), dtype=int)
-    jb = np.zeros((ne, m), dtype=int)
+    ib = np.zeros((ne, m), dtype=np.int32)
+    jb = np.zeros((ne, m), dtype=np.int32)
 
     # Assemble A and b
     for ei in range(0, ne):

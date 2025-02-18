@@ -76,7 +76,7 @@ def standard_aggregation(C):
     # no nodes aggregated
     if num_aggregates == 0:
         # return all zero matrix and no Cpts
-        return sparse.csr_array((num_rows, 1), dtype='int8'), \
+        return sparse.csr_array((num_rows, 1), dtype=np.int32), \
             np.array([], dtype=index_type)
 
     shape = (num_rows, num_aggregates)
@@ -86,12 +86,12 @@ def standard_aggregation(C):
         mask = Tj != -1
         row = np.arange(num_rows, dtype=index_type)[mask]
         col = Tj[mask]
-        data = np.ones(len(col), dtype='int8')
+        data = np.ones(len(col), dtype=np.int32)
         return sparse.coo_array((data, (row, col)), shape=shape).tocsr(), Cpts
 
     # all nodes aggregated
     Tp = np.arange(num_rows+1, dtype=index_type)
-    Tx = np.ones(len(Tj), dtype='int8')
+    Tx = np.ones(len(Tj), dtype=np.int32)
     return sparse.csr_array((Tx, Tj, Tp), shape=shape), Cpts
 
 
@@ -169,12 +169,12 @@ def naive_aggregation(C):
 
     if num_aggregates == 0:
         # all zero matrix
-        return sparse.csr_array((num_rows, 1), dtype='int8'), Cpts
+        return sparse.csr_array((num_rows, 1), dtype=np.int32), Cpts
 
     shape = (num_rows, num_aggregates)
     # all nodes aggregated
     Tp = np.arange(num_rows+1, dtype=index_type)
-    Tx = np.ones(len(Tj), dtype='int8')
+    Tx = np.ones(len(Tj), dtype=np.int32)
     return sparse.csr_array((Tx, Tj, Tp), shape=shape), Cpts
 
 
@@ -270,18 +270,18 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
         # Construct sparse T
         if num_aggregates == 0:
             # all zero matrix
-            T_temp = sparse.csr_array((num_rows, 1), dtype='int8')
+            T_temp = sparse.csr_array((num_rows, 1), dtype=np.int32)
             warn('No pairwise aggregates found, T = 0.')
         else:
             shape = (num_rows, num_aggregates)
             Tp = np.arange(num_rows+1, dtype=index_type)
             # If A is not BSR
             if not sparse.issparse(A) or A.format != 'bsr':
-                Tx = np.ones(len(Tj), dtype='int8')
+                Tx = np.ones(len(Tj), dtype=np.int32)
                 T_temp = sparse.csr_array((Tx, Tj, Tp), shape=shape)
             else:
                 shape = (shape[0]*A.blocksize[0], shape[1]*A.blocksize[1])
-                Tx = np.array(len(Tj)*[np.identity(A.blocksize[0])], dtype='int8')
+                Tx = np.array(len(Tj)*[np.identity(A.blocksize[0])], dtype=np.int32)
                 T_temp = sparse.bsr_array((Tx, Tj, Tp), blocksize=A.blocksize, shape=shape)
 
         # Form aggregation matrix, need to make sure is CSR/BSR
@@ -399,7 +399,7 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
 
     row = (clusters >= 0).nonzero()[0].astype(C.indices.dtype)
     col = clusters[row]
-    data = np.ones(len(row), dtype='int8')
+    data = np.ones(len(row), dtype=np.int32)
     AggOp = sparse.coo_array((data, (row, col)),
                               shape=(G.shape[0], num_seeds)).tocsr()
     return AggOp, seeds

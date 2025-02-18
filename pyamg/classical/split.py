@@ -423,7 +423,7 @@ def _preprocess(S, coloring_method=None):
         raise ValueError(f'expected square matrix, shape={S.shape}')
 
     N = S.shape[0]
-    S = csr_array((np.ones(S.nnz, dtype='int8'), S.indices, S.indptr),
+    S = csr_array((np.ones(S.nnz, dtype=np.int32), S.indices, S.indptr),
                    shape=(N, N))
     T = S.T.tocsr()  # transpose S for efficient column access
 
