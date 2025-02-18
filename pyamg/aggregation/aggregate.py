@@ -310,7 +310,7 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
     return T, Cpts
 
 
-def lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5):
+def lloyd_aggregation(C, ratio=0.1, measure='unit', maxiter=5):
     """Aggregate nodes using Lloyd Clustering.
 
     Parameters
@@ -350,7 +350,8 @@ def lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5):
 
     Examples
     --------
-    >>> from scipy.sparse import csr_array
+    >>> import pyamg
+    >>> # print(pyamg.__version__)
     >>> from pyamg.gallery import poisson
     >>> from pyamg.aggregation.aggregate import lloyd_aggregation
     >>> A = poisson((4,), format='csr')   # 1D mesh with 4 vertices
@@ -363,7 +364,7 @@ def lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5):
     array([[1],
            [1],
            [1],
-           [1]], dtype=int8)
+           [1]], dtype=int32)
     >>> # more seeding for two aggregates
     >>> Agg = lloyd_aggregation(A,ratio=0.5)[0].toarray()
 
@@ -380,6 +381,8 @@ def lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5):
     n = C.shape[0]
     naggs = int(min(max(ratio * n, 1), n))
 
+    data = C.data
+
     if measure is None:
         data = C.data
     elif measure == 'abs':
@@ -395,9 +398,6 @@ def lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5):
 
     if C.dtype == complex:
         data = np.real(data)
-
-    if C.data.min() <= 0:
-        raise ValueError('positive edge weights required')
 
     if len(data) > 0:
         if data.min() < 0:
