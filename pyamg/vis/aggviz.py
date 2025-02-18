@@ -75,7 +75,7 @@ def plotaggs(AggOp, V, G, ax,
             todraw.append(newobj)
 
         for i in aggids:                                   # for each point in the aggregate
-            nbrs = G.getrow(i).indices                     # get the neighbors in the graph
+            nbrs = G[i, :].indices                     # get the neighbors in the graph
             nbrs = np.array([k for k in nbrs if k != i])   # remove i from the neighbors
 
             for j1 in nbrs:                                # for each neighbor

@@ -508,8 +508,8 @@ def _rebalance(G, c, m, d, dist_all, num_clusters):
         if E[a_e] > S[a_s]:
             break
 
-        M[Agg2Agg.getrow(a_e).indices] = False  # neighbors of a_e
-        M[Agg2Agg.getrow(a_s).indices] = False  # neighbors of a_s
+        M[Agg2Agg[a_e, :].indices] = False  # neighbors of a_e
+        M[Agg2Agg[a_s, :].indices] = False  # neighbors of a_s
         newc[a_e] = c1[a_s]   # redefine centers
         newc[a_s] = c2[a_s]   # redefine centers
         rebalance_change = True
