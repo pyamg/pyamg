@@ -7,13 +7,11 @@ aggregate groupings in 2d and in 3d, and C/F splittings.
 
 from . import vtk_writer
 from . import vis_coarse
-from . import aggviz
 
 from .vtk_writer import write_vtu, write_basic_mesh
 from .vis_coarse import vis_aggregate_groups
 
 __all__ = [
-    'aggviz',
     'vis_aggregate_groups',
     'vis_coarse',
     'vtk_writer',
