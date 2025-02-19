@@ -321,5 +321,5 @@ def test_gradgrad_kappa():
 
     res = []
     ml = smoothed_aggregation_solver(A, max_coarse=10)
-    x = ml.solve(b, tol=1e-8, residuals=res)
-    assert res[-1] < 1e-6 
+    _ = ml.solve(b, tol=1e-8, residuals=res)
+    assert res[-1] < 1e-6
