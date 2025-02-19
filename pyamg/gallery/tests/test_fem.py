@@ -3,6 +3,7 @@ import os
 import numpy as np
 import scipy.sparse.linalg as sla
 from pyamg.gallery import fem, regular_triangle_mesh
+from pyamg import smoothed_aggregation_solver
 
 test_dir = os.path.split(__file__)[0]
 base_dir = os.path.split(test_dir)[0]
@@ -317,3 +318,8 @@ def test_gradgrad_kappa():
     uex = uexact(mesh.X, mesh.Y)
     assert fem.l2norm(u - uex, mesh) < 1e-2
     assert np.abs(u - uex).max() < 1e-2
+
+    res = []
+    ml = smoothed_aggregation_solver(A, max_coarse=10)
+    _ = ml.solve(b, tol=1e-8, residuals=res)
+    assert res[-1] < 1e-6

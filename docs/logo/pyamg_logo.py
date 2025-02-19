@@ -5,7 +5,7 @@ from scipy.io import loadmat
 import matplotlib as mplt
 import matplotlib.pyplot as plt
 import shapely.geometry as sg
-from shapely.ops import cascaded_union
+from shapely.ops import unary_union
 
 import pyamg
 from pyamg.gallery.fem import Mesh, gradgradform
@@ -46,7 +46,7 @@ def plotaggs(AggOp, V, E, G,
             todraw.append(newobj)
 
         for i in aggids:                                   # for each point in the aggregate
-            nbrs = G[i, :].indices                         # get the neighbors in the graph
+            nbrs = G[[i], :].indices                       # get the neighbors in the graph
 
             for j1 in nbrs:                                # for each neighbor
                 found = False                              # mark if triangle is found
@@ -63,7 +63,7 @@ def plotaggs(AggOp, V, E, G,
                     newobj = sg.LineString(coords)         # add a line object to the list
                     todraw.append(newobj)
 
-        todraw = cascaded_union(todraw)                    # union objects in the aggregate
+        todraw = unary_union(todraw)                    # union objects in the aggregate
         todraw = todraw.buffer(0.1)                        # expand to smooth
         todraw = todraw.buffer(-0.05)                      # then contract
 
