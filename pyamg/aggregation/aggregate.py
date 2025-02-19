@@ -44,7 +44,7 @@ def standard_aggregation(C):
     array([[1, 0],
            [1, 0],
            [0, 1],
-           [0, 1]], dtype=int8)
+           [0, 1]], dtype=int32)
     >>> A = csr_array([[1,0,0],[0,1,1],[0,1,1]])
     >>> A.toarray()                      # first vertex is isolated
     array([[1, 0, 0],
@@ -53,7 +53,7 @@ def standard_aggregation(C):
     >>> standard_aggregation(A)[0].toarray() # one aggregate
     array([[0],
            [1],
-           [1]], dtype=int8)
+           [1]], dtype=int32)
 
     """
     if not sparse.issparse(C) or C.format != 'csr':
@@ -137,7 +137,7 @@ def naive_aggregation(C):
     array([[1, 0],
            [1, 0],
            [0, 1],
-           [0, 1]], dtype=int8)
+           [0, 1]], dtype=int32)
     >>> A = csr_array([[1,0,0],[0,1,1],[0,1,1]])
     >>> A.toarray()                      # first vertex is isolated
     array([[1, 0, 0],
@@ -146,7 +146,7 @@ def naive_aggregation(C):
     >>> naive_aggregation(A)[0].toarray() # two aggregates
     array([[1, 0],
            [0, 1],
-           [0, 1]], dtype=int8)
+           [0, 1]], dtype=int32)
 
     """
     if not sparse.issparse(C) or C.format != 'csr':
@@ -215,12 +215,12 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
     array([[1, 0],
            [1, 0],
            [0, 1],
-           [0, 1]], dtype=int8)
+           [0, 1]], dtype=int32)
     >>> pairwise_aggregation(A, matchings=2)[0].toarray() # one aggregate
     array([[1],
            [1],
            [1],
-           [1]], dtype=int8)
+           [1]], dtype=int32)
 
     See Also
     --------
@@ -362,7 +362,7 @@ def lloyd_aggregation(C, ratio=0.03, distance='unit', maxiter=10):
     array([[1],
            [1],
            [1],
-           [1]], dtype=int8)
+           [1]], dtype=int32)
     >>> # more seeding for two aggregates
     >>> Agg = lloyd_aggregation(A,ratio=0.5)[0].toarray()
 
