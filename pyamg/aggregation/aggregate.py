@@ -351,7 +351,6 @@ def lloyd_aggregation(C, ratio=0.1, measure='unit', maxiter=5):
     Examples
     --------
     >>> import pyamg
-    >>> # print(pyamg.__version__)
     >>> from pyamg.gallery import poisson
     >>> from pyamg.aggregation.aggregate import lloyd_aggregation
     >>> A = poisson((4,), format='csr')   # 1D mesh with 4 vertices
