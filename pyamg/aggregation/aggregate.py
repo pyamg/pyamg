@@ -489,6 +489,13 @@ def balanced_lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5,
     >>> np.random.seed(787888)
     >>> AggOp, seeds = balanced_lloyd_aggregation(G)
 
+    References
+    ----------
+    ..[1] Zaman, Tareq, Nicolas Nytko, Ali Taghibakhshi, Scott MacLachlan,
+          Luke Olson, and Matthew West. "Generalizing lloyd’s algorithm for graph clustering."
+          SIAM Journal on Scientific Computing 46, no. 5 (2024): A2819-A2847.
+          https://epubs.siam.org/doi/abs/10.1137/23M1556800?journalCode=sjoce3
+
     """
     if C.shape[0] != C.shape[1]:
         raise ValueError('Graph should be a square matrix.')
