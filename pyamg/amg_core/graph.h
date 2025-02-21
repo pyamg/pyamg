@@ -454,7 +454,7 @@ void floyd_warshall(const I num_nodes,
       I j = Aj[jj];                         // global index
       I _j = L[j];                          // local index
 
-      if(m[j] == a){                        // check to see if neighber is in cluster a
+      if(m[j] == a){                        // check to see if neighbor is in cluster a
         I _ij = _i * N + _j;                // row major indexing into D, P
         D[_ij] = Ax[jj];                    // edge weight
         P[_ij] = i;                         // predecessor

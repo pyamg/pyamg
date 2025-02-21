@@ -14,7 +14,7 @@
 
 
 /*
- * Compute symmetric strenth of connection.
+ * Compute symmetric strength of connection.
  *
  * Compute a strength of connection matrix using the standard symmetric
  * Smoothed Aggregation heuristic.  Both the input and output matrices

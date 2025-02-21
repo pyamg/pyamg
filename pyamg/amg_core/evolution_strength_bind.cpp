@@ -493,11 +493,11 @@ BIG cost savings.
 Examples
 --------
 >>> from pyamg.amg_core import incomplete_mat_mult_csr
->>> from numpy import arange, eye, ones
+>>> import numpy as np
 >>> from scipy.sparse import csr_array, csc_array
->>> A = csr_array(arange(1,10,dtype=float).reshape(3,3))
->>> B = csc_array(ones((3,3),dtype=float))
->>> AB = csr_array(eye(3,3,dtype=float))
+>>> A = csr_array(np.arange(1,10,dtype=float).reshape(3,3))
+>>> B = csc_array(np.ones((3,3),dtype=float))
+>>> AB = csr_array(np.eye(3,3,dtype=float))
 >>> A.sort_indices()
 >>> B.sort_indices()
 >>> AB.sort_indices()

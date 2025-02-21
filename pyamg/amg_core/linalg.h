@@ -914,17 +914,17 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
  * Examples
  * --------
  * >>> from pyamg.amg_core import pinv_array
- * >>> from scipy import arange, ones, array, dot
- * >>> A = array([arange(1,5, dtype=float).reshape(2,2), ones((2,2),dtype=float)])
+ * >>> import numpy as np
+ * >>> A = np.array([np.arange(1,5, dtype=float).reshape(2,2), np.ones((2,2),dtype=float)])
  * >>> Ac = A.copy()
  * >>> pinv_array(A, 2, 2, 'T')
- * >>> print "Multiplication By Inverse\n" + str(dot(A[0], Ac[0]))
- * >>> print "Multiplication by PseudoInverse\n" + str(dot(Ac[1], dot(A[1], Ac[1])))
+ * >>> print "Multiplication By Inverse\n" + str(np.dot(A[0], Ac[0]))
+ * >>> print "Multiplication by PseudoInverse\n" + str(np.dot(Ac[1], np.dot(A[1], Ac[1])))
  * >>>
  * >>> A = Ac.copy()
  * >>> pinv_array(A,2,2,'F')
- * >>> print "Changing flag to \'F\' results in different Inverse\n" + str(dot(A[0], Ac[0]))
- * >>> print "A holds the inverse of the transpose\n" + str(dot(A[0], Ac[0].T))
+ * >>> print "Changing flag to \'F\' results in different Inverse\n" + str(np.dot(A[0], Ac[0]))
+ * >>> print "A holds the inverse of the transpose\n" + str(np.dot(A[0], Ac[0].T))
  *
  */
 template<class I, class T, class F>

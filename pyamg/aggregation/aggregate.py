@@ -567,7 +567,7 @@ def metis_aggregation(C, ratio=0.1, measure=None):
     C : csr_array
         strength of connection matrix
     ratio : scalar
-        Fraction of nodes to be aggregate (centers).  ratio=0.1 is
+        Fraction of nodes to be aggregated (centers).  ratio=0.1 is
         a coarsening by 10
     measure : ['unit','abs','inv',None]
         Distance measure to use and assigned to each edge graph.  METIS
