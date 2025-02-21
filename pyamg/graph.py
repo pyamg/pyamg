@@ -184,14 +184,12 @@ def bellman_ford(G, centers, method='standard', tiebreaking=True):
     distances[centers] = 0                         # distance = 0 at centers
     nearest[centers] = np.arange(num_clusters)     # number the membership
 
-    if method == 'balanced':
-        predecessors_count = np.full(n, 0, dtype=np.int32)
-        cluster_size = np.full(num_clusters, 1, dtype=np.int32)
-
     if method == 'standard':
         amg_core.bellman_ford(n, G.indptr, G.indices, G.data, centers,  # IN
                               distances, nearest, predecessors)         # OUT
     elif method == 'balanced':
+        predecessors_count = np.full(n, 0, dtype=np.int32)
+        cluster_size = np.full(num_clusters, 1, dtype=np.int32)
         amg_core.bellman_ford_balanced(n, G.indptr, G.indices, G.data, centers,  # IN
                                        distances, nearest, predecessors,         # OUT
                                        predecessors_count, cluster_size,         # OUT
