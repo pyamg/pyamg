@@ -492,7 +492,8 @@ def balanced_lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5,
     References
     ----------
     ..[1] Zaman, Tareq, Nicolas Nytko, Ali Taghibakhshi, Scott MacLachlan,
-          Luke Olson, and Matthew West. "Generalizing lloyd’s algorithm for graph clustering."
+          Luke Olson, and Matthew West.
+          "Generalizing lloyd's algorithm for graph clustering."
           SIAM Journal on Scientific Computing 46, no. 5 (2024): A2819-A2847.
           https://epubs.siam.org/doi/abs/10.1137/23M1556800?journalCode=sjoce3
 
