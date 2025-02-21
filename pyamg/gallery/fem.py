@@ -897,6 +897,33 @@ def applybc(A, b, mesh, bc, remove_dirichlet=False):
     b : ndarray
         Modified, assembled right-hand side
 
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import scipy.sparse.linalg as sla
+    >>> from pyamg.gallery import fem, regular_triangle_mesh
+    >>> import matplotlib.pyplot as plt
+    >>> # mesh
+    >>> V, E = regular_triangle_mesh(50, 50)
+    >>> mesh = fem.Mesh(V, E)
+    >>> f = lambda x, y : 0*x + 1.0
+    >>> # BC
+    >>> g = lambda x, y : x*(1-x)*4
+    >>> tol = 1e-12
+    >>> X, Y = V[:,0], V[:,1]
+    >>> id1 = np.where(abs(Y) < tol)[0]      # south
+    >>> id2 = np.where(abs(Y-1) < tol)[0]    # north
+    >>> bc = [{'id': id1, 'g': g},           # Dirichlet
+    ...       {'id': id2, 'g': g}]           # Dirichlet
+    >>> # Assembly and apply BC
+    >>> A, b = fem.gradgradform(mesh, f=f)
+    >>> A, b = fem.applybc(A, b, mesh, bc)
+    >>> A = A.tocsr()
+    >>> u = sla.spsolve(A, b)
+    >>> # plt.tricontourf(X, Y, E, u, 100);
+    >>> # plt.tricontour(X, Y, E, u, 100, linewidths=0.5, colors='k');
+    >>> # plt.show();
+
     """
     for c in bc:
         if not callable(c['g']):
