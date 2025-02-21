@@ -902,7 +902,6 @@ def applybc(A, b, mesh, bc, remove_dirichlet=False):
     >>> import numpy as np
     >>> import scipy.sparse.linalg as sla
     >>> from pyamg.gallery import fem, regular_triangle_mesh
-    >>> import matplotlib.pyplot as plt
     >>> # mesh
     >>> V, E = regular_triangle_mesh(50, 50)
     >>> mesh = fem.Mesh(V, E)
@@ -920,6 +919,7 @@ def applybc(A, b, mesh, bc, remove_dirichlet=False):
     >>> A, b = fem.applybc(A, b, mesh, bc)
     >>> A = A.tocsr()
     >>> u = sla.spsolve(A, b)
+    >>> # import matplotlib.pyplot as plt
     >>> # plt.tricontourf(X, Y, E, u, 100);
     >>> # plt.tricontour(X, Y, E, u, 100, linewidths=0.5, colors='k');
     >>> # plt.show();
