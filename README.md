@@ -79,14 +79,23 @@ If you use PyAMG in your work, please consider using the following citation:
 - Look at the [Tutorial](https://github.com/pyamg/pyamg/wiki/Tutorial) or the [examples](https://github.com/pyamg/pyamg-examples) (for instance  the [0_start_here](https://github.com/pyamg/pyamg-examples/blob/main/0_start_here/demo.py) example).
 
 - Run the unit tests (`pip install pytest`):
-  - With PyAMG installed and from a non-source directory:
+  - From Python with PyAMG installed and from a non-source directory:
   ```python
   import pyamg
   pyamg.test()
   ```
-  - From the PyAMG source directory and installed (e.g. with `pip install -e .`):
-  ```python
+  - From the PyAMG source directory and an **editable** install:
+  (e.g. with `pip install -e .`):
+  ```bash
+  pip install --no-build-isolation -e ".[test]"
   pytest .
+  ```
+
+  - From the PyAMG source directory and a **regular** install:
+  (e.g. with `pip install -e .`):
+  ```bash
+  pip install ".[test]"
+  pytest --pyargs pyamg --basetemp=temp
   ```
 
 # What is AMG?
