@@ -1,13 +1,5 @@
 """PyAMG: Algebraic Multigrid Solvers in Python."""
 
-import re
-import warnings
-import numpy as np
-import scipy as sp
-
-from .version import version_tuple as __version_tuple__
-from .version import version as __version__
-
 from . import (aggregation, amg_core, classical, gallery, krylov, relaxation, util, vis)
 from . import (blackbox, graph, graph_ref, multilevel, strength)
 
@@ -17,10 +9,12 @@ from .aggregation import smoothed_aggregation_solver, rootnode_solver, pairwise_
 from .gallery import demo
 from .blackbox import solve, solver, solver_configuration
 
+import importlib.metadata
+__version__ = importlib.metadata.version(__name__)
+
 __all__ = [
     'MultilevelSolver',
     '__version__',
-    '__version_tuple__',
     'aggregation',
     'air_solver',
     'amg_core',
@@ -57,55 +51,6 @@ test         Run pyamg unittests (requires pytest)
 __version__  pyamg version string
 """
 
-# Warn on old numpy or scipy.  Two digits.
-npreq = '1.6'
-npmin = [int(j) for j in npreq.split('.')]
-m = re.match(r'(\d+)\.(\d+).*', np.__version__)
-npver = [int(m.group(1)), int(m.group(2))]
-if npver[0] < npmin[0] or (npver[0] == npmin[0] and npver[1] < npmin[1]):
-    warnings.warn(f'Numpy {npmin} or above is recommended for this version of'
-                  f'PyAMG (detected version {npver})', UserWarning, stacklevel=2)
-
-spreq = '0.11'
-spmin = [int(j) for j in spreq.split('.')]
-m = re.match(r'(\d+)\.(\d+).*', sp.__version__)
-spver = [int(m.group(1)), int(m.group(2))]
-if spver[0] < spmin[0] or (spver[0] == spmin[0] and spver[1] < spmin[1]):
-    warnings.warn(f'SciPy {spmin} or above is recommended for this version of'
-                  f'PyAMG (detected version {spver})', UserWarning, stacklevel=2)
-
-
-def test(verbose=False):  # noqa: PT028
-    """Test runner for pytest.
-
-    Parameters
-    ----------
-    verbose : bool
-        Turn on verbose output.
-
-    """
-    import sys     # noqa: PLC0415
-    try:
-        import pytest  # noqa: PLC0415
-    except ModuleNotFoundError as e:
-        raise ModuleNotFoundError('pytest is not installed and is needed for test()') from e
-
-    sysversion = sys.version.replace('\n', '')
-    print(f'Python version: {sysversion}')
-    print(f'pytest version: {pytest.__version__}')
-    print(f'scipy  version: {sp.__version__}')
-    print(f'numpy  version: {np.__version__}')
-    print(f'pyamg  version: {__version__}')
-
-    pyamgdir = __path__[0]
-    args = [pyamgdir]
-
-    if verbose:
-        args += ['--verbose']
-    else:
-        args += ['--quiet']
-
-    try:
-        return pytest.main(args)
-    except SystemExit as e:
-        return e.code
+from pyamg._tools._tester import PytestTester  # noqa
+test = PytestTester(__name__)
+del PytestTester
