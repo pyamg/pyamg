@@ -1,10 +1,11 @@
-"""Test clustering."""
+"""Test clustering routines in amg_core."""
 import numpy as np
-from pyamg import amg_core
-from pyamg.gallery import load_example
+from numpy.testing import TestCase, assert_array_equal
 from scipy import sparse
 
-from numpy.testing import TestCase, assert_equal, assert_array_equal
+from pyamg import amg_core
+from pyamg.gallery import load_example
+from pyamg.graph_ref import bellman_ford_reference, bellman_ford_balanced_reference
 
 
 def canonical_graph(G):
@@ -23,33 +24,20 @@ def canonical_graph(G):
 
 class TestClustering(TestCase):
     def setUp(self):
-        cases = [None for i in range(5)]
-
-        cluster_node_incidence_input = [None for i in range(5)]
-        cluster_node_incidence_output = [None for i in range(5)]
-
-        cluster_center_input = [None for i in range(5)]
-        cluster_center_output = [None for i in range(5)]
-
-        bellman_ford_input = [None for i in range(5)]
-        bellman_ford_output = [None for i in range(5)]
-
-        # bellman_ford_balanced_input = [None for i in range(5)]
-        # bellman_ford_balanced_output = [None for i in range(5)]
-
-        lloyd_cluster_input = [None for i in range(5)]
-        lloyd_cluster_output = [None for i in range(5)]
-
-        lloyd_cluster_exact_input = [None for i in range(5)]
-        lloyd_cluster_exact_output = [None for i in range(5)]
+        cases_bellman_ford = []
+        cases_bellman_ford_balanced = []
 
         # (0) 6 node undirected, unit length
         # (1) 12 node undirected, unit length
         # (2) 16 node undirected, random length
         # (3) 16 node directed, random length
         # (4) 191 node unstructured finite element matrix
+        # (5) 5 nodes in a line
+        # (6) 5 nodes in a graph
 
+        ############################################################
         # (0) 6 node undirected, unit length
+        ############################################################
         #
         # [3] ---- [4] ---- [5]
         #  |  \   / |  \   / |
@@ -71,41 +59,21 @@ class TestClustering(TestCase):
         G[5, [1, 2, 4]] = 1
         G[[0, 1, 2, 3, 4, 5], [0, 1, 2, 3, 4, 5]] = [3, 5, 3, 3, 5, 3]
         G = sparse.csr_array(G)
-        cases[0] = (G)
 
-        cm = np.array([0, 1, 1, 0, 0, 1], dtype=np.int32)
-        ICp = np.array([0, 3, 6], dtype=np.int32)
-        ICi = np.array([0, 3, 4, 1, 2, 5], dtype=np.int32)
-        L = np.array([0, 0, 1, 1, 2, 2], dtype=np.int32)
-        cluster_node_incidence_input[0] = {'num_clusters': 2,
-                                           'cm': cm}
-        cluster_node_incidence_output[0] = {'ICp': ICp,
-                                            'ICi': ICi,
-                                            'L': L}
+        case = {}
+        case['id'] = 0
+        case['G'] = G
+        case['input'] = {'centers': np.array([0, 5], dtype=np.int32)}
+        case['output'] = {'m': np.array([0, 0, 1, 0, 0, 1], dtype=np.int32),
+                          'd': np.array([0., 1., 1., 1., 1., 0.], dtype=G.dtype)}
+        cases_bellman_ford.append(case)
 
-        cluster_center_input[0] = {'a': [0, 1],
-                                   'num_clusters': 2,
-                                   'cm': np.array([0, 1, 1, 0, 0, 1], dtype=np.int32),
-                                   'ICp': np.array([0, 3, 6], dtype=np.int32),
-                                   'ICi': np.array([0, 3, 4, 1, 2, 5], dtype=np.int32),
-                                   'L': np.array([0, 0, 1, 1, 2, 2], dtype=np.int32)}
-        cluster_center_output[0] = [0, 1]
+        del case['output']
+        cases_bellman_ford_balanced.append(case)
 
-        bellman_ford_input[0] = {'seeds': [0, 5]}
-        bellman_ford_output[0] = {'cm': np.array([0, 0, 1, 0, 0, 1], dtype=np.int32),
-                                  'd': np.array([0., 1., 1., 1., 1., 0.], dtype=G.dtype)}
-
-        lloyd_cluster_input[0] = {'seeds': np.array([0, 5], dtype=np.int32)}
-        lloyd_cluster_output[0] = {'cm': np.array([0, 0, 1, 0, 0, 1], dtype=np.int32),
-                                   'd': np.array([1., 0., 0., 1., 0., 0.], dtype=G.dtype),
-                                   'c': np.array([0, 5], dtype=np.int32)}
-
-        lloyd_cluster_exact_input[0] = {'seeds': np.array([0, 5], dtype=np.int32)}
-        lloyd_cluster_exact_output[0] = {'cm': np.array([0, 0, 1, 0, 1, 1], dtype=np.int32),
-                                         'd': np.array([0, 1, 1, 1, 1, 0], dtype=G.dtype),
-                                         'c': np.array([0, 2], dtype=np.int32)}
-
+        ############################################################
         # (1) 12 node undirected, unit length
+        ############################################################
         #
         #         _[1] ---- [7]
         #       /   |        |
@@ -145,30 +113,30 @@ class TestClustering(TestCase):
         G[11, [9, 10]] = 1
         G[np.arange(12), np.arange(12)] = [2, 3, 4, 2, 2, 4, 4, 2, 2, 4, 3, 2]
         G = sparse.csr_array(G)
-        cases.append(G)
 
-        cm = np.array([0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1], dtype=np.int32)
-        ICp = np.array([0, 6, 12], dtype=np.int32)
-        ICi = np.array([0, 1, 2, 3, 6, 7, 4, 5, 8, 9, 10, 11], dtype=np.int32)
-        L = np.array([0, 1, 2, 3, 0, 1, 4, 5, 2, 3, 4, 5], dtype=np.int32)
-        cluster_node_incidence_input.append({'num_clusters': 2,
-                                             'cm': cm})
-        cluster_node_incidence_output.append({'ICp': ICp,
-                                              'ICi': ICi,
-                                              'L': L})
-        cluster_center_input[0] = {'a': [0, 1],
-                                   'num_clusters': 2,
-                                   'cm': np.array([0, 1, 1, 0, 0, 1], dtype=np.int32),
-                                   'ICp': np.array([0, 3, 6], dtype=np.int32),
-                                   'ICi': np.array([0, 3, 4, 1, 2, 5], dtype=np.int32),
-                                   'L': np.array([0, 0, 1, 1, 2, 2], dtype=np.int32)}
-        cluster_center_output[0] = [0, 1]
+        case = {}
+        case['id'] = 1
+        case['G'] = G
+        case['input'] = {'centers': np.array([0, 1], dtype=np.int32)}
+        cases_bellman_ford.append(case)
+        cases_bellman_ford_balanced.append(case)
+
+        ############################################################
         # (2) 16 node undirected, random length (0,2)
+        ############################################################
         np.random.seed(2244369509)
         G.data[:] = np.random.rand(len(G.data)) * 2
-        cases.append(G)
 
+        case = {}
+        case['id'] = 2
+        case['G'] = G
+        case['input'] = {'centers': np.array([0, 1], dtype=np.int32)}
+        cases_bellman_ford.append(case)
+        cases_bellman_ford_balanced.append(case)
+
+        ############################################################
         # (3) 16 node directed, random length
+        ############################################################
         #         >[1] ---> [7]
         #       /   |        |
         #     /     v        v
@@ -208,174 +176,132 @@ class TestClustering(TestCase):
         G = sparse.csr_array(G)
         np.random.seed(1664236979)
         G.data[:] = np.random.rand(len(G.data)) * 2
-        cases.append(G)
 
+        case = {}
+        case['id'] = 3
+        case['G'] = G
+        case['input'] = {'centers': np.array([0, 5], np.int32)}
+        cases_bellman_ford.append(case)
+        cases_bellman_ford_balanced.append(case)
+
+        ############################################################
         # (4) 191 node unstructured finite element matrix
-        cases.append(load_example('unit_square')['A'])
+        ############################################################
+        G = load_example('unit_square')['A'].tocsr()
+        G.data[:] = 1.0
+        G.indptr.astype(np.int32, copy=False)
+        G.indices.astype(np.int32, copy=False)
 
-        self.cases = cases
-        self.cluster_node_incidence_input = cluster_node_incidence_input
-        self.cluster_node_incidence_output = cluster_node_incidence_output
-        self.cluster_center_input = cluster_center_input
-        self.cluster_center_output = cluster_center_output
-        self.bellman_ford_input = bellman_ford_input
-        self.bellman_ford_output = bellman_ford_output
-        # self.bellman_ford_balanced_input = bellman_ford_balanced_input
-        # self.bellman_ford_balanced_output = bellman_ford_balanced_output
-        self.lloyd_cluster_input = lloyd_cluster_input
-        self.lloyd_cluster_output = lloyd_cluster_output
-        self.lloyd_cluster_exact_input = lloyd_cluster_exact_input
-        self.lloyd_cluster_exact_output = lloyd_cluster_exact_output
+        case = {}
+        case['id'] = 4
+        case['G'] = G
+        case['input'] = {'centers': np.array([0, 10, 20, 30], dtype=np.int32)}
+        cases_bellman_ford.append(case)
+        cases_bellman_ford_balanced.append(case)
 
-    def test_cluster_node_incidence(self):
-        for A, argin, argout in zip(self.cases,
-                                    self.cluster_node_incidence_input,
-                                    self.cluster_node_incidence_output):
+        ############################################################
+        # (5) 5 nodes case in a line
+        ############################################################
+        Edges = np.array([[0, 1],
+                          [1, 2],
+                          [2, 3],
+                          [3, 2],
+                          [2, 1],
+                          [1, 0]], dtype=np.int32)
+        w = np.array([1, 1, 1, 1, 1, 1], dtype=float)
+        G = sparse.coo_array((w, (Edges[:, 0], Edges[:, 1])))
+        G = G.tocsr()
+        c = np.array([1, 3], dtype=np.int32)
 
-            if argin is not None:
-                num_nodes = A.shape[0]
-                num_clusters = argin['num_clusters']
-                cm = argin['cm']
-                ICp = -1*np.ones(num_clusters+1, dtype=np.int32)
-                ICi = -1*np.ones(num_nodes, dtype=np.int32)
-                L = -1*np.ones(num_nodes, dtype=np.int32)
+        case = {}
+        case['id'] = 5
+        case['G'] = G
+        case['input'] = {'centers': c}
+        cases_bellman_ford.append(case)
+        cases_bellman_ford_balanced.append(case)
 
-                amg_core.cluster_node_incidence(num_nodes, num_clusters, cm, ICp, ICi, L)
+        ############################################################
+        # (6) 5 node graph
+        ############################################################
+        Edges = np.array([[1, 4],
+                          [3, 1],
+                          [1, 3],
+                          [0, 1],
+                          [0, 2],
+                          [3, 2],
+                          [1, 2],
+                          [4, 3]], dtype=np.int32)
+        w = np.array([2, 1, 2, 1, 4, 5, 3, 1], dtype=float)
+        G = sparse.coo_array((w, (Edges[:, 0], Edges[:, 1])))
+        G = G.tocsr()
+        c = np.array([0, 1, 2], dtype=np.int32)
 
-                assert_array_equal(ICp, argout['ICp'])
-                assert_array_equal(ICi, argout['ICi'])
-                assert_array_equal(L, argout['L'])
+        case = {}
+        case['id'] = 6
+        case['G'] = G
+        case['input'] = {'centers': c}
+        cases_bellman_ford.append(case)
+        cases_bellman_ford_balanced.append(case)
 
-    def test_cluster_center(self):
-        for A, argin, argout in zip(self.cases,
-                                    self.cluster_center_input,
-                                    self.cluster_center_output):
-
-            if argin is not None:
-                for a, ccorrect in zip(argin['a'], argout):
-                    num_nodes = A.shape[0]
-                    num_clusters = argin['num_clusters']
-                    cm = argin['cm']
-                    ICp = argin['ICp']
-                    ICi = argin['ICi']
-                    L = argin['L']
-                    c = amg_core.cluster_center(a,
-                                                num_nodes, num_clusters,
-                                                A.indptr, A.indices, A.data,
-                                                cm,
-                                                ICp, ICi, L)
-
-                    assert_equal(c, ccorrect)
+        self.cases_bellman_ford = cases_bellman_ford
+        self.cases_bellman_ford_balanced = cases_bellman_ford_balanced
 
     def test_bellman_ford(self):
-        for A, argin, argout in zip(self.cases,
-                                    self.bellman_ford_input,
-                                    self.bellman_ford_output):
+        for case in self.cases_bellman_ford:
+            G = case['G']
 
-            if argin is not None:
-                seeds = argin['seeds']
-                num_nodes = A.shape[0]
+            if 'input' in case:
+                centers = case['input']['centers']
+                n = G.shape[0]
 
-                mv = np.finfo(A.dtype).max
-                d = mv * np.ones(num_nodes, dtype=A.dtype)
-                d[seeds] = 0
+                d = np.full(n, np.inf, dtype=G.dtype)
+                m = np.full(n, -1, dtype=np.int32)
+                p = np.full(n, -1, dtype=np.int32)
+                d[centers] = 0
+                m[centers] = np.arange(len(centers))
 
-                cm = -1 * np.ones(num_nodes, dtype=np.int32)
-                cm[seeds] = np.arange(len(seeds))
+                amg_core.bellman_ford(n, G.indptr, G.indices, G.data, centers,
+                                      d, m, p)
 
-                old_d = np.empty_like(d)
+            if 'output' in case:
+                d_ref = case['output']['d']
+                m_ref = case['output']['m']
+            else:
+                d_ref, m_ref, _ = bellman_ford_reference(G, centers)
 
-                iter = 0
-                maxiter = 10
-                while maxiter is None or iter < maxiter:
-                    old_d[:] = d
+            assert_array_equal(d, d_ref)
+            assert_array_equal(m, m_ref)
 
-                    amg_core.bellman_ford(num_nodes,
-                                          A.indptr, A.indices, A.data,
-                                          d, cm)
+    def test_bellman_ford_balanced(self):
+        for case in self.cases_bellman_ford_balanced:
+            G = case['G']
 
-                    if (old_d == d).all():
-                        break
+            if 'input' in case:
+                centers = case['input']['centers']
+                n = G.shape[0]
 
-                    iter += 1
+                # initialize
+                d = np.full(n, np.inf, dtype=G.dtype)         # distance to cluster center
+                m = np.full(n, -1, dtype=np.int32)            # cluster membership or index
+                p = np.full(n, -1, dtype=np.int32)            # predecessor on shortest path
+                pc = np.full(n, 0, dtype=np.int32)            # predecessor count (0)
+                s = np.full(len(centers), 1, dtype=np.int32)  # cluster size (1)
+                d[centers] = 0                                # distance = 0 at centers
+                m[centers] = np.arange(len(centers))          # number the membership
 
-                assert_array_equal(d, argout['d'])
-                assert_array_equal(cm, argout['cm'])
+                print(case['id'])
+                print(type(n))
+                print(G.indptr.dtype)
+                print(G.indices.dtype)
+                print(G.data.dtype)
+                amg_core.bellman_ford_balanced(n, G.indptr, G.indices, G.data, centers,
+                                               d, m, p, pc, s, True)
 
-    # def test_bellman_ford_balanced(self):
-    #     for A, argin, argout in zip(self.cases,
-    #                                 self.bellman_ford_balanced_input,
-    #                                 self.bellman_ford_balanced_output):
+            if 'output' in case:
+                d_ref = case['output']['d']
+                m_ref = case['output']['m']
+            else:
+                d_ref, m_ref, _ = bellman_ford_balanced_reference(G, centers)
 
-    #         if argin is not None:
-    #             seeds = argin['seeds']
-    #             num_nodes = A.shape[0]
-    #             num_clusters = len(seeds)
-
-    #             mv = np.finfo(A.dtype).max
-    #             d = mv * np.ones(num_nodes, dtype=A.dtype)
-    #             d[seeds] = 0
-
-    #             cm = 0 * np.ones(num_nodes, dtype=np.int32)
-    #             cm[seeds] = np.arange(len(seeds))
-
-    #             amg_core.bellman_ford_balanced(num_nodes, num_clusters,
-    #                                            A.indptr, A.indices, A.data,
-    #                                            d, cm)
-
-    #             assert_array_equal(d, argout['d'])
-    #             assert_array_equal(cm, argout['cm'])
-
-    def test_lloyd_cluster(self):
-        for A, argin, argout in zip(self.cases,
-                                    self.lloyd_cluster_input,
-                                    self.lloyd_cluster_output):
-
-            if argin is not None:
-                seeds = argin['seeds']
-                num_nodes = A.shape[0]
-                c = seeds.copy()
-                num_clusters = len(seeds)
-
-                mv = np.finfo(A.dtype).max
-                d = mv * np.ones(num_nodes, dtype=A.dtype)
-                d[seeds] = 0
-
-                cm = -1 * np.ones(num_nodes, dtype=np.int32)
-                cm[seeds] = seeds
-
-                amg_core.lloyd_cluster(num_nodes,
-                                       A.indptr, A.indices, A.data,
-                                       num_clusters,
-                                       d, cm, c)
-
-                assert_array_equal(d, argout['d'])
-                assert_array_equal(cm, argout['cm'])
-                assert_array_equal(c, argout['c'])
-
-    def test_lloyd_cluster_exact(self):
-        for A, argin, argout in zip(self.cases,
-                                    self.lloyd_cluster_exact_input,
-                                    self.lloyd_cluster_exact_output):
-
-            if argin is not None:
-                seeds = argin['seeds']
-                num_nodes = A.shape[0]
-                c = seeds.copy()
-                num_clusters = len(seeds)
-
-                mv = np.finfo(A.dtype).max
-                d = mv * np.ones(num_nodes, dtype=A.dtype)
-                d[seeds] = 0
-
-                cm = -1 * np.ones(num_nodes, dtype=np.int32)
-                cm[seeds] = seeds
-
-                amg_core.lloyd_cluster_exact(num_nodes,
-                                             A.indptr, A.indices, A.data,
-                                             num_clusters,
-                                             d, cm, c)
-
-                assert_array_equal(d, argout['d'])
-                assert_array_equal(cm, argout['cm'])
-                assert_array_equal(c, argout['c'])
+            assert_array_equal(d, d_ref)
+            assert_array_equal(m, m_ref)

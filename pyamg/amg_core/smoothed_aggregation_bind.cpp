@@ -392,7 +392,7 @@ PYBIND11_MODULE(smoothed_aggregation, m) {
     m.def("symmetric_strength_of_connection", &_symmetric_strength_of_connection<int, std::complex<double>, double>,
         py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(),
 R"pbdoc(
-Compute symmetric strenth of connection.
+Compute symmetric strength of connection.
 
 Compute a strength of connection matrix using the standard symmetric
 Smoothed Aggregation heuristic.  Both the input and output matrices

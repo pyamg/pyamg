@@ -383,7 +383,7 @@ void rs_cf_splitting(const I n_nodes,
                 }
             }
 
-            // For each j in S^T_i /\ U marked as tentative F-point, modify lamdba
+            // For each j in S^T_i /\ U marked as tentative F-point, modify lambda
             // values for neighborhood of j
             for (I jj = Tp[i]; jj < Tp[i+1]; jj++)
             {

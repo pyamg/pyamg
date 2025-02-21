@@ -867,25 +867,28 @@ def divform(mesh):
     return BX, BY
 
 
-def applybc(A, b, mesh, bc):
+def applybc(A, b, mesh, bc, remove_dirichlet=False):
     """Apply boundary conditions.
 
     Parameters
     ----------
     A : sparse matrix
-        Fully assembled sparse matrix
+        Fully assembled sparse matrix.
     b : ndarray
-        Fully assembled right-hand side
+        Fully assembled right-hand side.
     mesh : Mesh
-        Mesh object
+        Mesh object.
     bc : list
-       list of boundary conditions
-       bc = [bc1, bc2, ..., bck]
-       where bck = {'id': id,    a list of vertices for boundary "k"
-                     'g': g,     g = g(x,y) is a function for the vertices on boundary "k"
-                   'var': var    the variable, given as a start in the dof list
-                'degree': degree degree of the variable, either 1 or 2
-                   }
+       List of boundary conditions: bc = [bc1, bc2, ..., bck],
+       where
+
+           bck = {'id': id,    # a list of vertices for boundary "k"
+                   'g': g,     # g = g(x,y) is a function for the vertices on boundary "k"
+                 'var': var    # the variable, given as a start in the dof list
+              'degree': degree # degree of the variable, either 1 or 2
+                 }
+    remove_dirichlet : bool
+        Flag to remove Dirichlet boundary nodes from the matrix (size).
 
     Returns
     -------
@@ -893,6 +896,33 @@ def applybc(A, b, mesh, bc):
         Modified, assembled sparse matrix
     b : ndarray
         Modified, assembled right-hand side
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import scipy.sparse.linalg as sla
+    >>> from pyamg.gallery import fem, regular_triangle_mesh
+    >>> # mesh
+    >>> V, E = regular_triangle_mesh(50, 50)
+    >>> mesh = fem.Mesh(V, E)
+    >>> f = lambda x, y : 0*x + 1.0
+    >>> # BC
+    >>> g = lambda x, y : x*(1-x)*4
+    >>> tol = 1e-12
+    >>> X, Y = V[:,0], V[:,1]
+    >>> id1 = np.where(abs(Y) < tol)[0]      # south
+    >>> id2 = np.where(abs(Y-1) < tol)[0]    # north
+    >>> bc = [{'id': id1, 'g': g},           # Dirichlet
+    ...       {'id': id2, 'g': g}]           # Dirichlet
+    >>> # Assembly and apply BC
+    >>> A, b = fem.gradgradform(mesh, f=f)
+    >>> A, b = fem.applybc(A, b, mesh, bc)
+    >>> A = A.tocsr()
+    >>> u = sla.spsolve(A, b)
+    >>> # import matplotlib.pyplot as plt
+    >>> # plt.tricontourf(X, Y, E, u, 100);
+    >>> # plt.tricontour(X, Y, E, u, 100, linewidths=0.5, colors='k');
+    >>> # plt.show();
 
     """
     for c in bc:
@@ -941,17 +971,25 @@ def applybc(A, b, mesh, bc):
 
     # set BC to identity in the matrix
     # collect all BC indices (1 of 2)
-    Dflag = np.full((A.shape[0],), False)
+    dirichlet = np.full(A.shape[0], False)
     for c in bc:
         idx = c['var'] + c['id']
-        Dflag[idx] = True
+        dirichlet[idx] = True
+
     # write identity (2 of 2)
-    for k, (i, j) in enumerate(zip(A.row, A.col)):
-        if Dflag[i] or Dflag[j]:
-            if i == j:
-                A.data[k] = 1.0
-            else:
-                A.data[k] = 0.0
+    # mark Dirichlet in the data array
+    dirichlet_idx = np.logical_or(dirichlet[A.row], dirichlet[A.col])
+    A.data[dirichlet_idx] = 0.0
+    if not remove_dirichlet:
+        diag_idx = np.logical_and(dirichlet_idx, A.row == A.col)
+        A.data[diag_idx] = 1.0
+        A.eliminate_zeros()
+        A = A.tocsr()
+    else:
+        A.eliminate_zeros()
+        A = A.tocsr()
+        not_dirichlet = np.logical_not(dirichlet)
+        A = A[not_dirichlet, :][:, not_dirichlet]
 
     return A, b
 

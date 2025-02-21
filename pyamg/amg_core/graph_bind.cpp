@@ -149,76 +149,122 @@ T _vertex_coloring_LDF(
                                         );
 }
 
-template<class I>
-void _cluster_node_incidence(
-        const I num_nodes,
-     const I num_clusters,
-      py::array_t<I> & cm,
-     py::array_t<I> & ICp,
-     py::array_t<I> & ICi,
-       py::array_t<I> & L
-                             )
-{
-    auto py_cm = cm.unchecked();
-    auto py_ICp = ICp.mutable_unchecked();
-    auto py_ICi = ICi.mutable_unchecked();
-    auto py_L = L.mutable_unchecked();
-    const I *_cm = py_cm.data();
-    I *_ICp = py_ICp.mutable_data();
-    I *_ICi = py_ICi.mutable_data();
-    I *_L = py_L.mutable_data();
-
-    return cluster_node_incidence<I>(
-                num_nodes,
-             num_clusters,
-                      _cm, cm.shape(0),
-                     _ICp, ICp.shape(0),
-                     _ICi, ICi.shape(0),
-                       _L, L.shape(0)
-                                     );
-}
-
 template<class I, class T>
-I _cluster_center(
-                const I a,
+void _floyd_warshall(
         const I num_nodes,
-     const I num_clusters,
       py::array_t<I> & Ap,
       py::array_t<I> & Aj,
       py::array_t<T> & Ax,
-      py::array_t<I> & cm,
-     py::array_t<I> & ICp,
-     py::array_t<I> & ICi,
-       py::array_t<I> & L
-                  )
+       py::array_t<T> & D,
+       py::array_t<I> & P,
+       py::array_t<I> & C,
+       py::array_t<I> & L,
+       py::array_t<I> & m,
+                const I a,
+                const I N
+                     )
 {
     auto py_Ap = Ap.unchecked();
     auto py_Aj = Aj.unchecked();
     auto py_Ax = Ax.unchecked();
-    auto py_cm = cm.unchecked();
-    auto py_ICp = ICp.unchecked();
-    auto py_ICi = ICi.unchecked();
+    auto py_D = D.mutable_unchecked();
+    auto py_P = P.mutable_unchecked();
+    auto py_C = C.unchecked();
     auto py_L = L.unchecked();
+    auto py_m = m.unchecked();
     const I *_Ap = py_Ap.data();
     const I *_Aj = py_Aj.data();
     const T *_Ax = py_Ax.data();
-    const I *_cm = py_cm.data();
-    const I *_ICp = py_ICp.data();
-    const I *_ICi = py_ICi.data();
+    T *_D = py_D.mutable_data();
+    I *_P = py_P.mutable_data();
+    const I *_C = py_C.data();
     const I *_L = py_L.data();
+    const I *_m = py_m.data();
 
-    return cluster_center<I, T>(
-                        a,
+    return floyd_warshall<I, T>(
                 num_nodes,
-             num_clusters,
                       _Ap, Ap.shape(0),
                       _Aj, Aj.shape(0),
                       _Ax, Ax.shape(0),
-                      _cm, cm.shape(0),
-                     _ICp, ICp.shape(0),
-                     _ICi, ICi.shape(0),
-                       _L, L.shape(0)
+                       _D, D.shape(0),
+                       _P, P.shape(0),
+                       _C, C.shape(0),
+                       _L, L.shape(0),
+                       _m, m.shape(0),
+                        a,
+                        N
                                 );
+}
+
+template<class I, class T>
+bool _center_nodes(
+        const I num_nodes,
+      py::array_t<I> & Ap,
+      py::array_t<I> & Aj,
+      py::array_t<T> & Ax,
+    py::array_t<I> & Cptr,
+       py::array_t<T> & D,
+       py::array_t<I> & P,
+       py::array_t<I> & C,
+       py::array_t<I> & L,
+       py::array_t<T> & q,
+       py::array_t<I> & c,
+       py::array_t<T> & d,
+       py::array_t<I> & m,
+       py::array_t<I> & p,
+      py::array_t<I> & pc,
+       py::array_t<I> & s
+                   )
+{
+    auto py_Ap = Ap.unchecked();
+    auto py_Aj = Aj.unchecked();
+    auto py_Ax = Ax.unchecked();
+    auto py_Cptr = Cptr.mutable_unchecked();
+    auto py_D = D.mutable_unchecked();
+    auto py_P = P.mutable_unchecked();
+    auto py_C = C.mutable_unchecked();
+    auto py_L = L.mutable_unchecked();
+    auto py_q = q.mutable_unchecked();
+    auto py_c = c.mutable_unchecked();
+    auto py_d = d.mutable_unchecked();
+    auto py_m = m.mutable_unchecked();
+    auto py_p = p.mutable_unchecked();
+    auto py_pc = pc.mutable_unchecked();
+    auto py_s = s.mutable_unchecked();
+    const I *_Ap = py_Ap.data();
+    const I *_Aj = py_Aj.data();
+    const T *_Ax = py_Ax.data();
+    I *_Cptr = py_Cptr.mutable_data();
+    T *_D = py_D.mutable_data();
+    I *_P = py_P.mutable_data();
+    I *_C = py_C.mutable_data();
+    I *_L = py_L.mutable_data();
+    T *_q = py_q.mutable_data();
+    I *_c = py_c.mutable_data();
+    T *_d = py_d.mutable_data();
+    I *_m = py_m.mutable_data();
+    I *_p = py_p.mutable_data();
+    I *_pc = py_pc.mutable_data();
+    I *_s = py_s.mutable_data();
+
+    return center_nodes<I, T>(
+                num_nodes,
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                    _Cptr, Cptr.shape(0),
+                       _D, D.shape(0),
+                       _P, P.shape(0),
+                       _C, C.shape(0),
+                       _L, L.shape(0),
+                       _q, q.shape(0),
+                       _c, c.shape(0),
+                       _d, d.shape(0),
+                       _m, m.shape(0),
+                       _p, p.shape(0),
+                      _pc, pc.shape(0),
+                       _s, s.shape(0)
+                              );
 }
 
 template<class I, class T>
@@ -227,102 +273,124 @@ void _bellman_ford(
       py::array_t<I> & Ap,
       py::array_t<I> & Aj,
       py::array_t<T> & Ax,
+       py::array_t<I> & c,
        py::array_t<T> & d,
-      py::array_t<I> & cm
+       py::array_t<I> & m,
+       py::array_t<I> & p
                    )
 {
     auto py_Ap = Ap.unchecked();
     auto py_Aj = Aj.unchecked();
     auto py_Ax = Ax.unchecked();
+    auto py_c = c.unchecked();
     auto py_d = d.mutable_unchecked();
-    auto py_cm = cm.mutable_unchecked();
+    auto py_m = m.mutable_unchecked();
+    auto py_p = p.mutable_unchecked();
     const I *_Ap = py_Ap.data();
     const I *_Aj = py_Aj.data();
     const T *_Ax = py_Ax.data();
+    const I *_c = py_c.data();
     T *_d = py_d.mutable_data();
-    I *_cm = py_cm.mutable_data();
+    I *_m = py_m.mutable_data();
+    I *_p = py_p.mutable_data();
 
     return bellman_ford<I, T>(
                 num_nodes,
                       _Ap, Ap.shape(0),
                       _Aj, Aj.shape(0),
                       _Ax, Ax.shape(0),
+                       _c, c.shape(0),
                        _d, d.shape(0),
-                      _cm, cm.shape(0)
+                       _m, m.shape(0),
+                       _p, p.shape(0)
                               );
 }
 
 template<class I, class T>
-void _lloyd_cluster(
+bool _bellman_ford_balanced(
         const I num_nodes,
       py::array_t<I> & Ap,
       py::array_t<I> & Aj,
       py::array_t<T> & Ax,
-     const I num_clusters,
+       py::array_t<I> & c,
        py::array_t<T> & d,
-      py::array_t<I> & cm,
-       py::array_t<I> & c
-                    )
+       py::array_t<I> & m,
+       py::array_t<I> & p,
+      py::array_t<I> & pc,
+       py::array_t<I> & s,
+   const bool tiebreaking
+                            )
 {
     auto py_Ap = Ap.unchecked();
     auto py_Aj = Aj.unchecked();
     auto py_Ax = Ax.unchecked();
+    auto py_c = c.unchecked();
     auto py_d = d.mutable_unchecked();
-    auto py_cm = cm.mutable_unchecked();
-    auto py_c = c.mutable_unchecked();
+    auto py_m = m.mutable_unchecked();
+    auto py_p = p.mutable_unchecked();
+    auto py_pc = pc.mutable_unchecked();
+    auto py_s = s.mutable_unchecked();
     const I *_Ap = py_Ap.data();
     const I *_Aj = py_Aj.data();
     const T *_Ax = py_Ax.data();
+    const I *_c = py_c.data();
     T *_d = py_d.mutable_data();
-    I *_cm = py_cm.mutable_data();
-    I *_c = py_c.mutable_data();
+    I *_m = py_m.mutable_data();
+    I *_p = py_p.mutable_data();
+    I *_pc = py_pc.mutable_data();
+    I *_s = py_s.mutable_data();
 
-    return lloyd_cluster<I, T>(
+    return bellman_ford_balanced<I, T>(
                 num_nodes,
                       _Ap, Ap.shape(0),
                       _Aj, Aj.shape(0),
                       _Ax, Ax.shape(0),
-             num_clusters,
+                       _c, c.shape(0),
                        _d, d.shape(0),
-                      _cm, cm.shape(0),
-                       _c, c.shape(0)
-                               );
+                       _m, m.shape(0),
+                       _p, p.shape(0),
+                      _pc, pc.shape(0),
+                       _s, s.shape(0),
+              tiebreaking
+                                       );
 }
 
 template<class I, class T>
-void _lloyd_cluster_exact(
+bool _most_interior_nodes(
         const I num_nodes,
       py::array_t<I> & Ap,
       py::array_t<I> & Aj,
       py::array_t<T> & Ax,
-     const I num_clusters,
+       py::array_t<I> & c,
        py::array_t<T> & d,
-      py::array_t<I> & cm,
-       py::array_t<I> & c
+       py::array_t<I> & m,
+       py::array_t<I> & p
                           )
 {
     auto py_Ap = Ap.unchecked();
     auto py_Aj = Aj.unchecked();
     auto py_Ax = Ax.unchecked();
-    auto py_d = d.mutable_unchecked();
-    auto py_cm = cm.mutable_unchecked();
     auto py_c = c.mutable_unchecked();
+    auto py_d = d.mutable_unchecked();
+    auto py_m = m.mutable_unchecked();
+    auto py_p = p.mutable_unchecked();
     const I *_Ap = py_Ap.data();
     const I *_Aj = py_Aj.data();
     const T *_Ax = py_Ax.data();
-    T *_d = py_d.mutable_data();
-    I *_cm = py_cm.mutable_data();
     I *_c = py_c.mutable_data();
+    T *_d = py_d.mutable_data();
+    I *_m = py_m.mutable_data();
+    I *_p = py_p.mutable_data();
 
-    return lloyd_cluster_exact<I, T>(
+    return most_interior_nodes<I, T>(
                 num_nodes,
                       _Ap, Ap.shape(0),
                       _Aj, Aj.shape(0),
                       _Ax, Ax.shape(0),
-             num_clusters,
+                       _c, c.shape(0),
                        _d, d.shape(0),
-                      _cm, cm.shape(0),
-                       _c, c.shape(0)
+                       _m, m.shape(0),
+                       _p, p.shape(0)
                                      );
 }
 
@@ -419,11 +487,11 @@ PYBIND11_MODULE(graph, m) {
     vertex_coloring_mis
     vertex_coloring_jones_plassmann
     vertex_coloring_LDF
-    cluster_node_incidence
-    cluster_center
+    floyd_warshall
+    center_nodes
     bellman_ford
-    lloyd_cluster
-    lloyd_cluster_exact
+    bellman_ford_balanced
+    most_interior_nodes
     maximal_independent_set_k_parallel
     breadth_first_search
     connected_components
@@ -578,94 +646,50 @@ References
    DRAFT SCCS-666
    http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.45.4650)pbdoc");
 
-    m.def("cluster_node_incidence", &_cluster_node_incidence<int>,
-        py::arg("num_nodes"), py::arg("num_clusters"), py::arg("cm").noconvert(), py::arg("ICp").noconvert(), py::arg("ICi").noconvert(), py::arg("L").noconvert(),
+    m.def("floyd_warshall", &_floyd_warshall<int, int>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("m").noconvert(), py::arg("a"), py::arg("N"));
+    m.def("floyd_warshall", &_floyd_warshall<int, float>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("m").noconvert(), py::arg("a"), py::arg("N"));
+    m.def("floyd_warshall", &_floyd_warshall<int, double>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("m").noconvert(), py::arg("a"), py::arg("N"),
 R"pbdoc(
-Compute the incidence matrix for a clustering.
+Floyd-Warshall on a subgraph or cluster of nodes in A.
 
 Parameters
 ----------
 num_nodes : int
-    Number of nodes.
-num_clusters : int
-    Number of clusters.
-cm : array, num_nodes
-    Cluster index for each node.
-ICp : arrayt, num_clusters+1, inplace
-    CSC column pointer array for I.
-ICi : array, num_nodes, inplace
-    CSC column indexes for I.
-L : array, num_nodes, inplace
-    Local index mapping.
-
-Returns
--------
-None
-    In place.
+    Number of nodes (number of rows in A).
+Ap : array
+    CSR row pointer for A, (num_nodes, 1).
+Aj : array
+    CSR column index for A, (num_edges, 1).
+Ax : array
+    CSR data array (edge weights), (num_edges, 1).
+D : array
+    FW distance array, (max_size, max_size).
+P : array
+    FW predecessor array, (max_size, max_size).
+C : array
+    FW global index for current cluster, (N, 1).
+L : array
+    FW local index for current cluster, (num_nodes, 1).
+m : array
+    Cluster index, (num_nodes, 1).
+a : array
+    Center of current cluster.
+N : int
+    Size of current cluster.
 
 Notes
 -----
-I = Incidence matrix between nodes and clusters (num_nodes x num_clusters)
-I[i,a] = 1 if node i is in cluster a, otherwise 0
-
-Cluster indexes: a,b,c in 1..num_clusters
-Global node indexes: i,j,k in 1..num_rows
-Local node indexes: pair (a,m) where a is cluster and m in 1..num_nodes_in_cluster
-
-We store I in both CSC and CSR formats because we want to be able
-to map global <-> local node indexes. However, I in CSR format is
-simply the cm array, so we only need to compute CSC format.
-
-IC = (ICp,ICi)    = I in CSC format (don't store ICx because it's always 1).
-
-IR = (IRa) = (cm) = I in CSR format (don't store IRp because we
-have exactly one nonzero entry per row, and don't store IRx because it's always 1). This is
-just the cm array.
-
-Converting local (a,m) -> global i:   i = ICi[ICp[a] + m]
-Converting global i -> local (a,m):   a = cm[i], m = L[i]
-
-L is an additional vector (length num_rows) to store local indexes.)pbdoc");
-
-    m.def("cluster_center", &_cluster_center<int, int>,
-        py::arg("a"), py::arg("num_nodes"), py::arg("num_clusters"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("cm").noconvert(), py::arg("ICp").noconvert(), py::arg("ICi").noconvert(), py::arg("L").noconvert());
-    m.def("cluster_center", &_cluster_center<int, float>,
-        py::arg("a"), py::arg("num_nodes"), py::arg("num_clusters"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("cm").noconvert(), py::arg("ICp").noconvert(), py::arg("ICi").noconvert(), py::arg("L").noconvert());
-    m.def("cluster_center", &_cluster_center<int, double>,
-        py::arg("a"), py::arg("num_nodes"), py::arg("num_clusters"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("cm").noconvert(), py::arg("ICp").noconvert(), py::arg("ICi").noconvert(), py::arg("L").noconvert(),
-R"pbdoc(
-Find cluster center.
-
-Apply Floyd–Warshall to cluster "a" and use the result to find the
-cluster center
-
-Parameters
-----------
-a : int
-    Cluster index to find the center of.
-num_nodes : int
-    Number of nodes.
-num_clusters : int
-    Number of clusters.
-Ap : array
-    CSR row pointer.
-Aj : array
-    CSR index array.
-Ax : array
-    CSR data array (edge lengths).
-cm : array, num_nodes
-    Cluster index for each node.
-ICp : array, num_clusters+1
-    CSC column pointer array for I.
-ICi : array, num_nodes
-    CSC column indexes for I.
-L : array, num_nodes
-    Local index mapping.
-
-Returns
--------
-int
-    Global node index of center of cluster a.
+    - There are no checks within this kernel
+    - There is no initialization within this kernel
+    - Ax > 0 is assumed
+    - Only a slice of C is passed to Floyd–Warshall.  See center_nodes.
+    - C[i] is the global index of i for i=0, ..., N in the current cluster
+    - N = |C|
+    - L = local indices, nx1 (-1 if not in the cluster)
+    - assumes a fully connected (directed) graph
 
 References
 ----------
@@ -673,12 +697,63 @@ References
 .. [2] Floyd-Warshall: https://en.wikipedia.org/wiki/Floyd–Warshall_algorithm
 .. [3] Graph Distance: https://en.wikipedia.org/wiki/Distance_(graph_theory))pbdoc");
 
+    m.def("center_nodes", &_center_nodes<int, int>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert());
+    m.def("center_nodes", &_center_nodes<int, float>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert());
+    m.def("center_nodes", &_center_nodes<int, double>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(),
+R"pbdoc(
+Update center nodes for a cluster
+
+Parameters
+----------
+  num_nodes  : (IN) number of nodes (number of rows in A)
+  Ap[]       : (IN) CSR row pointer for A                              (num_nodes x 1)
+  Aj[]       : (IN) CSR column index for A                             (num_edges x 1)
+  Ax[]       : (IN) CSR data array (edge weights)                      (num_edges x 1)
+Cptr[]       : (INOUT) ptr to start of indices in C for each cluster   (num_clusters x 1)
+   D[]       : (INOUT) FW distance array                               (max_size x max_size)
+   P[]       : (INOUT) FW predecessor array                            (max_size x max_size)
+   C[]       : (INOUT) FW global index for current cluster             (num_nodes x 1)
+   L[]       : (INOUT) FW local index for current cluster              (num_nodes x 1)
+   q         : (INOUT) FW work array for D**2                          (max_size x max_size)
+   c         : (INOUT) cluster center                                  (num_clusters x 1)
+   d         : (INOUT) distance to cluster center                      (num_nodes x 1)
+   m         : (INOUT) cluster index                                   (num_nodes x 1)
+   p         : (INOUT) predecessor on shortest path to center          (num_nodes x 1)
+   pc        : (INOUT) predecessor count                               (num_nodes x 1)
+   s         : (INOUT) cluster size                                    (num_clusters x 1)
+
+Returns
+-------
+changed : flag to indicate a change in arrays D or P
+
+Notes
+-----
+- sort into clusters first O(n)
+    s: [4           2     4               ....
+ Cptr: [0           4     6              11 ...
+        |           |     |              |
+        v           v     v              v
+    C: [87 99 4  6  82 13 15 9  12 55 66 77 ...]
+              ^  ^           ^
+              |  |________   |_____
+              |_____      |        |
+                    |     |        |
+    L: [            2     3        1
+        ^  ^  ^  ^  ^  ^  ^  ^  ^  ^  ^
+        |  |  |  |  |  |  |  |  |  |  |  ...
+        0  1  2  3  4  5  6  7  8  9  10 ...
+- pass pointer to start of each C[start,...., start+N]
+- N is the cluster size)pbdoc");
+
     m.def("bellman_ford", &_bellman_ford<int, int>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("d").noconvert(), py::arg("cm").noconvert());
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert());
     m.def("bellman_ford", &_bellman_ford<int, float>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("d").noconvert(), py::arg("cm").noconvert());
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert());
     m.def("bellman_ford", &_bellman_ford<int, double>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("d").noconvert(), py::arg("cm").noconvert(),
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(),
 R"pbdoc(
 Apply one iteration of Bellman-Ford iteration on a distance graph stored in CSR format.
 
@@ -692,86 +767,114 @@ Aj : array
     CSR index array.
 Ax : array
     CSR data array (edge lengths).
+c : array
+    Cluster center.
 d : array, inplace
     Distance to nearest center.
-cm : array, inplace
+m : array, inplace
     Cluster index for each node.
+p : array, inplace
+    Predecssor on the shortest path to center.
+
+Notes
+-----
+- There are no checks within this kernel.
+- Ax is assumed to be positive
+
+Initializations::
+
+ - d[i] = 0 if i is a center, else inf
+ - m[i] = 0 .. num_clusters if in a cluster, else -1
+ - p[i] = -1
+
+See Also
+--------
+pyamg.graph.bellman_ford
 
 References
 ----------
 .. [1] Bellman-Ford Wikipedia: http://en.wikipedia.org/wiki/Bellman-Ford_algorithm)pbdoc");
 
-    m.def("lloyd_cluster", &_lloyd_cluster<int, int>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_clusters"), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert());
-    m.def("lloyd_cluster", &_lloyd_cluster<int, float>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_clusters"), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert());
-    m.def("lloyd_cluster", &_lloyd_cluster<int, double>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_clusters"), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert(),
+    m.def("bellman_ford_balanced", &_bellman_ford_balanced<int, int>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("tiebreaking"));
+    m.def("bellman_ford_balanced", &_bellman_ford_balanced<int, float>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("tiebreaking"));
+    m.def("bellman_ford_balanced", &_bellman_ford_balanced<int, double>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("tiebreaking"),
 R"pbdoc(
-Perform one iteration of Lloyd clustering on a distance graph.
+Bellman-Ford with a heuristic to balance cluster sizes
+
+ This version is modified to break distance ties by assigning nodes
+ to the cluster with the fewest points, while preserving cluster
+ connectivity. This results in more balanced cluster sizes.
+
+ Parameters
+ ----------
+  num_nodes  : (IN) number of nodes (number of rows in A)
+  Ap[]       : (IN) CSR row pointer for A                              (num_nodes x 1)
+  Aj[]       : (IN) CSR column index for A                             (num_edges x 1)
+  Ax[]       : (IN) CSR data array (edge weights)                      (num_edges x 1)
+   c         : (INOUT) cluster center                                  (num_clusters x 1)
+   d         : (INOUT) distance to cluster center                      (num_nodes x 1)
+   m         : (INOUT) cluster index                                   (num_nodes x 1)
+   p         : (INOUT) predecessor on shortest path to center          (num_nodes x 1)
+   pc        : (INOUT) number of predecessors                          (num_nodes x 1)
+   s         : (INOUT) cluster size                                    (num_clusters x 1)
+
+ Notes
+ -----
+ - There are no checks within this kernel.
+ - Ax > 0 is assumed
+
+ Initializations
+ ---------------
+ d[i] = 0 if i is a center, else 0
+ m[i] = 0, ..., nclusters if i is in a cluster, else -1
+ p = -1
+ pc = 0
+ s = 1
+
+ See Also
+ --------
+ pyamg.graph.bellman_ford)pbdoc");
+
+    m.def("most_interior_nodes", &_most_interior_nodes<int, int>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert());
+    m.def("most_interior_nodes", &_most_interior_nodes<int, float>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert());
+    m.def("most_interior_nodes", &_most_interior_nodes<int, double>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(),
+R"pbdoc(
+Find the most interior nodes.
 
 Parameters
 ----------
 num_nodes : int
     Number of nodes (number of rows in A).
 Ap : array
-    CSR row pointer for adjacency matrix A.
+    CSR row pointer for adjacency matrix A, (num_nodes, 1).
 Aj : array
-    CSR index array.
+    CSR index array, (num_edges, 1).
 Ax : array
-    CSR data array (edge lengths).
-num_clusters : int
-    Number of clusters (seeds).
+    CSR data array (edge lengths), (num_edges, 1).
+c : array, num_cluster
+    Cluster centers, (num_clusters, 1).
 d : array, num_nodes
-    Distance to nearest seed.
-cm : array, num_nodes
-    Cluster index for each node.
-c : array, num_clusters
-    Cluster centers.
+    Distance to nearest seed, (num_nodes, 1).
+m : array, num_nodes
+    Cluster index for each node, (num_nodes, 1).
+p : array
+    Predecessor on shortest path to center, (num_nodes, 1).
+
+Notes
+-----
+- There are no checks within this kernel.
+- Ax is assumed to be positive
 
 References
 ----------
 .. [Bell2008] Nathan Bell, Algebraic Multigrid for Discrete Differential Forms
    PhD thesis (UIUC), August 2008.)pbdoc");
-
-    m.def("lloyd_cluster_exact", &_lloyd_cluster_exact<int, int>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_clusters"), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert());
-    m.def("lloyd_cluster_exact", &_lloyd_cluster_exact<int, float>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_clusters"), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert());
-    m.def("lloyd_cluster_exact", &_lloyd_cluster_exact<int, double>,
-        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("num_clusters"), py::arg("d").noconvert(), py::arg("cm").noconvert(), py::arg("c").noconvert(),
-R"pbdoc(
-Perform one iteration of Lloyd clustering on a distance graph using exact centers.
-
-Parameters
-----------
-num_nodes : int
-    Number of rows in A (number of vertices).
-Ap : array
-    CSR row pointer.
-Aj : array
-    CSR index array.
-Ax : array
-    CSR data array (edge lengths).
-num_clusters : int
-    Number of clusters = number of seeds.
-d : array, num_nodes
-    Distance to nearest seed.
-cm : array, num_nodes
-    Cluster index for each node.
-c : array, num_clusters
-    Cluster centers.
-
-Returns
--------
-None
-    In place.
-
-Notes
------
-This version computes exact cluster centers with Floyd-Warshall and
-also uses a balanced version of Bellman-Ford to try and find
-nearly-equal-sized clusters.)pbdoc");
 
     m.def("maximal_independent_set_k_parallel", &_maximal_independent_set_k_parallel<int, int, double>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("k"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("max_iters"),
