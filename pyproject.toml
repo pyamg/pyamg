@@ -168,3 +168,8 @@ omit = [
     "pyamg/amg_core/bindthem.py",
     "pyamg/gallery/demo.py",
 ]
+
+[tool.pytest.ini_options]
+addopts = [
+    "--ignore=pyamg/amg_core/bindthem.py",
+]
