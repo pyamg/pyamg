@@ -189,9 +189,7 @@ def PMIS(S):
     del S, T
 
     splitting = MIS(G, weights)
-    print(splitting)
     _set_dirichlet(G, splitting)
-    print(splitting)
 
     return splitting
 
@@ -449,7 +447,8 @@ def _preprocess(S, coloring_method=None):
 
     return (weights, G, S, T)
 
+
 def _set_dirichlet(G, splitting):
     # For rows of zero-length (Dirichlet), set as Fine.
-    I = np.where(np.diff(G.indptr)==0)[0]
+    I = np.where(np.diff(G.indptr) == 0)[0]
     splitting[I] = 0
