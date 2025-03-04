@@ -297,7 +297,7 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
 
     # Improve candidates
     if B.shape[1] > 1 and improvement_iters > 0:
-        b = np.zeros((A.shape[0], 1), dtype=A.dtype)
+        b = np.zeros_like(B[:, 0])
         for _i in range(improvement_iters):
             for j in range(B.shape[1]):
                 # Run a V-cycle built on everything except candidate j, while
