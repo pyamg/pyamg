@@ -311,12 +311,12 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
 
 
 def _determine_num_aggs(n, ratio=None, num_aggs=None, default_ratio=0.1):
-    """Compute number of aggregates when given either a ratio or an explicit value"""
+    """Compute number of aggregates when given either a ratio or an explicit value."""
     if ratio is None and num_aggs is None:
         ratio = default_ratio
 
     if ratio is not None and num_aggs is not None:
-        warnings.warn('both ratio and num_aggs specified, using num_aggs...')
+        warn('both ratio and num_aggs specified, using num_aggs...')
 
     if num_aggs is not None:
         if num_aggs < 1 or num_aggs >= n:
