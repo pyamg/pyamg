@@ -310,7 +310,26 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
     return T, Cpts
 
 
-def lloyd_aggregation(C, ratio=0.1, measure='unit', maxiter=5):
+def _determine_num_aggs(n, ratio=None, num_aggs=None, default_ratio=0.1):
+    """Compute number of aggregates when given either a ratio or an explicit value"""
+    if ratio is None and num_aggs is None:
+        ratio = default_ratio
+
+    if ratio is not None and num_aggs is not None:
+        warnings.warn('both ratio and num_aggs specified, using num_aggs...')
+
+    if num_aggs is not None:
+        if num_aggs < 1 or num_aggs >= n:
+            raise ValueError('num_aggs must be in the range 1 <= num_aggs < n')
+        return num_aggs
+
+    if ratio is not None:
+        if ratio < 0 or ratio > 1:
+            raise ValueError('ratio must be > 0.0 and <= 1.0')
+        return int(min(max(ratio * n, 1), n))
+
+
+def lloyd_aggregation(C, ratio=None, num_aggs=None, measure='unit', maxiter=5):
     """Aggregate nodes using Lloyd Clustering.
 
     Parameters
@@ -318,8 +337,10 @@ def lloyd_aggregation(C, ratio=0.1, measure='unit', maxiter=5):
     C : csr_array
         Strength of connection matrix.
     ratio : scalar
-        Fraction of nodes to be aggregate (centers).  ratio=0.1 is
-        a coarsening by 10.
+        Fraction of nodes to be aggregated (centers).  ratio=0.1 is
+        a coarsening by 10 (optional, either this or num_aggs should be specified)
+    num_aggs : integer
+        Number of aggregates to use. (optional, either this or ratio should be specified)
     measure : ['unit','abs','inv',None]
         Distance measure to use and assigned to each edge graph.
 
@@ -374,11 +395,8 @@ def lloyd_aggregation(C, ratio=0.1, measure='unit', maxiter=5):
     if C.shape[0] != C.shape[1]:
         raise ValueError('graph should be a square matrix.')
 
-    if ratio <= 0 or ratio > 1:
-        raise ValueError('ratio must be > 0.0 and <= 1.0')
-
     n = C.shape[0]
-    naggs = int(min(max(ratio * n, 1), n))
+    naggs = _determine_num_aggs(n, ratio, num_aggs, default_ratio=0.1)
 
     data = C.data
 
@@ -421,8 +439,8 @@ def lloyd_aggregation(C, ratio=0.1, measure='unit', maxiter=5):
     return AggOp, centers
 
 
-def balanced_lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5,
-                               rebalance_iters=5, pad=None, A=None):
+def balanced_lloyd_aggregation(C, ratio=None, num_aggs=None, measure=None,
+                               maxiter=5, rebalance_iters=5, pad=None, A=None):
     """Aggregate nodes using Balanced Lloyd Clustering.
 
     Parameters
@@ -430,10 +448,10 @@ def balanced_lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5,
     C : csr_array
         Strength of connection matrix with positive weights.
     ratio : scalar
-        Fraction of nodes to be aggregate (centers).  ``ratio=0.1`` is
-        a coarsening by 10.
-    naggs : int
-        Number of aggregates or clusters expected (default: ``C.shape[0] / 10``)
+        Fraction of nodes to be aggregated (centers).  ratio=0.1 is
+        a coarsening by 10 (optional, either this or num_aggs should be specified)
+    num_aggs : integer
+        Number of aggregates to use. (optional, either this or ratio should be specified)
     measure : ['unit','abs','inv',None]
         Distance measure to use and assigned to each edge graph.
 
@@ -504,11 +522,8 @@ def balanced_lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5,
     if not sparse.issparse(C) or C.format not in ('csc', 'csr'):
         raise TypeError('expected csr_array or csc_array')
 
-    if ratio <= 0 or ratio > 1:
-        raise ValueError('ratio must be > 0.0 and <= 1.0')
-
     n = C.shape[0]
-    naggs = int(min(max(ratio * n, 1), n))
+    naggs = _determine_num_aggs(n, ratio, num_aggs, default_ratio=0.1)
 
     if pad is not None and measure == 'inv':
         if A is None:
@@ -560,7 +575,7 @@ def balanced_lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5,
     return AggOp, centers
 
 
-def metis_aggregation(C, ratio=0.1, measure=None):
+def metis_aggregation(C, ratio=None, num_aggs=None, measure=None):
     """Aggregate nodes using a METIS partition.
 
     Parameters
@@ -569,7 +584,9 @@ def metis_aggregation(C, ratio=0.1, measure=None):
         strength of connection matrix
     ratio : scalar
         Fraction of nodes to be aggregated (centers).  ratio=0.1 is
-        a coarsening by 10
+        a coarsening by 10 (optional, either this or num_aggs should be specified)
+    num_aggs : integer
+        Number of aggregates to use. (optional, either this or ratio should be specified)
     measure : ['unit','abs','inv',None]
         Distance measure to use and assigned to each edge graph.  METIS
         requires integer weights.  None, simply convert to integer (rounding up).
@@ -600,11 +617,8 @@ def metis_aggregation(C, ratio=0.1, measure=None):
     if C.shape[0] != C.shape[1]:
         raise ValueError('graph should be a square matrix.')
 
-    if ratio <= 0 or ratio > 1:
-        raise ValueError('ratio must be > 0.0 and <= 1.0')
-
     n = C.shape[0]
-    naggs = int(min(max(ratio * n, 1), n))
+    naggs = _determine_num_aggs(n, ratio, num_aggs, default_ratio=0.1)
 
     if measure is None:
         data = np.ceil(C.data).astype(np.int32)
