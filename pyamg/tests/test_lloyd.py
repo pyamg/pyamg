@@ -218,3 +218,61 @@ def test_balanced_lloyd_laplacian_bystep(construct_graph_laplacian):
     # >>Check Pass 0 center_nodes
     assert_array_equal(centers, [1, 5])
     assert not changed
+
+
+def test_rebalance():
+    #          c        c <- centers
+    # 0--1--2--3--4--5--6 <- graph
+    # x  x  x  x  x  x  o <- cluster id
+    # nearest neigbor unit distance
+    G = sparse.diags_array([1., 0, 1], offsets=[-1, 0, 1], shape=(7, 7)).tocsr()
+    c = np.array([3, 6], dtype=np.int32)
+    m = np.array([0, 0, 0, 0, 0, 0, 1], dtype=np.int32)
+    d = np.array([3, 2, 1, 0, 1, 2, 0], dtype=np.float64)
+    dist_all = np.empty((2, 40), dtype=np.float64)
+    dist_all.fill(np.inf)
+    dist_all[0, :36] = np.array([
+        0, 1, 2, 3, 4, 5,
+        1, 0, 1, 2, 3, 4,
+        2, 1, 0, 1, 2, 3,
+        3, 2, 1, 0, 1, 2,
+        4, 3, 2, 1, 0, 1,
+        5, 4, 3, 2, 1, 0], dtype=np.float64)
+    dist_all[1, [0]] = np.array([0])
+
+    # elimination penalty
+    # cluster 0:
+    # 6^2 + 5^2 + 4^2 + 3^2 + 2^2 + 1^2
+    # - (3^2 + 2^2 + 1^2 + 0^2 + 1^2 + 2^2)
+    # = 72
+    # cluster 1:
+    # 3**2 - 0**2
+    # = 9
+    E = pyamg.graph._elimination_penalty(G, m, d, dist_all, num_clusters=2)
+    np.testing.assert_array_equal(E, [72, 9])
+
+    # split improvement
+    # initial: [3^2 + 2^2 + 1^2 + 0^2 + 1^2 + 2^2, 0^2] = [19, 0]
+    # cluster 0 split:
+    #     center 1:  - (1^2 + 0^2 + 1^2)
+    #     center 4:  - (1^2 + 0^2 + 1^2)
+    # S[0] = 19 - 4 = 15
+    # S[1] = 0 (unchanged sinnce cluster size == 1)
+    S, c1, c2 = pyamg.graph._split_improvement(m, d, dist_all, num_clusters=2)
+    np.testing.assert_array_equal(S, [15, 0])
+    np.testing.assert_array_equal(c1, [1, 6])
+    np.testing.assert_array_equal(c2, [4, 6])
+    print(c1, c2)
+
+    # rebalance
+    # new centers: 1, 4 (from above)
+    newc, rebalance_change = \
+    pyamg.graph._rebalance(
+        G=G,
+        c=c,
+        m=m,
+        d=d,
+        dist_all=dist_all,
+        num_clusters=2)
+    np.testing.assert_array_equal(np.sort(newc), [1, 4])
+    assert rebalance_change
