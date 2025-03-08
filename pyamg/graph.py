@@ -532,7 +532,7 @@ def _elimination_penalty(A, m, d, dist_all, num_clusters):
         for iloc, _ in enumerate(Va):
             dmin = np.inf
             for jloc, j in enumerate(Va):
-                for k in Acol.getcol(j).indices:
+                for k in Acol[:, [j]].indices:
                     if m[k] != m[j]:
                         jiloc = jloc * N + iloc
                         dmin = min(d[k] + A[k, j] + dist_all[a, jiloc], dmin)
@@ -547,8 +547,8 @@ def _split_improvement(m, d, dist_all, num_clusters):
     see _rebalance()
     """
     S = np.inf * np.ones(num_clusters)
-    I = -1 * np.ones(num_clusters)  # better cluster centers if split
-    J = -1 * np.ones(num_clusters)  # better cluster centers if split
+    I = -1 * np.ones(num_clusters, dtype=np.int32)  # better cluster centers if split
+    J = -1 * np.ones(num_clusters, dtype=np.int32)  # better cluster centers if split
     for a in range(num_clusters):
         S[a] = np.inf
         Va = np.int32(np.where(m == a)[0])
