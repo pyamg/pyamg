@@ -31,10 +31,10 @@ def _interpolation1d(nc, nf):
     return 0.5 * P
 
 
-def geoamg_solver(A: sp.sparse.base.spmatrix,
-                  cpts_list: list[NDArray],
-                  C_list: list[sp.sparse.base.spmatrix],
-                  interpolation: Union[str, tuple[str, dict[str, Any]]] = 'classical',
+def geoamg_solver(A,
+                  cpts_list,
+                  interpolation= 'classical',
+                  C_list=None,
                   presmoother=('gauss_seidel', {'sweep': 'symmetric'}),
                   postsmoother=('gauss_seidel', {'sweep': 'symmetric'}),
                   keep=False, **kwargs):
@@ -46,10 +46,14 @@ def geoamg_solver(A: sp.sparse.base.spmatrix,
         Square matrix in CSR format
     cpts_list : list of ndarray
         A list of C-points for each level
-    C_list : list of csr_array
-        A list of strong connections for each level
     interpolation : str, default 'classical'
         Method for interpolation. Options include 'direct', 'classical'.
+        If one provides theta as a SOC argument, SOC is recomputed for
+        interpolation, so C_list is not needed and/or used.
+    C_list : list of csr_array
+        Optional list of strong connections for each level used in
+        computing interpolation. If not provided, SOC is computed in
+        interpolation routine.
     presmoother : str or dict
         Method used for presmoothing at each level.  Method-specific parameters
         may be passed in using a tuple, e.g.
@@ -73,6 +77,12 @@ def geoamg_solver(A: sp.sparse.base.spmatrix,
 
     """
     levels = [MultilevelSolver.Level()]
+    nlevels = len(cpts_list)
+    if C_list is None:
+        C_list = [None]*nlevels
+    else:
+        if len(cpts_list) != len(C_list)
+            raise ValueError('C_list length does not match cpts_list length')
 
     # convert A to csr
     if not sparse.issparse(A) or A.format != 'csr':
@@ -92,6 +102,16 @@ def geoamg_solver(A: sp.sparse.base.spmatrix,
     for _, (cpts, C) in enumerate(zip(cpts_list, C_list)):
 
         A = levels[-1].A
+        if C is not None:
+            if not sparse.issparse(C) or C.format != 'csr':
+                try:
+                    C = sparse.csr_array(C)
+                    warn('Implicit conversion of C to CSR', sparse.SparseEfficiencyWarning)
+                except Exception as e:
+                    raise TypeError('Argument C[l] must have type csr_array, '
+                                    'or be convertible to csr_array') from e
+            if C.shape[0] != C.shape[1] or C.shape[0] != A.shape[0]
+                raise ValueError('expected square SOCNmatrix matching A')
 
         splitting = np.zeros(A.shape[0], dtype=np.int32)
         splitting[cpts] = True

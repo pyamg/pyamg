@@ -53,13 +53,19 @@ def direct_interpolation(A, C, splitting, theta=None, norm='min'):
     if not issparse(A) or A.format != 'csr':
         raise TypeError('expected csr_array for A')
 
-    if not issparse(C) or C.format != 'csr':
-        raise TypeError('expected csr_array for C')
+    if (C is not None) and (not issparse(C) or C.format != 'csr'):
+        raise TypeError('Expected csr_array SOC matrix, C.')
+
+    nc = np.sum(splitting)
+    n = A.shape[0]
 
     if theta is not None:
         C = classical_strength_of_connection(A, theta=theta, norm=norm)
+    elif C is None:
+        C = classical_strength_of_connection(A, theta=0.25, norm=norm)
     else:
         C = C.copy()
+
     C.eliminate_zeros()
 
     # Interpolation weights are computed based on entries in A, but subject to the
@@ -132,7 +138,7 @@ def classical_interpolation(A, C, splitting, theta=None, norm='min', modified=Tr
     if not issparse(A) or A.format != 'csr':
         raise TypeError('expected csr_array for A')
 
-    if not issparse(C) or C.format != 'csr':
+    if (C is not None) and (not issparse(C) or C.format != 'csr'):
         raise TypeError('Expected csr_array SOC matrix, C.')
 
     nc = np.sum(splitting)
@@ -140,6 +146,8 @@ def classical_interpolation(A, C, splitting, theta=None, norm='min', modified=Tr
 
     if theta is not None:
         C = classical_strength_of_connection(A, theta=theta, norm=norm)
+    elif C is None:
+        C = classical_strength_of_connection(A, theta=0.25, norm=norm)
     else:
         C = C.copy()
 
