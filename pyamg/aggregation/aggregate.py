@@ -552,7 +552,7 @@ def balanced_lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5,
     if clusters.min() < 0:
         warn('Lloyd clustering did not cluster every point')
 
-    row = (clusters >= 0).nonzero()[0]
+    row = (clusters >= 0).nonzero()[0].astype(C.indices.dtype)
     col = clusters[row]
     data = np.ones(len(row), dtype=np.int32)
     AggOp = sparse.coo_array((data, (row, col)), shape=(n, naggs)).tocsr()
@@ -629,7 +629,7 @@ def metis_aggregation(C, ratio=0.1, measure=None):
     if len(parts) != n:
         warn('METIS aggregation encountered a point that is unaggregated.')
 
-    row = (parts >= 0).nonzero()[0]
+    row = (parts >= 0).nonzero()[0].astype(C.indices.dtype)
     col = parts[row]
     data = np.ones(len(row), dtype=np.int32)
     AggOp = sparse.coo_array((data, (row, col)), shape=(n, naggs)).tocsr()
