@@ -15,7 +15,7 @@ from pyamg.strength import classical_strength_of_connection, \
     algebraic_distance, affinity_distance
 from .aggregate import standard_aggregation, naive_aggregation,\
     lloyd_aggregation, balanced_lloyd_aggregation,\
-    metis_aggregation, pairwise_aggregation
+    metis_aggregation, mis_aggregation, pairwise_aggregation
 from .tentative import fit_candidates
 from .smooth import jacobi_prolongation_smoother, \
     richardson_prolongation_smoother, energy_prolongation_smoother
@@ -349,6 +349,8 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
         AggOp, Cnodes = balanced_lloyd_aggregation(C, **kwargs)
     elif fn == 'metis':
         AggOp = metis_aggregation(C, **kwargs)
+    elif fn == 'mis':
+        AggOp, Cnodes = mis_aggregation(C, **kwargs)
     elif fn == 'pairwise':
         AggOp = pairwise_aggregation(A, **kwargs)[0]
     elif fn == 'predefined':

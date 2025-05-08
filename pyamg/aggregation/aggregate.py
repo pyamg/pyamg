@@ -5,7 +5,7 @@ from warnings import warn
 import numpy as np
 from scipy import sparse
 from .. import amg_core
-from ..graph import lloyd_cluster, balanced_lloyd_cluster, metis_partition
+from ..graph import lloyd_cluster, balanced_lloyd_cluster, metis_partition, maximal_independent_set
 from ..strength import classical_strength_of_connection
 
 
@@ -635,3 +635,59 @@ def metis_aggregation(C, ratio=0.1, measure=None):
     AggOp = sparse.coo_array((data, (row, col)), shape=(n, naggs)).tocsr()
 
     return AggOp
+
+def mis_aggregation(C):
+    """Compute the sparsity pattern of the tentative prolongator using MIS-2.
+
+    Parameters
+    ----------
+    C : csr_array
+        Strength of connection matrix.
+
+    Returns
+    -------
+    csr_array
+        Aggregation operator which determines the sparsity pattern
+        of the tentative prolongator.
+    array
+        Array of Cpts, i.e., Cpts[i] = root node of aggregate i.
+
+    See Also
+    --------
+    standard_aggregation
+
+    """
+    if not sparse.issparse(C) or C.format != 'csr':
+        raise TypeError('expected csr_array')
+
+    if C.shape[0] != C.shape[1]:
+        raise ValueError('expected square matrix')
+
+    index_type = C.indptr.dtype
+    num_rows = C.shape[0]
+
+    mis = maximal_independent_set(C, k=2)
+
+    Cpts = np.int32(np.where(mis==1)[0])
+    v = -1 * np.ones(C.shape[0], dtype=np.int32)
+    v[Cpts] = np.arange(len(Cpts))
+    
+    for cid, c in enumerate(Cpts):
+        nbrs = C[[c],:].indices
+        v[nbrs] = cid
+    unassigned = np.int32(np.where(v==-1)[0])
+    for c in unassigned:
+        nbrs = C[[c],:].indices
+        v[c] = v[nbrs].max()
+    assert len(np.where(v==-1)[0])==0
+    
+    n = C.shape[0]
+    naggs = len(Cpts)
+    clusters = v
+    
+    row = (clusters >= 0).nonzero()[0].astype(C.indices.dtype)
+    col = clusters[row]
+    
+    data = np.ones(len(row), dtype=np.int32)
+    AggOp= sparse.coo_array((data, (row, col)), shape=(n, naggs)).tocsr()
+    return AggOp, Cpts
