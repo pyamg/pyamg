@@ -143,7 +143,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
         warnings.warn(msg, DeprecationWarning, stacklevel=1)
 
     # Convert inputs to linear system, with error checking
-    A, M, x, b, postprocess = make_system(A, M, x0, b)
+    A, M, x, b = make_system(A, M, x0, b)
     n = A.shape[0]
 
     # Ensure that warnings are always reissued from this function
@@ -186,7 +186,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
     # Is this a one dimensional matrix?
     if n == 1:
         entry = np.ravel(A @ np.array([1.0], dtype=x.dtype))
-        return (postprocess(b/entry), 0)
+        return (b/entry, 0)
 
     # Prep for method
     r = b - A @ x
@@ -207,7 +207,7 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
 
     # set the stopping criteria (see the docstring)
     if normr < tol * normMb:
-        return (postprocess(x), 0)
+        return (x, 0)
 
     # Use separate variable to track iterations.  If convergence fails, we
     # cannot simply report niter = (outer-1)*max_outer + inner.  Numerical
@@ -331,12 +331,12 @@ def gmres_mgs(A, b, x0=None, tol=1e-5,
             change = np.max(np.abs(update[indices] / x[indices]))
             if change < 1e-12:
                 # No change, halt
-                return (postprocess(x), -1)
+                return (x, -1)
 
         # test for convergence
         if normr < tol * normMb:
-            return (postprocess(x), 0)
+            return (x, 0)
 
     # end outer loop
 
-    return (postprocess(x), niter)
+    return (x, niter)

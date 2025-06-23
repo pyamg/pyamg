@@ -84,7 +84,7 @@ def cg(A, b, x0=None, tol=1e-5, criteria='rr',
 
     """
     # Convert inputs to linear system, with error checking
-    A, M, x, b, postprocess = make_system(A, M, x0, b)
+    A, M, x, b = make_system(A, M, x0, b)
 
     # Ensure that warnings are always reissued from this function
     warnings.filterwarnings('always', module='pyamg.krylov._cg')
@@ -132,7 +132,7 @@ def cg(A, b, x0=None, tol=1e-5, criteria='rr',
         raise ValueError('Invalid stopping criteria.')
 
     if normr < rtol:
-        return (postprocess(x), 0)
+        return (x, 0)
 
     # How often should r be recomputed
     recompute_r = 8
@@ -146,7 +146,7 @@ def cg(A, b, x0=None, tol=1e-5, criteria='rr',
         pAp = np.inner(Ap.conjugate(), p)         # check curvature of A
         if pAp < 0.0:
             warn('\nIndefinite matrix detected in CG, aborting\n')
-            return (postprocess(x), -1)
+            return (x, -1)
 
         alpha = rz/pAp                            # 3
         x += alpha * p                            # 4
@@ -161,7 +161,7 @@ def cg(A, b, x0=None, tol=1e-5, criteria='rr',
 
         if rz < 0.0:                             # check curvature of M
             warn('\nIndefinite preconditioner detected in CG, aborting\n')
-            return (postprocess(x), -1)
+            return (x, -1)
 
         beta = rz/rz_old                          # 7
         p *= beta                                 # 8
@@ -190,7 +190,7 @@ def cg(A, b, x0=None, tol=1e-5, criteria='rr',
             rtol = tol
 
         if normr < rtol:
-            return (postprocess(x), 0)
+            return (x, 0)
 
         if it == maxiter:
-            return (postprocess(x), it)
+            return (x, it)

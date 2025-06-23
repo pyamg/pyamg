@@ -84,7 +84,7 @@ def cr(A, b, x0=None, tol=1e-5, criteria='rr',
     6.54282
 
     """
-    A, M, x, b, postprocess = make_system(A, M, x0, b)
+    A, M, x, b = make_system(A, M, x0, b)
 
     # Ensure that warnings are always reissued from this function
     warnings.filterwarnings('always', module='pyamg.krylov._cr')
@@ -130,7 +130,7 @@ def cr(A, b, x0=None, tol=1e-5, criteria='rr',
         raise ValueError('Invalid stopping criteria.')
 
     if normr < rtol:
-        return (postprocess(x), 0)
+        return (x, 0)
 
     # How often should r be recomputed
     recompute_r = 8
@@ -188,12 +188,12 @@ def cr(A, b, x0=None, tol=1e-5, criteria='rr',
             rtol = tol * normMb
 
         if normr < rtol:
-            return (postprocess(x), 0)
+            return (x, 0)
 
         if zz == 0.0:
             # rz == 0.0 is an indicator of convergence when r = 0.0
             warn('\nSingular preconditioner detected in CR, ceasing iterations\n')
-            return (postprocess(x), -1)
+            return (x, -1)
 
         if it == maxiter:
-            return (postprocess(x), it)
+            return (x, it)

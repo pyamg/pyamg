@@ -92,7 +92,7 @@ def minimal_residual(A, b, x0=None, tol=1e-5,
     7.26369
 
     """
-    A, M, x, b, postprocess = make_system(A, M, x0, b)
+    A, M, x, b = make_system(A, M, x0, b)
 
     # Ensure that warnings are always reissued from this function
     warnings.filterwarnings('always', module='pyamg.krylov._minimal_residual')
@@ -121,7 +121,7 @@ def minimal_residual(A, b, x0=None, tol=1e-5,
 
     # set the stopping criteria (see the docstring)
     if normr < tol * normMb:
-        return (postprocess(x), 0)
+        return (x, 0)
 
     # How often should r be recomputed
     recompute_r = 50
@@ -135,7 +135,7 @@ def minimal_residual(A, b, x0=None, tol=1e-5,
         pz = np.inner(p.conjugate(), z)  # check curvature of M^-1 A
         if pz < 0.0:
             warn('\nIndefinite matrix detected in minimal residual, stopping.\n')
-            return (postprocess(x), -1)
+            return (x, -1)
 
         alpha = pz / np.inner(p.conjugate(), p)
         x = x + alpha * z
@@ -157,7 +157,7 @@ def minimal_residual(A, b, x0=None, tol=1e-5,
 
         # set the stopping criteria (see the docstring)
         if normr < tol * normMb:
-            return (postprocess(x), 0)
+            return (x, 0)
 
         if it == maxiter:
-            return (postprocess(x), it)
+            return (x, it)
