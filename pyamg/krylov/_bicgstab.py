@@ -81,7 +81,7 @@ def bicgstab(A, b, x0=None, tol=1e-5, criteria='rr',
 
     """
     # Convert inputs to linear system, with error checking
-    A, M, x, b, postprocess = make_system(A, M, x0, b)
+    A, M, x, b = make_system(A, M, x0, b)
 
     # Ensure that warnings are always reissued from this function
     warnings.filterwarnings('always', module='pyamg.krylov._bicgstab')
@@ -120,13 +120,13 @@ def bicgstab(A, b, x0=None, tol=1e-5, criteria='rr',
         raise ValueError('Invalid stopping criteria.')
 
     if normr < rtol:
-        return (postprocess(x), 0)
+        return (x, 0)
 
     # Is thisAa one dimensional matrix?
     # Use a matvec to access A[0,0]
     if A.shape[0] == 1:
         entry = np.ravel(A @ np.array([1.0], dtype=x.dtype))
-        return (postprocess(b/entry), 0)
+        return (b/entry, 0)
 
     rstar = r.copy()
     p = r.copy()
@@ -182,7 +182,7 @@ def bicgstab(A, b, x0=None, tol=1e-5, criteria='rr',
             rtol = tol * (normA * np.linalg.norm(x) + normb)
 
         if normr < rtol:
-            return (postprocess(x), 0)
+            return (x, 0)
 
         if it == maxiter:
-            return (postprocess(x), it)
+            return (x, it)

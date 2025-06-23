@@ -89,7 +89,7 @@ def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
     7.89436
 
     """
-    A, M, x, b, postprocess = make_system(A, M, x0, b)
+    A, M, x, b = make_system(A, M, x0, b)
 
     # Ensure that warnings are always reissued from this function
     warnings.filterwarnings('always', module='pyamg.krylov._steepest_descent')
@@ -146,7 +146,7 @@ def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
         zAz = np.inner(z.conjugate(), q)                # check curvature of A
         if zAz < 0.0:
             warn('\nIndefinite matrix detected in steepest descent, aborting\n')
-            return (postprocess(x), -1)
+            return (x, -1)
 
         alpha = rz / zAz                            # step size
         x = x + alpha * z
@@ -162,7 +162,7 @@ def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
 
         if rz < 0.0:                                # check curvature of M
             warn('\nIndefinite preconditioner detected in steepest descent, stopping.\n')
-            return (postprocess(x), -1)
+            return (x, -1)
 
         normr = norm(r)
 
@@ -185,13 +185,13 @@ def steepest_descent(A, b, x0=None, tol=1e-5, criteria='rr',
             rtol = tol
 
         if normr < rtol:
-            return (postprocess(x), 0)
+            return (x, 0)
 
         if rz == 0.0:
             # important to test after testing normr < tol. rz == 0.0 is an
             # indicator of convergence when r = 0.0
             warn('\nSingular preconditioner detected in steepest descent, stopping.\n')
-            return (postprocess(x), -1)
+            return (x, -1)
 
         if it == maxiter:
-            return (postprocess(x), it)
+            return (x, it)

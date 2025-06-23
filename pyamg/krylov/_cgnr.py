@@ -94,7 +94,7 @@ def cgnr(A, b, x0=None, tol=1e-5, criteria='rr',
         AH = aslinearoperator(np.asarray(A).conj().T)
 
     # Convert inputs to linear system, with error checking
-    A, M, x, b, postprocess = make_system(A, M, x0, b)
+    A, M, x, b = make_system(A, M, x0, b)
     n = A.shape[0]
 
     # Ensure that warnings are always reissued from this function
@@ -155,7 +155,7 @@ def cgnr(A, b, x0=None, tol=1e-5, criteria='rr',
         raise ValueError('Invalid stopping criteria.')
 
     if normr < rtol:
-        return (postprocess(x), 0)
+        return (x, 0)
 
     # Begin CGNR
 
@@ -214,7 +214,7 @@ def cgnr(A, b, x0=None, tol=1e-5, criteria='rr',
             rtol = tol
 
         if normr < rtol:
-            return (postprocess(x), 0)
+            return (x, 0)
 
         if it == maxiter:
-            return (postprocess(x), it)
+            return (x, it)
