@@ -1,15 +1,84 @@
 [build-system]
-build-backend = "setuptools.build_meta"
+build-backend = "mesonpy"
 requires = [
-    "setuptools>=42",
-    "setuptools_scm[toml]==8.3.0",
-    "pybind11>=2.8.0",
+    "meson-python",
+    "pybind11>=2.12.0,<3.0.0a0",
+    "numpy>=2.0.0,<3.0.0a0",
     "wheel",
+    "versioningit",
 ]
 
-[tool.setuptools_scm]
-version_scheme = "no-guess-dev"
-version_file = "pyamg/version.py"
+[project]
+name = "pyamg"
+dynamic = ["version"]
+authors = [
+    {name = "Nathan Bell"},
+    {name = "Luke Olson", email = "luke.olson@gmail.com"},
+    {name = "Jacob Schroder"},
+    {name = "Ben Southworth"},
+]
+maintainers = [
+    {name = "Luke Olson", email = "luke.olson@gmail.com"},
+    {name = "Jacob Schroder"},
+    {name = "Ben Southworth"},
+]
+description = "PyAMG: Algebraic Multigrid Solvers in Python"
+readme = "README.md"
+license = {text = "MIT License"}
+keywords = ["algebraic multigrid", "AMG", "sparse matrix", "preconditioning"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: C++",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Education",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "numpy",
+    "scipy>=1.11.0"
+]
+
+[project.optional-dependencies]
+build = [
+    "meson-python",
+    "meson",
+    "ninja",
+    "pybind11",
+]
+style = [
+    "ruff",
+]
+test = [
+    "pytest",
+]
+
+[project.urls]
+Homepage = "https://github.com/pyamg/pyamg"
+Documentation = "https://pyamg.readthedocs.io"
+Repository = "https://github.com/pyamg/pyamg.git"
+Issues = "https://github.com/pyamg/pyamg/issues"
+Changelog = "https://github.com/pyamg/pyamg/blob/main/changelog.md"
+
+[tool.versioningit.next-version]
+method = "smallest"
+
+[tool.versioningit.format]
+distance = "{next_version}.dev{distance}+{vcs}{rev}"
+dirty = "{base_version}+d{build_date:%Y%m%d}"
+distance-dirty = "{next_version}.dev{distance}+{vcs}{rev}.d{build_date:%Y%m%d}"
 
 [tool.ruff]
 line-length = 92
@@ -87,3 +156,15 @@ ignore-names = [
 docstring-quotes = "double"
 inline-quotes = "single"
 multiline-quotes = "double"
+
+[tool.coverage.run]
+branch = true
+source = [
+    "pyamg",
+]
+omit = [
+    "*tests/*",
+    "*__init__.py",
+    "pyamg/amg_core/bindthem.py",
+    "pyamg/gallery/demo.py",
+]
