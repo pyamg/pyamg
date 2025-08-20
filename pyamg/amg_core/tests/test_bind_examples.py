@@ -107,25 +107,29 @@ class TestVectors(TestCase):
         J = np.array([1, 1, 1], dtype=np.int8)
         x = np.array([1.0, 2.0, 3.0], dtype=np.float32)
 
-        pytest.raises(TypeError, g.test10, J, x)
+        with pytest.raises(TypeError):
+            g.test10(J, x)
 
     def test_10g(self):
         # int64, float32  (should FAIL on downconvert)
         J = np.array([1, 1, 1], dtype=np.int64)
         x = np.array([1.0, 2.0, 3.0], dtype=np.float32)
 
-        pytest.raises(TypeError, g.test10, J, x)
+        with pytest.raises(TypeError):
+            g.test10(J, x)
 
     def test_10h(self):
         # int32, float16  (should FAIL on upconvert)
         J = np.array([1, 1, 1], dtype=np.int32)
         x = np.array([1.0, 2.0, 3.0], dtype=np.float16)
 
-        pytest.raises(TypeError, g.test10, J, x)
+        with pytest.raises(TypeError):
+            g.test10(J, x)
 
     def test_10i(self):
         # int64, float32  (should FAIL on downconvert)
         J = np.array([1, 1, 1], dtype=np.int64)
         x = np.array([1.0, 2.0, 3.0], dtype=np.float64)
 
-        pytest.raises(TypeError, g.test10, J, x)
+        with pytest.raises(TypeError):
+            g.test10(J, x)
