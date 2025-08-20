@@ -12,15 +12,15 @@ from scipy.linalg import eigvals
 from scipy.sparse._sparsetools import (csr_scale_rows, bsr_scale_rows,
                                        csr_scale_columns, bsr_scale_columns)
 
-# pylint: disable=unused-import
-from scipy.sparse.linalg._isolve.utils import make_system  # noqa: F401
+from scipy.sparse.linalg._isolve.utils import make_system
 from scipy.sparse._sputils import upcast
 
 from .. import amg_core
 from . import linalg
 
+
 def fix_returns(func):
-    """Decorator to address change in scipy 1.16.0.
+    """Decorate make_system to address change in scipy 1.16.0.
 
     Notes
     -----
@@ -28,7 +28,8 @@ def fix_returns(func):
      - Before 1.16.0: `A,M,x,b,postprocess = make_system(A,M,x0,b)`
      - Since 1.16.0: `A,M,x,b = make_system(A,M,x0,b)`
      - This decorator handles both (returning only 4 args)
-     - FIXME: Can be removed when we bump to scipy>=1.16.0
+     - TODO: Can be removed when we bump to scipy>=1.16.0
+
     """
     @functools.wraps(func)
     def wrapper_fix_returns(*args, **kwargs):
@@ -38,7 +39,9 @@ def fix_returns(func):
         return ret[:4]
     return wrapper_fix_returns
 
+
 make_system = fix_returns(make_system)
+
 
 def get_blocksize(A):
     """Return the block size of a matrix."""
