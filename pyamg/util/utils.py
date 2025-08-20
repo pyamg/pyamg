@@ -34,8 +34,6 @@ def fix_returns(func):
     @functools.wraps(func)
     def wrapper_fix_returns(*args, **kwargs):
         ret = func(*args, **kwargs)
-        if len(ret) == 4:
-            return ret
         return ret[:4]
     return wrapper_fix_returns
 
