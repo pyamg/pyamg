@@ -1,5 +1,6 @@
 """General utility functions for pyamg."""
 
+import functools
 from warnings import warn
 
 import numpy as np
@@ -18,6 +19,26 @@ from scipy.sparse._sputils import upcast
 from .. import amg_core
 from . import linalg
 
+def fix_returns(func):
+    """Decorator to address change in scipy 1.16.0.
+
+    Notes
+    -----
+     - https://github.com/scipy/scipy/pull/22064
+     - Before 1.16.0: `A,M,x,b,postprocess = make_system(A,M,x0,b)`
+     - Since 1.16.0: `A,M,x,b = make_system(A,M,x0,b)`
+     - This decorator handles both (returning only 4 args)
+     - FIXME: Can be removed when we bump to scipy>=1.16.0
+    """
+    @functools.wraps(func)
+    def wrapper_fix_returns(*args, **kwargs):
+        ret = func(*args, **kwargs)
+        if len(ret) == 4:
+            return ret
+        return ret[:4]
+    return wrapper_fix_returns
+
+make_system = fix_returns(make_system)
 
 def get_blocksize(A):
     """Return the block size of a matrix."""
