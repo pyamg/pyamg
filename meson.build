@@ -4,6 +4,8 @@ project('pyamg', 'cpp',
   default_options: ['cpp_std=c++11'],
 )
 
+add_global_arguments('-ftemplate-depth=2048', language: 'cpp')
+
 amg_core_headers = ['air',
                     'evolution_strength',
                     'graph',
