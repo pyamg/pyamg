@@ -2,6 +2,21 @@
 
 A summary of changes for PyAMG.
 
+## [5.3.0]
+- add python 3.10-3.13
+- handle new/old scipy return args in make_system
+- add generalized Lloyd aggregation
+- fix/replace scipy sparse calls
+- fix docstrings throughout
+- fix SOR bug
+- drop pylint, use ruff for linting
+- change names [bc]sr_matrix -> [bc]sr_array, etc.
+- use @ for mat-vecs
+- expand testing
+- add pymetis to opt requirements; skip testing if unavailable
+- add option to remove dirichlet portion
+- add Floyd-Warshall and tests
+
 ## [5.2.1]
 - update wheel building and versioning
 
