@@ -16,20 +16,20 @@ jobs:
       fail-fast: false
       matrix:
         # macos-13 is an intel runner, macos-14 is apple silicon
-        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
+        os: [ubuntu-latest, windows-latest, macos-13, macos-latest]
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           # uncomment to force a wheel build
-          ref: v5.2.1
+          # ref: v5.3.0
           fetch-depth: 0
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.21.3
+        uses: pypa/cibuildwheel@v3.1.4
         env:
-          CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-* cp313-*"
+          CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-*"
           CIBW_SKIP: pp*
           CIBW_ARCHS_MACOS: "auto"
           CIBW_ARCHS_WINDOWS: "AMD64 x86"
@@ -39,7 +39,7 @@ jobs:
       - name: Save wheels
         uses: actions/upload-artifact@v4
         with:
-          name: artifact-${{ matrix.os }}
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
 
   build_sdist:
@@ -47,10 +47,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           # uncomment to force a wheel build
-          ref: v5.2.1
+          #ref: v5.3.0
           fetch-depth: 0
 
       - name: Install pypa/build
@@ -62,27 +62,23 @@ jobs:
       - name: Save sdist
         uses: actions/upload-artifact@v4
         with:
-          name: artifact-sdist
+          name: cibw-sdist
           path: dist/*.tar.gz
 
   upload_all:
     name: upload to PyPI
     needs: [build_wheels, build_sdist]
+    environment: publish_pypi
     runs-on: ubuntu-latest
-    environment:
-      name: publish_pypi
-      url: https://pypi.org/p/pyamg
-    permissions:
-      id-token: write
     steps:
     - name: retrieve artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
       with:
-        pattern: artifact-*
-        merge-multiple: true
+        pattern: cibw-*
         path: dist
+        merge-multiple: true
     - name: publish to pypi
-      uses: pypa/gh-action-pypi-publish@v1.9.0
+      uses: pypa/gh-action-pypi-publish@release/v1
       with:
         # uncomment to force a wheel build
-        skip-existing: true
+        # skip-existing: true
