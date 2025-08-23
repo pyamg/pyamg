@@ -80,5 +80,5 @@ jobs:
     - name: publish to pypi
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        # uncomment to force a wheel build
-        # skip-existing: true
+        # switch to true to overwrite upload
+        skip-existing: false
