@@ -68,6 +68,8 @@ jobs:
     name: upload to PyPI
     needs: [build_wheels, build_sdist]
     environment: publish_pypi
+    permissions:
+          id-token: write
     runs-on: ubuntu-latest
     steps:
     - name: retrieve artifacts
