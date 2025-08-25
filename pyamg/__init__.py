@@ -16,6 +16,7 @@ from .classical import ruge_stuben_solver, air_solver
 from .aggregation import smoothed_aggregation_solver, rootnode_solver, pairwise_solver
 from .gallery import demo
 from .blackbox import solve, solver, solver_configuration
+from .schwarz import least_squares_solver
 
 __all__ = [
     'MultilevelSolver',
@@ -32,6 +33,7 @@ __all__ = [
     'graph',
     'graph_ref',
     'krylov',
+    'least_squares_solver',
     'multilevel',
     'multilevel_solver',
     'pairwise_solver',

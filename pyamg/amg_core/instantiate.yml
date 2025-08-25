@@ -111,6 +111,7 @@ instantiate:
     - [int, "std::complex<double>"]
   functions:
     - csr_matvec
+    - local_outer_product
 
 - types:
     - [int, int]
