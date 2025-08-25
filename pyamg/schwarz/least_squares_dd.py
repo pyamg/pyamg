@@ -124,13 +124,20 @@ def least_squares_dd_solver(B, BT=None, A=None,
         pre_smoother = ('schwarz')
         post_smoother = pre_smoother
     ml = MultilevelSolver(levels, **kwargs)
-    
-    change_smoothers(ml, pre_smoother, post_smoother)
+
+    t0 = time.perf_counter()
+
+    ### DEBUG: test other pointwise smoothers
     # pre_smoother = ('gauss_seidel', {'sweep': 'symmetric'})
     # post_smoother = ('gauss_seidel', {'sweep': 'symmetric'})
     # pre_smoother = ('jacobi')
     # post_smoother = ('jacobi')
+    
     change_smoothers(ml, pre_smoother, post_smoother)
+    
+    t1 = time.perf_counter()
+    print("Smoother setup time = ", t1 - t0)
+
     return ml
 
 
@@ -155,6 +162,8 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold, diagon
     C = abs(A).tocsr()
     for i in range(C.data.shape[0]):
         C.data[i] = 1.0
+
+    t0 = time.perf_counter()
 
     # Compute the aggregation matrix AggOp (i.e., the nodal coarsening of A).
     # AggOp is a boolean matrix, where the sparsity pattern for the k-th column
@@ -204,6 +213,9 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold, diagon
     blocksize = np.zeros(levels[-1].N, dtype=np.int32)
     v_row_mult = np.zeros(B.shape[0])
 
+    t1 = time.perf_counter()
+    print("Aggregation time = ", t1 - t0)
+
     t0 = time.perf_counter()
 
     nodes_vs_subdomains_r = []
@@ -218,7 +230,7 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold, diagon
             # Get the subdomain
             levels[-1].overlapping_subdomain[i].append(
                 A.indices[A.indptr[j]:A.indptr[j + 1]])
-        # print(levels[-1].overlapping_subdomain[i])
+
         levels[-1].overlapping_subdomain[i] = np.concatenate(
             levels[-1].overlapping_subdomain[i], dtype=np.int32)
         levels[-1].overlapping_subdomain[i] = np.unique(
@@ -236,11 +248,13 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold, diagon
         v_row_mult[levels[-1].overlapping_rows[i]] += 1
         
         blocksize[i] = len(levels[-1].overlapping_subdomain[i])
+        
         # Loop over the subdomain and get the PoU
         v_mult[levels[-1].overlapping_subdomain[i]] += 1
         nodes_vs_subdomains_r.append(levels[-1].overlapping_subdomain[i])
         nodes_vs_subdomains_c.append(i*np.ones(len(levels[-1].overlapping_subdomain[i]), dtype=np.int32))
         nodes_vs_subdomains_v.append(np.ones(len(levels[-1].overlapping_subdomain[i])))
+    
     nodes_vs_subdomains_r = np.concatenate(nodes_vs_subdomains_r, dtype=np.int32)
     nodes_vs_subdomains_c = np.concatenate(nodes_vs_subdomains_c, dtype=np.int32)
     nodes_vs_subdomains_v = np.concatenate(nodes_vs_subdomains_v, dtype=np.float64)
@@ -266,7 +280,7 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold, diagon
         levels[-1].PoU[i] = np.array(levels[-1].PoU[i])
 
     t1 = time.perf_counter()
-    print("Aggregation time = ", t1 - t0)
+    print("Agg processing time = ", t1 - t0)
 
     t0 = time.perf_counter()
 
@@ -304,37 +318,38 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold, diagon
 
     t0 = time.perf_counter()
 
-    # loop over subdomains
     BTT = BT.T.conjugate().tocsr()
     ### Hussam's original python implementation
     ### This ended up being a serious bottleneck
-    for i in range(levels[-1].N):
-        bi = _extract_row_block(B,levels[-1].overlapping_rows[i])
-        bit = _extract_row_block(BTT,levels[-1].overlapping_rows[i])
-        bit = bit.T.conjugate()
-        a = bit @ bi
-        a = a.tocsr()
-        a.sort_indices()
-        b = levels[-1].auxiliary[levels[-1].submatrices_ptr[i]:levels[-1].submatrices_ptr[i+1]]
-        
-        levels[-1].auxiliary[levels[-1].submatrices_ptr[i]:levels[-1].submatrices_ptr[i+1]] = \
-            extract_diagonal_block(a, levels[-1].overlapping_subdomain[i]).flatten()
-
-    # rows_indptr = np.zeros(levels[-1].N+1, dtype=np.int32)
-    # cols_indptr = np.zeros(levels[-1].N+1, dtype=np.int32)
+    # loop over subdomains
     # for i in range(levels[-1].N):
-    #     rows_indptr[i+1] = rows_indptr[i] + len(levels[-1].overlapping_rows[i])
-    #     cols_indptr[i+1] = cols_indptr[i] + len(levels[-1].overlapping_subdomain[i])
+    #     bi = _extract_row_block(B,levels[-1].overlapping_rows[i])
+    #     bit = _extract_row_block(BTT,levels[-1].overlapping_rows[i])
+    #     bit = bit.T.conjugate()
+    #     a = bit @ bi
+    #     a = a.tocsr()
+    #     a.sort_indices()
+    #     b = levels[-1].auxiliary[levels[-1].submatrices_ptr[i]:levels[-1].submatrices_ptr[i+1]]
+        
+    #     levels[-1].auxiliary[levels[-1].submatrices_ptr[i]:levels[-1].submatrices_ptr[i+1]] = \
+    #         extract_diagonal_block(a, levels[-1].overlapping_subdomain[i]).flatten()
 
-    # rows_flat = np.concatenate(levels[-1].overlapping_rows).astype(np.int32, copy=False)
-    # cols_flat = np.concatenate(levels[-1].overlapping_subdomain).astype(np.int32, copy=False)
-    # amg_core.local_outer_product(
-    #     B.shape[0], B.shape[1],
-    #     B.indptr, B.indices, B.data,
-    #     BTT.indptr, BTT.indices, BTT.data,
-    #     rows_flat, rows_indptr,
-    #     cols_flat, cols_indptr,
-    #     levels[-1].auxiliary, levels[-1].submatrices_ptr)
+    # amg_core C++ implementation of extracting local subdomains
+    rows_indptr = np.zeros(levels[-1].N+1, dtype=np.int32)
+    cols_indptr = np.zeros(levels[-1].N+1, dtype=np.int32)
+    for i in range(levels[-1].N):
+        rows_indptr[i+1] = rows_indptr[i] + len(levels[-1].overlapping_rows[i])
+        cols_indptr[i+1] = cols_indptr[i] + len(levels[-1].overlapping_subdomain[i])
+
+    rows_flat = np.concatenate(levels[-1].overlapping_rows).astype(np.int32, copy=False)
+    cols_flat = np.concatenate(levels[-1].overlapping_subdomain).astype(np.int32, copy=False)
+    amg_core.local_outer_product(
+        B.shape[0], B.shape[1],
+        B.indptr, B.indices, B.data,
+        BTT.indptr, BTT.indices, BTT.data,
+        rows_flat, rows_indptr,
+        cols_flat, cols_indptr,
+        levels[-1].auxiliary, levels[-1].submatrices_ptr)
 
     if threshold is None:
         levels[-1].threshold = max(0.1,((kappa/levels[-1].number_of_colors) - 1)/ levels[-1].multiplicity)
@@ -348,7 +363,7 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold, diagon
     levels[-1].min_ev = 1e12
     
     t1 = time.perf_counter()
-    print("loop 1 time = ", t1 - t0)
+    print("Extract subdomain time = ", t1 - t0)
 
     t0 = time.perf_counter()
     for i in range(levels[-1].N):
@@ -408,7 +423,7 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold, diagon
     levels[-1].R = levels[-1].P.T.conjugate().tocsr()
 
     t1 = time.perf_counter()
-    print("loop 2 time = ", t1 - t0)
+    print("Construct P time = ", t1 - t0)
 
     t0 = time.perf_counter()
     B = B @ levels[-1].P
