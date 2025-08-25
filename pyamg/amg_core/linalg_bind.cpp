@@ -112,6 +112,67 @@ void _filter_matrix_rows(
                                        );
 }
 
+template <class I, class T>
+void _local_outer_product(
+                 I n_rows,
+                 I n_cols,
+      py::array_t<I> & Bp,
+      py::array_t<I> & Bj,
+      py::array_t<T> & Bx,
+    py::array_t<I> & BTTp,
+    py::array_t<I> & BTTj,
+    py::array_t<T> & BTTx,
+py::array_t<I> & rows_flat,
+py::array_t<I> & rows_indptr,
+py::array_t<I> & cols_flat,
+py::array_t<I> & cols_indptr,
+py::array_t<T> & aux_flat,
+py::array_t<I> & aux_indptr
+                          )
+{
+    auto py_Bp = Bp.unchecked();
+    auto py_Bj = Bj.unchecked();
+    auto py_Bx = Bx.unchecked();
+    auto py_BTTp = BTTp.unchecked();
+    auto py_BTTj = BTTj.unchecked();
+    auto py_BTTx = BTTx.unchecked();
+    auto py_rows_flat = rows_flat.unchecked();
+    auto py_rows_indptr = rows_indptr.unchecked();
+    auto py_cols_flat = cols_flat.unchecked();
+    auto py_cols_indptr = cols_indptr.unchecked();
+    auto py_aux_flat = aux_flat.mutable_unchecked();
+    auto py_aux_indptr = aux_indptr.mutable_unchecked();
+    const I *_Bp = py_Bp.data();
+    const I *_Bj = py_Bj.data();
+    const T *_Bx = py_Bx.data();
+    const I *_BTTp = py_BTTp.data();
+    const I *_BTTj = py_BTTj.data();
+    const T *_BTTx = py_BTTx.data();
+    const I *_rows_flat = py_rows_flat.data();
+    const I *_rows_indptr = py_rows_indptr.data();
+    const I *_cols_flat = py_cols_flat.data();
+    const I *_cols_indptr = py_cols_indptr.data();
+    T *_aux_flat = py_aux_flat.mutable_data();
+    I *_aux_indptr = py_aux_indptr.mutable_data();
+
+    return local_outer_product <I, T>(
+                   n_rows,
+                   n_cols,
+                      _Bp, Bp.shape(0),
+                      _Bj, Bj.shape(0),
+                      _Bx, Bx.shape(0),
+                    _BTTp, BTTp.shape(0),
+                    _BTTj, BTTj.shape(0),
+                    _BTTx, BTTx.shape(0),
+               _rows_flat, rows_flat.shape(0),
+             _rows_indptr, rows_indptr.shape(0),
+               _cols_flat, cols_flat.shape(0),
+             _cols_indptr, cols_indptr.shape(0),
+                _aux_flat, aux_flat.shape(0),
+              _aux_indptr, aux_indptr.shape(0)
+                                      );
+}
+
 PYBIND11_MODULE(linalg, m) {
     m.doc() = R"pbdoc(
     Pybind11 bindings for linalg.h
@@ -153,6 +214,7 @@ PYBIND11_MODULE(linalg, m) {
     csc_scale_columns
     csc_scale_rows
     filter_matrix_rows
+    local_outer_product
     )pbdoc";
 
     py::options options;
@@ -276,6 +338,17 @@ Returns
 -------
 None
     Nothing, Ax is modified in place.)pbdoc");
+
+    m.def("local_outer_product", &_local_outer_product<int, float>,
+        py::arg("n_rows"), py::arg("n_cols"), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert(), py::arg("BTTp").noconvert(), py::arg("BTTj").noconvert(), py::arg("BTTx").noconvert(), py::arg("rows_flat").noconvert(), py::arg("rows_indptr").noconvert(), py::arg("cols_flat").noconvert(), py::arg("cols_indptr").noconvert(), py::arg("aux_flat").noconvert(), py::arg("aux_indptr").noconvert());
+    m.def("local_outer_product", &_local_outer_product<int, double>,
+        py::arg("n_rows"), py::arg("n_cols"), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert(), py::arg("BTTp").noconvert(), py::arg("BTTj").noconvert(), py::arg("BTTx").noconvert(), py::arg("rows_flat").noconvert(), py::arg("rows_indptr").noconvert(), py::arg("cols_flat").noconvert(), py::arg("cols_indptr").noconvert(), py::arg("aux_flat").noconvert(), py::arg("aux_indptr").noconvert());
+    m.def("local_outer_product", &_local_outer_product<int, std::complex<float>>,
+        py::arg("n_rows"), py::arg("n_cols"), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert(), py::arg("BTTp").noconvert(), py::arg("BTTj").noconvert(), py::arg("BTTx").noconvert(), py::arg("rows_flat").noconvert(), py::arg("rows_indptr").noconvert(), py::arg("cols_flat").noconvert(), py::arg("cols_indptr").noconvert(), py::arg("aux_flat").noconvert(), py::arg("aux_indptr").noconvert());
+    m.def("local_outer_product", &_local_outer_product<int, std::complex<double>>,
+        py::arg("n_rows"), py::arg("n_cols"), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert(), py::arg("BTTp").noconvert(), py::arg("BTTj").noconvert(), py::arg("BTTx").noconvert(), py::arg("rows_flat").noconvert(), py::arg("rows_indptr").noconvert(), py::arg("cols_flat").noconvert(), py::arg("cols_indptr").noconvert(), py::arg("aux_flat").noconvert(), py::arg("aux_indptr").noconvert(),
+R"pbdoc(
+)pbdoc");
 
 }
 

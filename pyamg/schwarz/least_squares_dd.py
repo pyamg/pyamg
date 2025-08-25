@@ -306,26 +306,35 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold, diagon
 
     # loop over subdomains
     BTT = BT.T.conjugate().tocsr()
+    ### Hussam's original python implementation
+    ### This ended up being a serious bottleneck
     for i in range(levels[-1].N):
         bi = _extract_row_block(B,levels[-1].overlapping_rows[i])
         bit = _extract_row_block(BTT,levels[-1].overlapping_rows[i])
         bit = bit.T.conjugate()
-        
         a = bit @ bi
         a = a.tocsr()
         a.sort_indices()
         b = levels[-1].auxiliary[levels[-1].submatrices_ptr[i]:levels[-1].submatrices_ptr[i+1]]
-        # amg_core.extract_subblocks(a.indptr,a.indices, a.data, b,\
-        #                             [0,b.shape[0]], levels[-1].overlapping_subdomain[i], \
-        #                                 [0, len(levels[-1].overlapping_subdomain[i])], \
-        #                                 1, A.shape[0])
-        # b
         
-        levels[-1].auxiliary[levels[-1].submatrices_ptr[i]:levels[-1].submatrices_ptr[i+1]] = extract_diagonal_block(a, levels[-1].overlapping_subdomain[i]).flatten()
-        # levels[-1].auxiliary[levels[-1].submatrices_ptr[i]:levels[-1].submatrices_ptr[i+1]] = bb
-    
-        pdb.set_trace()
+        levels[-1].auxiliary[levels[-1].submatrices_ptr[i]:levels[-1].submatrices_ptr[i+1]] = \
+            extract_diagonal_block(a, levels[-1].overlapping_subdomain[i]).flatten()
 
+    # rows_indptr = np.zeros(levels[-1].N+1, dtype=np.int32)
+    # cols_indptr = np.zeros(levels[-1].N+1, dtype=np.int32)
+    # for i in range(levels[-1].N):
+    #     rows_indptr[i+1] = rows_indptr[i] + len(levels[-1].overlapping_rows[i])
+    #     cols_indptr[i+1] = cols_indptr[i] + len(levels[-1].overlapping_subdomain[i])
+
+    # rows_flat = np.concatenate(levels[-1].overlapping_rows).astype(np.int32, copy=False)
+    # cols_flat = np.concatenate(levels[-1].overlapping_subdomain).astype(np.int32, copy=False)
+    # amg_core.local_outer_product(
+    #     B.shape[0], B.shape[1],
+    #     B.indptr, B.indices, B.data,
+    #     BTT.indptr, BTT.indices, BTT.data,
+    #     rows_flat, rows_indptr,
+    #     cols_flat, cols_indptr,
+    #     levels[-1].auxiliary, levels[-1].submatrices_ptr)
 
     if threshold is None:
         levels[-1].threshold = max(0.1,((kappa/levels[-1].number_of_colors) - 1)/ levels[-1].multiplicity)

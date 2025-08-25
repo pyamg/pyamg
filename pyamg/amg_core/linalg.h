@@ -1538,8 +1538,8 @@ void local_outer_product(
     I aux_indptr[], const int aux_indptr_size)
 {
     // Views
-    CSRView<T> Bv{ n_rows, n_cols, Bp, Bj, Bx };
-    CSRView<T> BTTv{ n_rows, n_cols, BTTp, BTTj, BTTx };
+    CSRView<I,T> Bv{ n_rows, n_cols, Bp, Bj, Bx };
+    CSRView<I,T> BTTv{ n_rows, n_cols, BTTp, BTTj, BTTx };
 
     const I* R = &rows_flat[0];
     const I* Rptr = &rows_indptr[0];
@@ -1549,10 +1549,10 @@ void local_outer_product(
     T* out = &aux_flat[0];
     const I* Aptr = &aux_indptr[0];
 
-    const I K = static_cast<I>(rows_indptr.size()) - 1;
-    if (K != static_cast<I>(cols_indptr.size()) - 1 ||
-        K != static_cast<I>(aux_indptr.size())  - 1) {
-        throw std::invalid_argument("rows_indptr, cols_indptr, aux_indptr must have same K");
+    const I K = static_cast<I>(rows_indptr_size) - 1;
+    if (K != static_cast<I>(cols_indptr_size) - 1 ||
+        K != static_cast<I>(aux_indptr_size)  - 1) {
+        throw std::invalid_argument("rows_indptr, cols_indptr, aux_indptr must have same size");
     }
 
     // scratch buffers per row

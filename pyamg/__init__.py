@@ -8,7 +8,7 @@ import scipy as sp
 from .version import version_tuple as __version_tuple__
 from .version import version as __version__
 
-from . import (aggregation, amg_core, classical, gallery, krylov, relaxation, util, vis)
+from . import (aggregation, amg_core, classical, gallery, krylov, relaxation, schwarz, util, vis)
 from . import (blackbox, graph, graph_ref, multilevel, strength)
 
 from .multilevel import coarse_grid_solver, multilevel_solver, MultilevelSolver
@@ -16,7 +16,7 @@ from .classical import ruge_stuben_solver, air_solver
 from .aggregation import smoothed_aggregation_solver, rootnode_solver, pairwise_solver
 from .gallery import demo
 from .blackbox import solve, solver, solver_configuration
-from .schwarz import least_squares_solver
+from .schwarz import least_squares_dd_solver
 
 __all__ = [
     'MultilevelSolver',
