@@ -5,11 +5,12 @@ from warnings import warn
 import numpy as np
 from scipy.sparse import csr_array, issparse, SparseEfficiencyWarning, coo_array, csc_array, hstack
 from scipy.linalg import eig, eigh
+from copy import deepcopy
 
 from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.util.utils import eliminate_diag_dom_nodes, get_blocksize, asfptype, \
-    levelize_strength_or_aggregation, levelize_smooth_or_improve_candidates
+    levelize_strength_or_aggregation, levelize_smooth_or_improve_candidates, filter_matrix_rows
 from pyamg.strength import classical_strength_of_connection, \
     symmetric_strength_of_connection, evolution_strength_of_connection, \
     energy_based_strength_of_connection, distance_strength_of_connection, \
@@ -24,19 +25,18 @@ import time
 
 
 def least_squares_dd_solver(B, BT=None, A=None,
-                                       symmetry='hermitian', 
-                                       strength='symmetric',
-                                       aggregate='standard',
-                                       presmoother=('basic'),
-                                       postsmoother=('basic'),
-                                       kappa=500,
-                                       nev=None,
-                                       threshold=None,
-                                       max_levels=10, max_coarse=10,
-                                       diagonal_dominance=False,
-                                       filteringA=0.0,
-                                       filteringB=0.0,
-                                       keep=False, **kwargs):
+                            symmetry='hermitian', 
+                            strength=None,
+                            aggregate='standard',
+                            kappa=500,
+                            nev=None,
+                            threshold=None,
+                            min_coarsening=None,
+                            max_levels=10, max_coarse=100,
+                            diagonal_dominance=False,
+                            filteringA=(False,0),
+                            filteringB=(False,0),
+                            **kwargs):
     if A is not None:
         A_provided = True
         if not issparse(A) or A.format not in ('csr'):
@@ -81,7 +81,6 @@ def least_squares_dd_solver(B, BT=None, A=None,
     A = asfptype(A)
     A = A.tocsr()
     
-    
     if symmetry not in ('symmetric', 'hermitian', 'nonsymmetric'):
         raise ValueError('Expected "symmetric", "nonsymmetric" or "hermitian" '
                          'for the symmetry parameter ')
@@ -96,9 +95,6 @@ def least_squares_dd_solver(B, BT=None, A=None,
         levelize_strength_or_aggregation(strength, max_levels, max_coarse)
     max_levels, max_coarse, aggregate =\
         levelize_strength_or_aggregation(aggregate, max_levels, max_coarse)
-    # improve_candidates =\
-    #     levelize_smooth_or_improve_candidates(improve_candidates, max_levels)
-    # smooth = levelize_smooth_or_improve_candidates(smooth, max_levels)
 
     # Construct multilevel structure
     levels = []
@@ -112,8 +108,10 @@ def least_squares_dd_solver(B, BT=None, A=None,
     pre_smoother = []
     post_smoother = []
     while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
-        _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold, diagonal_dominance, filteringA,filteringB, keep)
-        print("Hierarchy extended")
+        print("N = {}, sparsity = {:.4g}".format( \
+            levels[-1].A.shape[0], len(levels[-1].A.data) / (levels[-1].A.shape[0] ** 2)))
+        _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold, min_coarsening, diagonal_dominance, filteringA,filteringB)
+        # print("Hierarchy extended")
         sm = ('schwarz', {'subdomain': levels[-2].subdomain, 'subdomain_ptr': levels[-2].subdomain_ptr, 'iterations':2 if len(pre_smoother)>0 else 1, 'sweep':'symmetric'})
         pre_smoother.append(sm)
         sm = ('schwarz', {'subdomain': levels[-2].subdomain, 'subdomain_ptr': levels[-2].subdomain_ptr, 'iterations':2 if len(post_smoother)>0 else 1, 'sweep':'symmetric'})
@@ -132,7 +130,7 @@ def least_squares_dd_solver(B, BT=None, A=None,
     # post_smoother = ('gauss_seidel', {'sweep': 'symmetric'})
     # pre_smoother = ('jacobi')
     # post_smoother = ('jacobi')
-    
+
     change_smoothers(ml, pre_smoother, post_smoother)
     
     t1 = time.perf_counter()
@@ -141,7 +139,9 @@ def least_squares_dd_solver(B, BT=None, A=None,
     return ml
 
 
-def _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold, diagonal_dominance, filteringA, filteringB, keep=True):
+def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
+    threshold, min_coarsening, diagonal_dominance, filteringA, \
+    filteringB):
     """Extend the multigrid hierarchy.
 
     Service routine to implement the strength of connection, aggregation,
@@ -157,13 +157,56 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold, diagon
     A = levels[-1].A
     B = levels[-1].B
     BT = levels[-1].BT
+    # Filter operator.
+    if len(levels) > 1:
+        if (filteringB is not None) and (filteringB[1] != 0):
+            print("B NNZ before filtering", len(B.data))
+            print("BT NNZ before filtering", len(BT.data))
+            filter_matrix_rows(B, filteringB[1], diagonal=True, lump=filteringB[0])
+            filter_matrix_rows(BT, filteringB[1], diagonal=True, lump=filteringB[0])
+            print("B NNZ after filtering", len(B.data))
+            print("BT NNZ after filtering", len(BT.data))
 
-    # Partition the graph
-    C = abs(A).tocsr()
-    for i in range(C.data.shape[0]):
-        C.data[i] = 1.0
+        if (filteringA is not None) and (filteringA[1] != 0):
+            print("A NNZ before filtering", len(A.data))
+            filter_matrix_rows(A, filteringA[1], diagonal=True, lump=filteringA[0])
+            print("B NNZ after filtering", len(B.data))
 
     t0 = time.perf_counter()
+
+    # Compute the strength-of-connection matrix C, where larger
+    # C[i,j] denote stronger couplings between i and j.
+    fn, kwargs = unpack_arg(strength[len(levels)-1])
+    if fn == 'symmetric':
+        C = symmetric_strength_of_connection(A, **kwargs)
+    elif fn == 'classical':
+        C = classical_strength_of_connection(A, **kwargs)
+    elif fn == 'distance':
+        C = distance_strength_of_connection(A, **kwargs)
+    elif fn in ('ode', 'evolution'):
+        if 'B' in kwargs:
+            C = evolution_strength_of_connection(A, **kwargs)
+        else:
+            C = evolution_strength_of_connection(A, B, **kwargs)
+    elif fn == 'energy_based':
+        C = energy_based_strength_of_connection(A, **kwargs)
+    elif fn == 'predefined':
+        C = kwargs['C'].tocsr()
+    elif fn == 'algebraic_distance':
+        C = algebraic_distance(A, **kwargs)
+    elif fn == 'affinity':
+        C = affinity_distance(A, **kwargs)
+    ### Hussam's original implementation
+    elif fn is None:
+        C = abs(A).tocsr()
+        C.data[:] = 1.0
+    else:
+        raise ValueError(f'Unrecognized strength of connection method: {fn!s}')
+
+    # Avoid coarsening diagonally dominant rows
+    flag, kwargs = unpack_arg(diagonal_dominance)
+    if flag:
+        C = eliminate_diag_dom_nodes(A, C, **kwargs)
 
     # Compute the aggregation matrix AggOp (i.e., the nodal coarsening of A).
     # AggOp is a boolean matrix, where the sparsity pattern for the k-th column
@@ -214,7 +257,7 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold, diagon
     v_row_mult = np.zeros(B.shape[0])
 
     t1 = time.perf_counter()
-    print("Aggregation time = ", t1 - t0)
+    print("\tAggregation time = {:.4g}".format(t1 - t0))
 
     t0 = time.perf_counter()
 
@@ -267,6 +310,9 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold, diagon
     levels[-1].number_of_colors = max(k_c)    
     levels[-1].multiplicity = max(v_row_mult)
     
+    print("\tMean blocksize = {:.4g}".format(np.mean(blocksize)))
+    print("\tMax blocksize = {:.4g}".format(np.max(blocksize)))
+
     for i in range(levels[-1].N):
         levels[-1].PoU[i] = []
         for j in levels[-1].overlapping_subdomain[i]:
@@ -280,7 +326,7 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold, diagon
         levels[-1].PoU[i] = np.array(levels[-1].PoU[i])
 
     t1 = time.perf_counter()
-    print("Agg processing time = ", t1 - t0)
+    print("\tAgg processing time = {:.4g}".format(t1 - t0))
 
     t0 = time.perf_counter()
 
@@ -305,6 +351,7 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold, diagon
     for i in range(levels[-1].N):
         levels[-1].submatrices_ptr[i+1] = levels[-1].submatrices_ptr[i] + \
             blocksize[i]*blocksize[i]
+
     levels[-1].submatrices = np.zeros(levels[-1].submatrices_ptr[-1],dtype=A.data.dtype)
     amg_core.extract_subblocks(A.indptr, A.indices, A.data, levels[-1].submatrices, \
                                 levels[-1].submatrices_ptr, levels[-1].subdomain, \
@@ -314,27 +361,12 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold, diagon
     levels[-1].auxiliary = np.zeros(levels[-1].submatrices_ptr[-1])
 
     t1 = time.perf_counter()
-    print("POU check time = ", t1 - t0)
+    print("\tPOU check time = {:.4g}".format(t1 - t0))
 
     t0 = time.perf_counter()
 
-    BTT = BT.T.conjugate().tocsr()
-    ### Hussam's original python implementation
-    ### This ended up being a serious bottleneck
-    # loop over subdomains
-    # for i in range(levels[-1].N):
-    #     bi = _extract_row_block(B,levels[-1].overlapping_rows[i])
-    #     bit = _extract_row_block(BTT,levels[-1].overlapping_rows[i])
-    #     bit = bit.T.conjugate()
-    #     a = bit @ bi
-    #     a = a.tocsr()
-    #     a.sort_indices()
-    #     b = levels[-1].auxiliary[levels[-1].submatrices_ptr[i]:levels[-1].submatrices_ptr[i+1]]
-        
-    #     levels[-1].auxiliary[levels[-1].submatrices_ptr[i]:levels[-1].submatrices_ptr[i+1]] = \
-    #         extract_diagonal_block(a, levels[-1].overlapping_subdomain[i]).flatten()
-
     # amg_core C++ implementation of extracting local subdomains
+    BTT = BT.T.conjugate().tocsr()
     rows_indptr = np.zeros(levels[-1].N+1, dtype=np.int32)
     cols_indptr = np.zeros(levels[-1].N+1, dtype=np.int32)
     for i in range(levels[-1].N):
@@ -363,7 +395,7 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold, diagon
     levels[-1].min_ev = 1e12
     
     t1 = time.perf_counter()
-    print("Extract subdomain time = ", t1 - t0)
+    print("\tExtract subdomain time = {:.4g}".format(t1 - t0))
 
     t0 = time.perf_counter()
     for i in range(levels[-1].N):
@@ -379,37 +411,42 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold, diagon
         normbb = np.linalg.norm(bb, ord=2)
         bb = bb + np.eye(bb.shape[0]) * (1e-10*normbb)
         
-        E, V = eigh(dad,bb)
-        # E, V = eig(bb,dad)
-        # E = 1/E
-        if nev is not None:
-            E = E[-nev:]
-            levels[-1].min_ev = min(levels[-1].min_ev, E[-nev])
-            V = V[:,-nev:]
-            levels[-1].nev[i] = nev
+        # Enforce minimum coarsening ratio on per aggregate basis
+        max_ev = bb.shape[0]
+        this_nev = nev
+        if min_coarsening is not None:
+            max_ev = len(levels[-1].nonoverlapping_subdomain[i])//min_coarsening
+        if nev is not None and min_coarsening is not None:
+            this_nev = np.min([nev,max_ev])
+
+        # When possible only compute necessary eigenvalues/vectors
+        if max_ev != bb.shape[0] and max_ev > 0:
+            E, V = eigh(dad,bb,subset_by_index=[bb.shape[0]-max_ev,bb.shape[0]-1])
+        elif max_ev > 0:
+            E, V = eigh(dad,bb)
+
+        if this_nev is not None and this_nev > 0:
+            # NOTE : assumes eigenvalues in increasing order
+            E = E[-this_nev:]
+            levels[-1].min_ev = min(levels[-1].min_ev, E[-this_nev])
+            V = V[:,-this_nev:]
+            levels[-1].nev[i] = this_nev
             for j in range(len(E)):
                 p_r.append(levels[-1].subdomain[levels[-1].subdomain_ptr[i]:levels[-1].subdomain_ptr[i + 1]])
                 p_c.append([counter]*len(levels[-1].subdomain[levels[-1].subdomain_ptr[i]:levels[-1].subdomain_ptr[i + 1]]))
                 counter += 1
                 p_v.append(d@V[:,j])
-        else:
+        elif max_ev > 0:
             counter_nev = 0
-            for j in range(len(E)):
-                # if j == len(E) - 1:
-                #     counter_nev += 1
-                #     levels[-1].min_ev = min(levels[-1].min_ev, E[-1])
-                #     p_r.append(levels[-1].subdomain[levels[-1].subdomain_ptr[i]:levels[-1].subdomain_ptr[i + 1]])
-                #     p_c.append([counter]*len(levels[-1].subdomain[levels[-1].subdomain_ptr[i]:levels[-1].subdomain_ptr[i + 1]]))
-                #     counter += 1
-                #     p_v.append(d@V[:,j])
-                # else:
-                    if E[j] > levels[-1].threshold:
-                        counter_nev += 1
-                        levels[-1].min_ev = min(levels[-1].min_ev, E[j])
-                        p_r.append(levels[-1].subdomain[levels[-1].subdomain_ptr[i]:levels[-1].subdomain_ptr[i + 1]])
-                        p_c.append([counter]*len(levels[-1].subdomain[levels[-1].subdomain_ptr[i]:levels[-1].subdomain_ptr[i + 1]]))
-                        counter += 1
-                        p_v.append(d@V[:,j])
+            # NOTE : assumes eigenvalues in increasing order
+            for j in range(len(E)-1,len(E)-np.min([len(E),max_ev])-1,-1):
+                if E[j] > levels[-1].threshold:
+                    counter_nev += 1
+                    levels[-1].min_ev = min(levels[-1].min_ev, E[j])
+                    p_r.append(levels[-1].subdomain[levels[-1].subdomain_ptr[i]:levels[-1].subdomain_ptr[i + 1]])
+                    p_c.append([counter]*len(levels[-1].subdomain[levels[-1].subdomain_ptr[i]:levels[-1].subdomain_ptr[i + 1]]))
+                    counter += 1
+                    p_v.append(d@V[:,j])
             levels[-1].nev[i] = counter_nev
     if(len(p_r)) == 0:
         p_r = [[0]]
@@ -423,74 +460,26 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold, diagon
     levels[-1].R = levels[-1].P.T.conjugate().tocsr()
 
     t1 = time.perf_counter()
-    print("Construct P time = ", t1 - t0)
+    print("\tConstruct P time = {:.4g}".format(t1 - t0))
 
     t0 = time.perf_counter()
     B = B @ levels[-1].P
     BT = levels[-1].R @ BT
-    if filteringB > 0:
-        norm_fro_B = np.linalg.norm(abs(B.data))
-        print("B NNZ before filtering", len(B.data))
-        # _filter_matrix(B, norm_fro_B * np.sqrt(filtering))
-        _filter_matrix(B, norm_fro_B * (filteringB))
-        B.eliminate_zeros()
-        print("B NNZ after filtering", len(B.data))
-        norm_fro_BT = np.linalg.norm(abs(BT.data))
-        print("BT NNZ before filtering", len(BT.data))
-        # _filter_matrix(BT,norm_fro_BT * np.sqrt(filtering))
-        _filter_matrix(BT,norm_fro_BT * (filteringB))
-        BT.eliminate_zeros()
-        print("BT NNZ after filtering", len(BT.data))
-
     A = BT @ B
-    if filteringA > 0:
-        A = 0.5*(A + A.T.conjugate())
-        print("NNZ before filtering", len(A.data))
-        # norm_fro_A = np.linalg.norm(A.data)
-        norm_fro_A = max(abs(A.data))
-        _filter_matrix(A,norm_fro_A * filteringA)
-        A.eliminate_zeros()
-        print("NNZ after filtering", len(A.data))
 
     t1 = time.perf_counter()
-    print("P^TAP time = ", t1 - t0)
+    print("\tP^TAP time = {:.4g}".format(t1 - t0))
+
+    print("\tAggregate size = {:.3g}".format(AggOp.shape[0]/AggOp.shape[1]))
+    print("\tEigenvectors/agg = {:.3g}".format(np.mean(levels[-1].nev)))
+    print("\tCoarsening ratio = {:.3g}".format(levels[-1].A.shape[0]/A.shape[0]))
 
     levels.append(MultilevelSolver.Level())
     levels[-1].A = A
     levels[-1].B = B
     levels[-1].BT = BT
 
-def _extract_row_block(A, row_idx):
-    """Extract the row block of a sparse matrix A given the row index."""
-    indices = []
-    data = []
-    indptr = [0]
-    for i in range(len(row_idx)):
-        idx = row_idx[i]
-        indptr.append(indptr[i] + A.indptr[idx + 1] - A.indptr[idx])
-        indices.extend(A.indices[A.indptr[idx]:A.indptr[idx + 1]])
-        data.extend(A.data[A.indptr[idx]:A.indptr[idx + 1]])
-    return csr_array((data, indices, indptr), shape=(len(row_idx),A.shape[1]))
-
-def extract_diagonal_block(A, indices):
-    """Extract the diagonal block of a sparse matrix A given the row index."""
-    b = np.zeros((len(indices),len(indices)), dtype=A.data.dtype)
-    for i in range(len(indices)):
-        idx = indices[i]
-        for j in A.indices[A.indptr[idx]:A.indptr[idx + 1]]:
-            if j in indices:
-                jj = np.where(indices == j)[0]
-                b[i,jj] = A.data[A.indptr[idx]:A.indptr[idx + 1]][A.indices[A.indptr[idx]:A.indptr[idx + 1]] == j][0]
-    return b
-
-# def extract_nonzero_block(A, indices):
-#     """Extract the nonzero block of a sparse matrix A given the row index."""
-#     b = np.zeros((len(indices),len(indices)), dtype=A.data.dtype)
-#     for i in range(len(indices)):
-#         idx = indices[i]
-#         for j in A.indices[A.indptr[idx]:A.indptr[idx + 1]]:
-#             b[i,j] = A.data[A.indptr[idx]:A.indptr[idx + 1]][A.indices[A.indptr[idx]:A.indptr[idx + 1]] == j][0]
-#     return b    
+  
 def _remove_empty_columns(A):
     """Remove empty columns from a sparse matrix."""
     if( not issparse(A)):
@@ -523,17 +512,4 @@ def _add_columns_containing_isolated_nodes(A):
         # x[loc_isolated_nodes] += 1
         A = hstack([A,x])
         return A
-        
-def _filter_matrix(A,threshold):
-    if( not issparse(A)):
-        raise TypeError('Argument A must be a sparse matrix')
-    if A.format != 'csc' and A.format != 'csr':
-        raise TypeError('Argument A must be a csc sparse matrix')
-
-    m = len(A.indptr) - 1
-    for i in range(m):
-        for k in range(A.indptr[i],A.indptr[i+1]):
-            if A.indices[k] != i:
-                if abs(A.data[k]) < threshold:
-                    A.data[k] = 0.0
-                    
+              
