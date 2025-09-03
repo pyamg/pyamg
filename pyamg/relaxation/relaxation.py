@@ -1041,6 +1041,7 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
             return A.schwarz_parameters
 
     # Default is to use the overlapping regions defined by A's sparsity pattern
+    A.sort_indices()
     if subdomain is None or subdomain_ptr is None:
         subdomain_ptr = A.indptr.copy()
         subdomain = A.indices.copy()

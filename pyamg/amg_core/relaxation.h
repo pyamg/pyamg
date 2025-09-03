@@ -1301,7 +1301,7 @@ void block_gauss_seidel(const I Ap[], const int Ap_size,
  * Extract diagonal blocks from A and insert into a linear array.
  *
  * This is a helper function for overlapping_schwarz_csr.
- *
+ *              MUST HAVE COLUMN INDICES SORTED
  * Parameters
  * ----------
  * Ap : array
