@@ -32,10 +32,12 @@ def least_squares_dd_solver(B, BT=None, A=None,
                             nev=None,
                             threshold=None,
                             min_coarsening=None,
-                            max_levels=10, max_coarse=100,
+                            max_levels=10,
+                            max_coarse=100,
                             diagonal_dominance=False,
                             filteringA=(False,0),
                             filteringB=(False,0),
+                            max_density=0.1,
                             **kwargs):
     if A is not None:
         A_provided = True
@@ -80,6 +82,8 @@ def least_squares_dd_solver(B, BT=None, A=None,
         A.sort_indices()
     A = asfptype(A)
     A = A.tocsr()
+    A.eliminate_zeros()
+    A.sort_indices()    # THIS IS IMPORTANT
     
     if symmetry not in ('symmetric', 'hermitian', 'nonsymmetric'):
         raise ValueError('Expected "symmetric", "nonsymmetric" or "hermitian" '
@@ -104,17 +108,25 @@ def least_squares_dd_solver(B, BT=None, A=None,
     levels[-1].BT = BT        # A is supposed to be spectrally equivalent to BT B and share the same sparsity pattern
     levels[-1].BT_provided = BT_provided
     levels[-1].A_provided = A_provided
+    levels[-1].density = len(levels[-1].A.data) / (levels[-1].A.shape[0] ** 2)
 
     pre_smoother = []
     post_smoother = []
-    while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
-        print("N = {}, sparsity = {:.4g}".format( \
-            levels[-1].A.shape[0], len(levels[-1].A.data) / (levels[-1].A.shape[0] ** 2)))
-        _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold, min_coarsening, diagonal_dominance, filteringA,filteringB)
+    while len(levels) < max_levels and \
+        levels[-1].A.shape[0] > max_coarse and \
+        levels[-1].density < max_density:
+        print("N = {}, density = {:.4g}".format( \
+            levels[-1].A.shape[0], levels[-1].density))
+        _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold,\
+            min_coarsening, diagonal_dominance, filteringA,filteringB)
         # print("Hierarchy extended")
-        sm = ('schwarz', {'subdomain': levels[-2].subdomain, 'subdomain_ptr': levels[-2].subdomain_ptr, 'iterations':2 if len(pre_smoother)>0 else 1, 'sweep':'symmetric'})
+        sm = ('schwarz', {'subdomain': levels[-2].subdomain,\
+            'subdomain_ptr': levels[-2].subdomain_ptr,\
+            'iterations':1 if len(pre_smoother)>0 else 1, 'sweep':'symmetric'})
         pre_smoother.append(sm)
-        sm = ('schwarz', {'subdomain': levels[-2].subdomain, 'subdomain_ptr': levels[-2].subdomain_ptr, 'iterations':2 if len(post_smoother)>0 else 1, 'sweep':'symmetric'})
+        sm = ('schwarz', {'subdomain': levels[-2].subdomain,\
+            'subdomain_ptr': levels[-2].subdomain_ptr,\
+            'iterations':1 if len(post_smoother)>0 else 1, 'sweep':'symmetric'})
         post_smoother.append(sm)
         # smoother.append(sm)
 
@@ -181,6 +193,9 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
         C = symmetric_strength_of_connection(A, **kwargs)
     elif fn == 'classical':
         C = classical_strength_of_connection(A, **kwargs)
+        test = abs(A).tocsr()
+        # if (np.max(test.indptr-C.indptr) != 0) or (np.max(test.indices-C.indices) != 0):
+        #     import pdb; pdb.set_trace()
     elif fn == 'distance':
         C = distance_strength_of_connection(A, **kwargs)
     elif fn in ('ode', 'evolution'):
@@ -198,20 +213,15 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
         C = affinity_distance(A, **kwargs)
     ### Hussam's original implementation
     elif fn is None:
-        C = abs(A).tocsr()
-        C.data[:] = 1.0
+        C = abs(A.copy()).tocsr()
     else:
         raise ValueError(f'Unrecognized strength of connection method: {fn!s}')
-
-    # Avoid coarsening diagonally dominant rows
-    flag, kwargs = unpack_arg(diagonal_dominance)
-    if flag:
-        C = eliminate_diag_dom_nodes(A, C, **kwargs)
 
     # Compute the aggregation matrix AggOp (i.e., the nodal coarsening of A).
     # AggOp is a boolean matrix, where the sparsity pattern for the k-th column
     # denotes the fine-grid nodes agglomerated into k-th coarse-grid node.
     fn, kwargs = unpack_arg(aggregate[len(levels)-1])
+    C.eliminate_zeros()
     Cnodes = None
     if fn == 'standard':
         AggOp, Cnodes = standard_aggregation(C, **kwargs)
@@ -224,6 +234,7 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
             kwargs['A'] = A
         AggOp, Cnodes = balanced_lloyd_aggregation(C, **kwargs)
     elif fn == 'metis':
+        C.data[:] = 1.0
         if(len(levels) == 1):
             AggOp = metis_aggregation(C, **kwargs)
         else:
@@ -265,13 +276,17 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
     nodes_vs_subdomains_c = []
     nodes_vs_subdomains_v = []
     for i in range(levels[-1].N):
+        # List of aggregate indices for nonoverlapping subdomains
         levels[-1].nonoverlapping_subdomain[i] = np.asarray(
             levels[-1].AggOpT.indices[levels[-1].AggOpT.indptr[i]:levels[-1].AggOpT.indptr[i + 1]], dtype=np.int32)
         levels[-1].nIi[i] = len(levels[-1].nonoverlapping_subdomain[i])
         levels[-1].overlapping_subdomain[i] = []
+
+        # Form overlapping subdomains as all fine-grid neighbors of each coarse aggregate
         for j in levels[-1].nonoverlapping_subdomain[i]:
             # Get the subdomain
             levels[-1].overlapping_subdomain[i].append(
+                # C.indices[C.indptr[j]:C.indptr[j + 1]])
                 A.indices[A.indptr[j]:A.indptr[j + 1]])
 
         levels[-1].overlapping_subdomain[i] = np.concatenate(
@@ -285,6 +300,7 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
         for j in levels[-1].nonoverlapping_subdomain[i]:
             # Get the subdomain
             levels[-1].overlapping_rows[i].append(BT.indices[BT.indptr[j]:BT.indptr[j + 1]])
+        
         levels[-1].overlapping_rows[i] = np.concatenate(
             levels[-1].overlapping_rows[i], dtype=np.int32)
         levels[-1].overlapping_rows[i] = np.unique(levels[-1].overlapping_rows[i])
@@ -302,10 +318,8 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
     nodes_vs_subdomains_c = np.concatenate(nodes_vs_subdomains_c, dtype=np.int32)
     nodes_vs_subdomains_v = np.concatenate(nodes_vs_subdomains_v, dtype=np.float64)
     levels[-1].nodes_vs_subdomains = csr_array((nodes_vs_subdomains_v, (nodes_vs_subdomains_r, nodes_vs_subdomains_c)), shape=(A.shape[0], levels[-1].N))
-    levels[-1].nodes_vs_subdomains = levels[-1].nodes_vs_subdomains.tocsr()
     levels[-1].T = levels[-1].nodes_vs_subdomains.T @ levels[-1].nodes_vs_subdomains
-    
-    levels[-1].T.data = np.ones(levels[-1].T.data.shape, dtype=levels[-1].T.data.dtype)
+    levels[-1].T.data[:] = 1
     k_c = levels[-1].T @ np.ones(levels[-1].T.shape[0], dtype=levels[-1].T.data.dtype)
     levels[-1].number_of_colors = max(k_c)    
     levels[-1].multiplicity = max(v_row_mult)
@@ -313,6 +327,7 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
     print("\tMean blocksize = {:.4g}".format(np.mean(blocksize)))
     print("\tMax blocksize = {:.4g}".format(np.max(blocksize)))
 
+    # Form partition of unity vector separting overlapping and nonoverlapping domains.
     for i in range(levels[-1].N):
         levels[-1].PoU[i] = []
         for j in levels[-1].overlapping_subdomain[i]:
@@ -331,6 +346,7 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
     t0 = time.perf_counter()
 
     # Sanity check PoU correct
+    # --> checks that PoU is nonzero at one and only one DOF
     temp = np.random.rand(A.shape[0])
     temp2 = 0*temp
     for i in range(levels[-1].N):
@@ -338,7 +354,8 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
     if(np.linalg.norm(temp2 - temp) > 1e-14*np.linalg.norm(temp)):
         warn('Partition of unity is incorrect. This can happen if the partitioning strategy \
             did not yield a nonoverlapping cover of the set of nodes')
-        
+    
+    # Form sparse indptr and indices for principle submatrices over subdomains
     levels[-1].subdomain = np.zeros(np.sum(blocksize), dtype=np.int32)
     levels[-1].subdomain_ptr = np.zeros(levels[-1].N + 1, dtype=np.int32)
     levels[-1].subdomain_ptr[0] = 0
@@ -348,15 +365,17 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
 
     levels[-1].submatrices_ptr = np.zeros(levels[-1].N + 1, dtype=np.int32)
     levels[-1].submatrices_ptr[0] = 0
+    # BSR type sparse indexing, with blocksize[i]xblocksize[i] block at ith index
     for i in range(levels[-1].N):
         levels[-1].submatrices_ptr[i+1] = levels[-1].submatrices_ptr[i] + \
             blocksize[i]*blocksize[i]
 
+    # Extract submatrices
     levels[-1].submatrices = np.zeros(levels[-1].submatrices_ptr[-1],dtype=A.data.dtype)
     amg_core.extract_subblocks(A.indptr, A.indices, A.data, levels[-1].submatrices, \
                                 levels[-1].submatrices_ptr, levels[-1].subdomain, \
-                                    levels[-1].subdomain_ptr, \
-                                        int(levels[-1].subdomain_ptr.shape[0]-1), A.shape[0])
+                                levels[-1].subdomain_ptr, \
+                                int(levels[-1].subdomain_ptr.shape[0]-1), A.shape[0])
 
     levels[-1].auxiliary = np.zeros(levels[-1].submatrices_ptr[-1])
 
@@ -365,7 +384,7 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
 
     t0 = time.perf_counter()
 
-    # amg_core C++ implementation of extracting local subdomains
+    # amg_core C++ implementation of extracting local subdomain outerproducts
     BTT = BT.T.conjugate().tocsr()
     rows_indptr = np.zeros(levels[-1].N+1, dtype=np.int32)
     cols_indptr = np.zeros(levels[-1].N+1, dtype=np.int32)
@@ -399,15 +418,21 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
 
     t0 = time.perf_counter()
     for i in range(levels[-1].N):
+        # Subdomain matrix from local outer product of B, B^T
         b = levels[-1].auxiliary[levels[-1].submatrices_ptr[i]:levels[-1].submatrices_ptr[i+1]]
         bb = np.reshape(b,(int(np.sqrt(len(b))),int(np.sqrt(len(b)))))
 
+        # Local principle submatrix of overlapping subdomain
         a = levels[-1].submatrices[levels[-1].submatrices_ptr[i]:levels[-1].submatrices_ptr[i+1]]
         aa = np.reshape(a,(int(np.sqrt(len(a))),int(np.sqrt(len(a)))))
 
+        # Scale principle submatrix by PoU
+        #   NOTE : doesn't this mean our submatrix is really a padded version of
+        #   the nonoverlapping subdomain principle submatrix?
         d = np.diag(levels[-1].PoU[i],0)
         dad = d @ aa @ d
-        
+
+        # Regularization
         normbb = np.linalg.norm(bb, ord=2)
         bb = bb + np.eye(bb.shape[0]) * (1e-10*normbb)
         
@@ -448,6 +473,7 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
                     counter += 1
                     p_v.append(d@V[:,j])
             levels[-1].nev[i] = counter_nev
+
     if(len(p_r)) == 0:
         p_r = [[0]]
         p_c = [[0]]
@@ -466,6 +492,7 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
     B = B @ levels[-1].P
     BT = levels[-1].R @ BT
     A = BT @ B
+    A.sort_indices()    # THIS IS IMPORTANT
 
     t1 = time.perf_counter()
     print("\tP^TAP time = {:.4g}".format(t1 - t0))
@@ -478,6 +505,7 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
     levels[-1].A = A
     levels[-1].B = B
     levels[-1].BT = BT
+    levels[-1].density = len(levels[-1].A.data) / (levels[-1].A.shape[0] ** 2)
 
   
 def _remove_empty_columns(A):
