@@ -43,7 +43,7 @@ DEFAULT_NITER = 1
 
 # List of by-definition symmetric relaxation schemes, e.g. Jacobi.
 SYMMETRIC_RELAXATION = ['jacobi', 'richardson', 'block_jacobi',
-                        'jacobi_ne', 'chebyshev', None]
+                        'jacobi_ne', 'chebyshev', 'additive_schwarz', None]
 
 # List of supported Krylov relaxation schemes
 KRYLOV_RELAXATION = ['cg', 'cgne', 'cgnr', 'gmres']
@@ -146,6 +146,7 @@ def change_smoothers(ml, presmoother, postsmoother):
         gmres
         cgne
         cgnr
+        additive_schwarz
         schwarz
         strength_based_schwarz
         None
@@ -507,6 +508,23 @@ def setup_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, withrho=True):
     update_wrapper(smoother, relaxation.jacobi)  # set __name__
     return smoother
 
+def setup_additive_schwarz(lvl, iterations=DEFAULT_NITER, subdomain=None,
+                  subdomain_ptr=None, inv_subblock=None, inv_subblock_ptr=None):
+    """Set up Schwarz."""
+    matrix_asformat(lvl, 'A', 'csr')
+    lvl.Acsr.sort_indices()
+    subdomain, subdomain_ptr, inv_subblock, inv_subblock_ptr = \
+        relaxation.schwarz_parameters(lvl.Acsr, subdomain, subdomain_ptr,
+                                      inv_subblock, inv_subblock_ptr)
+
+    def smoother(A, x, b):
+        relaxation.additive_schwarz(lvl.Acsr, x, b, iterations=iterations,
+                                    subdomain=subdomain,
+                                    subdomain_ptr=subdomain_ptr,
+                                    inv_subblock=inv_subblock,
+                                    inv_subblock_ptr=inv_subblock_ptr)
+    update_wrapper(smoother, relaxation.additive_schwarz)  # set __name__
+    return smoother
 
 def setup_schwarz(lvl, iterations=DEFAULT_NITER, subdomain=None,
                   subdomain_ptr=None, inv_subblock=None, inv_subblock_ptr=None,

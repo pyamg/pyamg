@@ -678,6 +678,47 @@ void _overlapping_schwarz_csr(
                                             );
 }
 
+template<class I, class T, class F>
+void _overlapping_asm(
+       py::array_t<T> & x,
+       py::array_t<T> & r,
+      py::array_t<T> & Tx,
+      py::array_t<I> & Tp,
+      py::array_t<I> & Sj,
+      py::array_t<I> & Sp,
+              I nsdomains,
+              I row_start,
+               I row_stop,
+               I row_step
+                      )
+{
+    auto py_x = x.mutable_unchecked();
+    auto py_r = r.unchecked();
+    auto py_Tx = Tx.unchecked();
+    auto py_Tp = Tp.unchecked();
+    auto py_Sj = Sj.unchecked();
+    auto py_Sp = Sp.unchecked();
+    T *_x = py_x.mutable_data();
+    const T *_r = py_r.data();
+    const T *_Tx = py_Tx.data();
+    const I *_Tp = py_Tp.data();
+    const I *_Sj = py_Sj.data();
+    const I *_Sp = py_Sp.data();
+
+    return overlapping_asm<I, T, F>(
+                       _x, x.shape(0),
+                       _r, r.shape(0),
+                      _Tx, Tx.shape(0),
+                      _Tp, Tp.shape(0),
+                      _Sj, Sj.shape(0),
+                      _Sp, Sp.shape(0),
+                nsdomains,
+                row_start,
+                 row_stop,
+                 row_step
+                                    );
+}
+
 PYBIND11_MODULE(relaxation, m) {
     m.doc() = R"pbdoc(
     Pybind11 bindings for relaxation.h
@@ -700,6 +741,7 @@ PYBIND11_MODULE(relaxation, m) {
     block_gauss_seidel
     extract_subblocks
     overlapping_schwarz_csr
+    overlapping_asm
     )pbdoc";
 
     py::options options;
@@ -1354,7 +1396,7 @@ R"pbdoc(
 Extract diagonal blocks from A and insert into a linear array.
 
 This is a helper function for overlapping_schwarz_csr.
-
+             MUST HAVE COLUMN INDICES SORTED
 Parameters
 ----------
 Ap : array
@@ -1423,6 +1465,54 @@ nsdomains : int
     Number of subdomains.
 nrows : int
     Number of rows.
+row_start : int
+    Subdomain processing start index.
+row_stop : int
+    Subdomain processing stop index.
+row_step : int
+    Subdomain processing step index.
+
+Returns
+-------
+None
+    Array x will be modified inplace.)pbdoc");
+
+    m.def("overlapping_asm", &_overlapping_asm<int, float, float>,
+        py::arg("x").noconvert(), py::arg("r").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
+    m.def("overlapping_asm", &_overlapping_asm<int, double, double>,
+        py::arg("x").noconvert(), py::arg("r").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
+    m.def("overlapping_asm", &_overlapping_asm<int, std::complex<float>, float>,
+        py::arg("x").noconvert(), py::arg("r").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
+    m.def("overlapping_asm", &_overlapping_asm<int, std::complex<double>, double>,
+        py::arg("x").noconvert(), py::arg("r").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"),
+R"pbdoc(
+Additive Schwarz iteration.
+
+Perform one update of an additive overlapping Schwarz
+relaxation on the linear system Ax = b,
+     x_{k+1} = x_k + (\sum_i R_i^T A_ii^{-1} R_i) r
+where residual x and r = b-Ax are passed in, as are
+subdomain inverses {A_ii} stored in sparse format.
+
+Refer to gauss_seidel for additional information regarding
+row_start, row_stop, and row_step.
+
+Parameters
+----------
+x : array
+    Approximate solution.
+r : array
+    Precomputed residual.
+Tx : array
+    Inverse of each diagonal block of A, stored in row major.
+Tp : array
+    Pointer array into Tx indicating where the diagonal blocks start and stop.
+Sj : array
+    Indices of each subdomain. Must be sorted over each subdomain.
+Sp : array
+    Pointer array indicating where each subdomain starts and stops.
+nsdomains : int
+    Number of subdomains.
 row_start : int
     Subdomain processing start index.
 row_stop : int
