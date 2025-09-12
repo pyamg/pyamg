@@ -22,6 +22,7 @@ instantiate:
     - extract_subblocks
     - overlapping_schwarz_csr
     - overlapping_asm
+    - overlapping_ras
     - pinv_array
     - symmetric_strength_of_connection
     - satisfy_constraints_helper

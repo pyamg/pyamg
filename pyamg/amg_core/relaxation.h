@@ -1522,8 +1522,8 @@ void overlapping_schwarz_csr(const I Ap[], const int Ap_size,
  *
  * Perform one update of an additive overlapping Schwarz
  * relaxation on the linear system Ax = b,
- *      x_{k+1} = x_k + (\sum_i R_i^T A_ii^{-1} R_i) r
- * where residual x and r = b-Ax are passed in, as are
+ *      x_{k+1} = x_k + (\sum_i R_i^T A_ii^{-1} R_i),
+ * where x and residual r = b-Ax are passed in, as are
  * subdomain inverses {A_ii} stored in sparse format.
  *
  * Refer to gauss_seidel for additional information regarding
@@ -1602,4 +1602,94 @@ void overlapping_asm(      T  x[], const int  x_size,
     }
 }
 
+
+/*
+ * Restricted additive Schwarz iteration.
+ *
+ * Perform one update of an additive overlapping Schwarz
+ * relaxation on the linear system Ax = b,
+ *      x_{k+1} = x_k + (\sum_i R_i^T Dii A_ii^{-1} R_i),
+ * where x and residual r = b-Ax are passed in, as are
+ * subdomain inverses {A_ii} stored in sparse format. Here
+ * Dii is a diagonal partition of unity scaling over
+ * subdomains.
+ *
+ * Refer to gauss_seidel for additional information regarding
+ * row_start, row_stop, and row_step.
+ *
+ * Parameters
+ * ----------
+ * x : array
+ *     Approximate solution.
+ * r : array
+ *     Precomputed residual.
+ * Tx : array
+ *     Inverse of each diagonal block of A, stored in row major.
+ * Tp : array
+ *     Pointer array into Tx indicating where the diagonal blocks start and stop.
+ * Sj : array
+ *     Indices of each subdomain. Must be sorted over each subdomain.
+ * Sp : array
+ *     Pointer array indicating where each subdomain starts and stops.
+ * D : array
+ *     Partition of unity array over all subdomains, indexed by Sp.
+ * nsdomains : int
+ *     Number of subdomains.
+ * row_start : int
+ *     Subdomain processing start index.
+ * row_stop : int
+ *     Subdomain processing stop index.
+ * row_step : int
+ *     Subdomain processing step index.
+ *
+ * Returns
+ * -------
+ * None
+ *     Array x will be modified inplace.
+ *
+ */
+template<class I, class T, class F>
+void overlapping_ras(      T  x[], const int  x_size,
+                     const T  r[], const int  r_size,
+                     const T Tx[], const int Tx_size,
+                     const I Tp[], const int Tp_size,
+                     const I Sj[], const int Sj_size,
+                     const I Sp[], const int Sp_size,
+                     const T D[], const int D_size,
+                           I nsdomains,
+                           I row_start,
+                           I row_stop,
+                           I row_step)
+{
+
+    // Begin loop over the subdomains
+    for(I domptr = row_start; domptr != row_stop; domptr+=row_step) {
+
+        I size_domain = Sp[domptr+1] - Sp[domptr];
+        std::vector<T> rtemp(size_domain,0);
+        std::vector<T> xtemp(size_domain,0);
+
+        // Extract residual for this subdomain
+        I counter = 0;
+        for(I j = Sp[domptr]; j < Sp[domptr+1]; j++) {
+            I row = Sj[j];
+            rtemp[counter] += r[row];
+            counter++;
+        }
+
+        // Multiply subdomain residual with subdomain inverse
+        gemm(&(Tx[Tp[domptr]]), size_domain, size_domain, 'F',
+             rtemp.data(),      size_domain,   1,         'F',
+             xtemp.data(), size_domain,   1,         'F',
+             'F');
+
+        // Add to x
+        counter = 0;
+        for(I j = Sp[domptr]; j < Sp[domptr+1]; j++) {
+            I row = Sj[j];
+            x[row] += D[j]*xtemp[counter];
+            counter++;
+        }
+    }
+}
 #endif

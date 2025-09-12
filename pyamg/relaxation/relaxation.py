@@ -344,6 +344,76 @@ def additive_schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
                                  row_start, row_stop, row_step)
 
 
+def rest_additive_schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
+                          POU=None, inv_subblock=None, inv_subblock_ptr=None):
+    """Perform Overlapping additive Schwarz on the linear system Ax=b.
+
+    Parameters
+    ----------
+    A : csr_array, bsr_array
+        Sparse NxN matrix
+    x : ndarray
+        Approximate solution (length N)
+    b : ndarray
+        Right-hand side (length N)
+    iterations : int
+        Number of iterations to perform
+    subdomain : int array
+        Linear array containing each subdomain's elements
+    subdomain_ptr : int array
+        Pointer in subdomain, such that
+        subdomain[subdomain_ptr[i]:subdomain_ptr[i+1]]]
+        contains the _sorted_ indices in subdomain i
+    POU : double array 
+        Flatenned partition of unity vector over all subdomains
+    inv_subblock : int_array
+        Linear array containing each subdomain's
+        inverted diagonal block of A
+    inv_subblock_ptr : int array
+        Pointer in inv_subblock, such that
+        inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]]]
+        contains the inverted diagonal block of A for the
+        i-th subdomain in _row_ major order
+
+    Returns
+    -------
+    Nothing, x will be modified in place.
+
+    Notes
+    -----
+    If subdomains is None, then a point-wise iteration takes place,
+    with the overlapping region defined by each degree-of-freedom's
+    neighbors in the matrix graph.
+
+    If subdomains is not None, but subblocks is, then the subblocks
+    are formed internally.
+
+    Currently only supports CSR matrices
+
+    Examples
+    --------
+    """
+    A, x, b = make_system(A, x, b, formats=['csr'])
+    A.sort_indices()
+
+    if subdomain is None or subdomain_ptr is None or POU is None:
+        raise ValueError('Subdomains and POU must be provided for RAS')
+
+    (subdomain, subdomain_ptr, inv_subblock, inv_subblock_ptr) = \
+        schwarz_parameters(A, subdomain, subdomain_ptr,
+                           inv_subblock, inv_subblock_ptr)
+
+    row_start, row_stop, row_step = 0, subdomain_ptr.shape[0]-1, 1
+
+    # Call C code, need to make sure that subdomains are sorted and unique
+    for _iter in range(iterations):
+        r = b - A@x     # Compute residual       
+        amg_core.overlapping_ras(x, r, inv_subblock, inv_subblock_ptr,
+                                 subdomain, subdomain_ptr, POU,
+                                 subdomain_ptr.shape[0]-1,
+                                 row_start, row_stop, row_step)
+
+
 def gauss_seidel(A, x, b, iterations=1, sweep='forward', omega=1.0):
     """Perform Gauss-Seidel iteration on the linear system Ax=b.
 

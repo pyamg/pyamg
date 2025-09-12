@@ -508,24 +508,6 @@ def setup_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, withrho=True):
     update_wrapper(smoother, relaxation.jacobi)  # set __name__
     return smoother
 
-def setup_additive_schwarz(lvl, iterations=DEFAULT_NITER, subdomain=None,
-                  subdomain_ptr=None, inv_subblock=None, inv_subblock_ptr=None):
-    """Set up Schwarz."""
-    matrix_asformat(lvl, 'A', 'csr')
-    lvl.Acsr.sort_indices()
-    subdomain, subdomain_ptr, inv_subblock, inv_subblock_ptr = \
-        relaxation.schwarz_parameters(lvl.Acsr, subdomain, subdomain_ptr,
-                                      inv_subblock, inv_subblock_ptr)
-
-    def smoother(A, x, b):
-        relaxation.additive_schwarz(lvl.Acsr, x, b, iterations=iterations,
-                                    subdomain=subdomain,
-                                    subdomain_ptr=subdomain_ptr,
-                                    inv_subblock=inv_subblock,
-                                    inv_subblock_ptr=inv_subblock_ptr)
-    update_wrapper(smoother, relaxation.additive_schwarz)  # set __name__
-    return smoother
-
 def setup_schwarz(lvl, iterations=DEFAULT_NITER, subdomain=None,
                   subdomain_ptr=None, inv_subblock=None, inv_subblock_ptr=None,
                   sweep=DEFAULT_SWEEP):
@@ -565,6 +547,50 @@ def setup_strength_based_schwarz(lvl, iterations=DEFAULT_NITER,
                                  subdomain_ptr=subdomain_ptr, sweep=sweep)
         smoother(A, x, b)
     return strength_based_schwarz
+
+
+def setup_additive_schwarz(lvl, iterations=DEFAULT_NITER, subdomain=None,
+                  subdomain_ptr=None, inv_subblock=None, inv_subblock_ptr=None):
+    """Set up Schwarz."""
+    matrix_asformat(lvl, 'A', 'csr')
+    lvl.Acsr.sort_indices()
+    subdomain, subdomain_ptr, inv_subblock, inv_subblock_ptr = \
+        relaxation.schwarz_parameters(lvl.Acsr, subdomain, subdomain_ptr,
+                                      inv_subblock, inv_subblock_ptr)
+
+    def smoother(A, x, b):
+        relaxation.additive_schwarz(lvl.Acsr, x, b, iterations=iterations,
+                                    subdomain=subdomain,
+                                    subdomain_ptr=subdomain_ptr,
+                                    inv_subblock=inv_subblock,
+                                    inv_subblock_ptr=inv_subblock_ptr)
+    update_wrapper(smoother, relaxation.additive_schwarz)  # set __name__
+    return smoother
+
+
+def setup_rest_additive_schwarz(lvl, iterations=DEFAULT_NITER, subdomain=None,
+                                subdomain_ptr=None, POU=None, inv_subblock=None,
+                                inv_subblock_ptr=None):
+    """Set up Restricted Additive Schwarz."""
+    matrix_asformat(lvl, 'A', 'csr')
+    lvl.Acsr.sort_indices()
+
+    if subdomain is None or subdomain_ptr is None or POU is None:
+        raise ValueError('Subdomains and POU must be provided for RAS')
+
+    subdomain, subdomain_ptr, inv_subblock, inv_subblock_ptr = \
+        relaxation.schwarz_parameters(lvl.Acsr, subdomain, subdomain_ptr,
+                                      inv_subblock, inv_subblock_ptr)
+
+    def smoother(A, x, b):
+        relaxation.rest_additive_schwarz(lvl.Acsr, x, b, iterations=iterations,
+                                    subdomain=subdomain,
+                                    subdomain_ptr=subdomain_ptr,
+                                    POU=POU,
+                                    inv_subblock=inv_subblock,
+                                    inv_subblock_ptr=inv_subblock_ptr)
+    update_wrapper(smoother, relaxation.rest_additive_schwarz)  # set __name__
+    return smoother
 
 
 def setup_block_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, Dinv=None,
@@ -865,6 +891,7 @@ def _setup_call(fn):
         'jacobi':                 setup_jacobi,
         'schwarz':                setup_schwarz,
         'additive_schwarz':       setup_additive_schwarz,
+        'rest_additive_schwarz':  setup_rest_additive_schwarz,
         'strength_based_schwarz': setup_strength_based_schwarz,
         'block_jacobi':           setup_block_jacobi,
         'block_gauss_seidel':     setup_block_gauss_seidel,
