@@ -864,6 +864,7 @@ def _setup_call(fn):
         'gauss_seidel':           setup_gauss_seidel,
         'jacobi':                 setup_jacobi,
         'schwarz':                setup_schwarz,
+        'additive_schwarz':       setup_additive_schwarz,
         'strength_based_schwarz': setup_strength_based_schwarz,
         'block_jacobi':           setup_block_jacobi,
         'block_gauss_seidel':     setup_block_gauss_seidel,
