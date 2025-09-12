@@ -25,6 +25,7 @@ import time
 
 
 def least_squares_dd_solver(B, BT=None, A=None,
+                            smooth="msm",
                             symmetry='hermitian', 
                             strength=None,
                             aggregate='standard',
@@ -120,19 +121,21 @@ def least_squares_dd_solver(B, BT=None, A=None,
         _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold,\
             min_coarsening, diagonal_dominance, filteringA,filteringB)
         # print("Hierarchy extended")
-        sm = ('schwarz', {'subdomain': levels[-2].subdomain,\
-            'subdomain_ptr': levels[-2].subdomain_ptr,\
-            'iterations':1 if len(pre_smoother)>0 else 1, 'sweep':'symmetric'})
-        pre_smoother.append(sm)
-        sm = ('schwarz', {'subdomain': levels[-2].subdomain,\
-            'subdomain_ptr': levels[-2].subdomain_ptr,\
-            'iterations':1 if len(post_smoother)>0 else 1, 'sweep':'symmetric'})
-        post_smoother.append(sm)
-        # smoother.append(sm)
+        if smooth == "msm":
+            sm = ('schwarz', {'subdomain': levels[-2].subdomain,\
+                'subdomain_ptr': levels[-2].subdomain_ptr,\
+                'iterations':1, 'sweep':'symmetric'})
+        elif smooth == "asm":
+            sm = ('additive_schwarz', {'subdomain': levels[-2].subdomain,\
+                'subdomain_ptr': levels[-2].subdomain_ptr,'iterations':1})
+        elif smooth == "ras":
+            raise ValueError("RAS not implemented yet.")
+        else:
+            raise ValueError("Invalid smoother type.")
 
-    if(pre_smoother == []):
-        pre_smoother = ('schwarz')
-        post_smoother = pre_smoother
+        pre_smoother.append(sm)
+        post_smoother.append(sm)
+
     ml = MultilevelSolver(levels, **kwargs)
 
     t0 = time.perf_counter()
