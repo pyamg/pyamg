@@ -129,7 +129,10 @@ def least_squares_dd_solver(B, BT=None, A=None,
             sm = ('additive_schwarz', {'subdomain': levels[-2].subdomain,\
                 'subdomain_ptr': levels[-2].subdomain_ptr,'iterations':1})
         elif smooth == "ras":
-            raise ValueError("RAS not implemented yet.")
+            levels[-2].PoU_flat = np.concatenate(levels[-2].PoU)
+            sm = ('rest_additive_schwarz', {'subdomain': levels[-2].subdomain,\
+                'subdomain_ptr': levels[-2].subdomain_ptr,
+                'POU': levels[-2].PoU_flat, 'iterations':1})
         else:
             raise ValueError("Invalid smoother type.")
 
@@ -373,7 +376,7 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
         levels[-1].submatrices_ptr[i+1] = levels[-1].submatrices_ptr[i] + \
             blocksize[i]*blocksize[i]
 
-    # Extract submatrices
+    # Extract submatrices from overlapping subdomains 
     levels[-1].submatrices = np.zeros(levels[-1].submatrices_ptr[-1],dtype=A.data.dtype)
     amg_core.extract_subblocks(A.indptr, A.indices, A.data, levels[-1].submatrices, \
                                 levels[-1].submatrices_ptr, levels[-1].subdomain, \
@@ -421,24 +424,27 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
 
     t0 = time.perf_counter()
     for i in range(levels[-1].N):
-        # Subdomain matrix from local outer product of B, B^T
+
+        # Separate overlapping and nonoverlapping local DOFs
+        nonoverlap = np.where(levels[-1].PoU[i] == 1)[0]
+        overlap = np.where(levels[-1].PoU[i] == 0)[0]
+
+        # Overlapping subdomain matrix from local outer product of B, B^T
         b = levels[-1].auxiliary[levels[-1].submatrices_ptr[i]:levels[-1].submatrices_ptr[i+1]]
         bb = np.reshape(b,(int(np.sqrt(len(b))),int(np.sqrt(len(b)))))
 
-        # Local principle submatrix of overlapping subdomain
+        # Local principle submatrix restricted to nonoverlapping aggregate
         a = levels[-1].submatrices[levels[-1].submatrices_ptr[i]:levels[-1].submatrices_ptr[i+1]]
-        aa = np.reshape(a,(int(np.sqrt(len(a))),int(np.sqrt(len(a)))))
-
-        # Scale principle submatrix by PoU
-        #   NOTE : doesn't this mean our submatrix is really a padded version of
-        #   the nonoverlapping subdomain principle submatrix?
-        d = np.diag(levels[-1].PoU[i],0)
-        dad = d @ aa @ d
+        aa = np.reshape(a,(int(np.sqrt(len(a))),int(np.sqrt(len(a)))))[nonoverlap,:][:,nonoverlap]
 
         # Regularization
         normbb = np.linalg.norm(bb, ord=2)
         bb = bb + np.eye(bb.shape[0]) * (1e-10*normbb)
-        
+
+        # Schur complement in nonoverlapping subdomain
+        S = bb[nonoverlap,:][:,nonoverlap] - bb[nonoverlap,:][:,overlap] @ \
+            np.linalg.inv(bb[overlap,:][:,overlap]) @ bb[overlap,:][:,nonoverlap]
+
         # Enforce minimum coarsening ratio on per aggregate basis
         max_ev = bb.shape[0]
         this_nev = nev
@@ -448,10 +454,10 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
             this_nev = np.min([nev,max_ev])
 
         # When possible only compute necessary eigenvalues/vectors
-        if max_ev != bb.shape[0] and max_ev > 0:
-            E, V = eigh(dad,bb,subset_by_index=[bb.shape[0]-max_ev,bb.shape[0]-1])
+        if max_ev != S.shape[0] and max_ev > 0:
+            E, V = eigh(aa,S,subset_by_index=[S.shape[0]-max_ev,S.shape[0]-1])
         elif max_ev > 0:
-            E, V = eigh(dad,bb)
+            E, V = eigh(aa,S)
 
         if this_nev is not None and this_nev > 0:
             # NOTE : assumes eigenvalues in increasing order
@@ -460,21 +466,25 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
             V = V[:,-this_nev:]
             levels[-1].nev[i] = this_nev
             for j in range(len(E)):
-                p_r.append(levels[-1].subdomain[levels[-1].subdomain_ptr[i]:levels[-1].subdomain_ptr[i + 1]])
-                p_c.append([counter]*len(levels[-1].subdomain[levels[-1].subdomain_ptr[i]:levels[-1].subdomain_ptr[i + 1]]))
+                temp_inds = np.arange(levels[-1].subdomain_ptr[i],levels[-1].subdomain_ptr[i + 1])[nonoverlap]
+                temp_rows = levels[-1].subdomain[temp_inds]
+                p_r.append(temp_rows)
+                p_c.append([counter]*len(temp_rows))
                 counter += 1
-                p_v.append(d@V[:,j])
+                p_v.append(V[:,j])
         elif max_ev > 0:
             counter_nev = 0
             # NOTE : assumes eigenvalues in increasing order
             for j in range(len(E)-1,len(E)-np.min([len(E),max_ev])-1,-1):
                 if E[j] > levels[-1].threshold:
+                    temp_inds = np.arange(levels[-1].subdomain_ptr[i],levels[-1].subdomain_ptr[i + 1])[nonoverlap]
+                    temp_rows = levels[-1].subdomain[temp_inds]
                     counter_nev += 1
                     levels[-1].min_ev = min(levels[-1].min_ev, E[j])
-                    p_r.append(levels[-1].subdomain[levels[-1].subdomain_ptr[i]:levels[-1].subdomain_ptr[i + 1]])
-                    p_c.append([counter]*len(levels[-1].subdomain[levels[-1].subdomain_ptr[i]:levels[-1].subdomain_ptr[i + 1]]))
+                    p_r.append(temp_rows)
+                    p_c.append([counter]*len(temp_rows))
                     counter += 1
-                    p_v.append(d@V[:,j])
+                    p_v.append(V[:,j])
             levels[-1].nev[i] = counter_nev
 
     if(len(p_r)) == 0:
