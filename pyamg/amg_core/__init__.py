@@ -15,13 +15,14 @@ from .graph import (maximal_independent_set_serial, maximal_independent_set_para
                     breadth_first_search, connected_components)
 
 from .krylov import (apply_householders, householder_hornerscheme, apply_givens)
-from .linalg import (pinv_array, csc_scale_columns, csc_scale_rows, filter_matrix_rows)
+from .linalg import (pinv_array, csc_scale_columns, csc_scale_rows,
+    filter_matrix_rows, local_outer_product)
 from .relaxation import (gauss_seidel, sor_gauss_seidel, bsr_gauss_seidel,
                          gauss_seidel_indexed,
                          jacobi, bsr_jacobi,
                          jacobi_ne, gauss_seidel_ne, gauss_seidel_nr,
                          block_jacobi, block_gauss_seidel,
-                         extract_subblocks, overlapping_schwarz_csr,
+                         extract_subblocks, overlapping_schwarz_csr,overlapping_asm,overlapping_ras,
                          jacobi_indexed, bsr_jacobi_indexed, block_jacobi_indexed)
 from .ruge_stuben import (classical_strength_of_connection_abs,
                           classical_strength_of_connection_min,
@@ -79,6 +80,7 @@ __all__ = [
     'csc_scale_columns',
     'csc_scale_rows',
     'filter_matrix_rows',
+    'local_outer_product',
     # relaxation
     'gauss_seidel',
     'sor_gauss_seidel',

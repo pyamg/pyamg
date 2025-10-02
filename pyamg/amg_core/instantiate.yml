@@ -21,6 +21,8 @@ instantiate:
     - block_gauss_seidel
     - extract_subblocks
     - overlapping_schwarz_csr
+    - overlapping_asm
+    - overlapping_ras
     - pinv_array
     - symmetric_strength_of_connection
     - satisfy_constraints_helper
@@ -111,6 +113,7 @@ instantiate:
     - [int, "std::complex<double>"]
   functions:
     - csr_matvec
+    - local_outer_product
 
 - types:
     - [int, int]
