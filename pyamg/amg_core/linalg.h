@@ -1512,8 +1512,7 @@ where rows is the desired set of overlapping rows over which to
 take the outer product. I.e., we view BTT^TB via outer products
 between rows of BTT and B. For each selected row r, we only
 gather entries whose column is in the overlapping subdomain,
-and accumulate the outer product of those two tiny row-slices.
-
+and accumulate the outer product of those two row-slices.
 */
 template <class I, class T>
 void local_outer_product(
@@ -1527,6 +1526,8 @@ void local_outer_product(
     const I BTTp[], const int BTTp_size,
     const I BTTj[], const int BTTj_size,
     const T BTTx[], const int BTTx_size,
+    // Weighting vector W
+    const T W[], const int W_size,
     // Groups: overlapping_rows (flattened CSR-like)
     const I rows_flat[], const int rows_flat_size,
     const I rows_indptr[], const int rows_indptr_size,
@@ -1585,6 +1586,7 @@ void local_outer_product(
         // Accumulate contributions to matrix outer product from each row r
         for (I rr = r0; rr < r1; ++rr) {
             I r = R[rr];
+            const T scale = 1. / W[r];
 
             // gather BTT row r restricted to current group's columns/subdomain
             // (left vector for outer product)
@@ -1626,7 +1628,7 @@ void local_outer_product(
                     // where in pos cb[t] is located; this returns the
                     // local index of the col->pos map
                     right_pos.push_back(it->second);
-                    right_val.push_back(vb[t]);
+                    right_val.push_back(scale * vb[t]);
                 }
             }
             // Zero overlap, skip outer product for this row

@@ -122,6 +122,7 @@ void _local_outer_product(
     py::array_t<I> & BTTp,
     py::array_t<I> & BTTj,
     py::array_t<T> & BTTx,
+       py::array_t<T> & W,
 py::array_t<I> & rows_flat,
 py::array_t<I> & rows_indptr,
 py::array_t<I> & cols_flat,
@@ -136,6 +137,7 @@ py::array_t<I> & aux_indptr
     auto py_BTTp = BTTp.unchecked();
     auto py_BTTj = BTTj.unchecked();
     auto py_BTTx = BTTx.unchecked();
+    auto py_W = W.unchecked();
     auto py_rows_flat = rows_flat.unchecked();
     auto py_rows_indptr = rows_indptr.unchecked();
     auto py_cols_flat = cols_flat.unchecked();
@@ -148,6 +150,7 @@ py::array_t<I> & aux_indptr
     const I *_BTTp = py_BTTp.data();
     const I *_BTTj = py_BTTj.data();
     const T *_BTTx = py_BTTx.data();
+    const T *_W = py_W.data();
     const I *_rows_flat = py_rows_flat.data();
     const I *_rows_indptr = py_rows_indptr.data();
     const I *_cols_flat = py_cols_flat.data();
@@ -164,6 +167,7 @@ py::array_t<I> & aux_indptr
                     _BTTp, BTTp.shape(0),
                     _BTTj, BTTj.shape(0),
                     _BTTx, BTTx.shape(0),
+                       _W, W.shape(0),
                _rows_flat, rows_flat.shape(0),
              _rows_indptr, rows_indptr.shape(0),
                _cols_flat, cols_flat.shape(0),
@@ -340,13 +344,9 @@ None
     Nothing, Ax is modified in place.)pbdoc");
 
     m.def("local_outer_product", &_local_outer_product<int, float>,
-        py::arg("n_rows"), py::arg("n_cols"), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert(), py::arg("BTTp").noconvert(), py::arg("BTTj").noconvert(), py::arg("BTTx").noconvert(), py::arg("rows_flat").noconvert(), py::arg("rows_indptr").noconvert(), py::arg("cols_flat").noconvert(), py::arg("cols_indptr").noconvert(), py::arg("aux_flat").noconvert(), py::arg("aux_indptr").noconvert());
+        py::arg("n_rows"), py::arg("n_cols"), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert(), py::arg("BTTp").noconvert(), py::arg("BTTj").noconvert(), py::arg("BTTx").noconvert(), py::arg("W").noconvert(), py::arg("rows_flat").noconvert(), py::arg("rows_indptr").noconvert(), py::arg("cols_flat").noconvert(), py::arg("cols_indptr").noconvert(), py::arg("aux_flat").noconvert(), py::arg("aux_indptr").noconvert());
     m.def("local_outer_product", &_local_outer_product<int, double>,
-        py::arg("n_rows"), py::arg("n_cols"), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert(), py::arg("BTTp").noconvert(), py::arg("BTTj").noconvert(), py::arg("BTTx").noconvert(), py::arg("rows_flat").noconvert(), py::arg("rows_indptr").noconvert(), py::arg("cols_flat").noconvert(), py::arg("cols_indptr").noconvert(), py::arg("aux_flat").noconvert(), py::arg("aux_indptr").noconvert());
-    m.def("local_outer_product", &_local_outer_product<int, std::complex<float>>,
-        py::arg("n_rows"), py::arg("n_cols"), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert(), py::arg("BTTp").noconvert(), py::arg("BTTj").noconvert(), py::arg("BTTx").noconvert(), py::arg("rows_flat").noconvert(), py::arg("rows_indptr").noconvert(), py::arg("cols_flat").noconvert(), py::arg("cols_indptr").noconvert(), py::arg("aux_flat").noconvert(), py::arg("aux_indptr").noconvert());
-    m.def("local_outer_product", &_local_outer_product<int, std::complex<double>>,
-        py::arg("n_rows"), py::arg("n_cols"), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert(), py::arg("BTTp").noconvert(), py::arg("BTTj").noconvert(), py::arg("BTTx").noconvert(), py::arg("rows_flat").noconvert(), py::arg("rows_indptr").noconvert(), py::arg("cols_flat").noconvert(), py::arg("cols_indptr").noconvert(), py::arg("aux_flat").noconvert(), py::arg("aux_indptr").noconvert(),
+        py::arg("n_rows"), py::arg("n_cols"), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert(), py::arg("BTTp").noconvert(), py::arg("BTTj").noconvert(), py::arg("BTTx").noconvert(), py::arg("W").noconvert(), py::arg("rows_flat").noconvert(), py::arg("rows_indptr").noconvert(), py::arg("cols_flat").noconvert(), py::arg("cols_indptr").noconvert(), py::arg("aux_flat").noconvert(), py::arg("aux_indptr").noconvert(),
 R"pbdoc(
 )pbdoc");
 

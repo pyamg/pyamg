@@ -404,6 +404,7 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
         B.shape[0], B.shape[1],
         B.indptr, B.indices, B.data,
         BTT.indptr, BTT.indices, BTT.data,
+        v_row_mult[0],
         rows_flat, rows_indptr,
         cols_flat, cols_indptr,
         levels[-1].auxiliary, levels[-1].submatrices_ptr)

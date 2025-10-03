@@ -55,6 +55,7 @@ instantiate:
     - one_point_interpolation
     - approx_ideal_restriction_pass2
     - block_approx_ideal_restriction_pass2
+    - local_outer_product
 
 - types:
     - [int,float,"std::complex<float>"]
@@ -113,7 +114,6 @@ instantiate:
     - [int, "std::complex<double>"]
   functions:
     - csr_matvec
-    - local_outer_product
 
 - types:
     - [int, int]
