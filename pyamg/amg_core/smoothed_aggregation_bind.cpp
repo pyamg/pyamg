@@ -392,12 +392,13 @@ PYBIND11_MODULE(smoothed_aggregation, m) {
     m.def("symmetric_strength_of_connection", &_symmetric_strength_of_connection<int, std::complex<double>, double>,
         py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(),
 R"pbdoc(
+Compute symmetric strength of connection.
+
 Compute a strength of connection matrix using the standard symmetric
 Smoothed Aggregation heuristic.  Both the input and output matrices
 are stored in CSR format.  A nonzero connection A[i,j] is considered
 strong if:
 
-..
     abs(A[i,j]) >= theta * sqrt( abs(A[i,i]) * abs(A[j,j]) )
 
 The strength of connection matrix S is simply the set of nonzero entries
@@ -406,21 +407,21 @@ of A that qualify as strong connections.
 Parameters
 ----------
 num_rows : int
-    number of rows in A
+    Number of rows in A.
 theta : float
-    stength of connection tolerance
+    Strength of connection tolerance.
 Ap : array
-    CSR row pointer
+    CSR row pointer.
 Aj : array
-    CSR index array
+    CSR index array.
 Ax : array
-    CSR data array
+    CSR data array.
 Sp : array, inplace
-    CSR row pointer
+    CSR row pointer.
 Sj : array, inplace
-    CSR index array
+    CSR index array.
 Sx : array, inplace
-    CSR data array
+    CSR data array.
 
 Notes
 -----
@@ -431,25 +432,25 @@ storage for S as is used by A.)pbdoc");
     m.def("standard_aggregation", &_standard_aggregation<int>,
         py::arg("n_row"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert(),
 R"pbdoc(
-Compute aggregates for a matrix A stored in CSR format
+Compute aggregates for a matrix A stored in CSR format.
 
 Parameters
 ----------
 n_row : int
-    number of rows in A
+    Number of rows in A.
 Ap : array, n_row + 1
-    CSR row pointer
+    CSR row pointer.
 Aj : array, nnz
-    CSR column indices
+    CSR column indices.
 x : array, n_row, inplace
-    aggregate numbers for each node
+    Aggregate numbers for each node.
 y : array, n_row, inplace
-    will hold Cpts upon return
+    Will hold Cpts upon return.
 
 Returns
 -------
 int
-    The number of aggregates (``== max(x[:]) + 1``)
+    The number of aggregates (``== max(x[:]) + 1``).
 
 Notes
 -----
@@ -460,25 +461,25 @@ Notes
     m.def("naive_aggregation", &_naive_aggregation<int>,
         py::arg("n_row"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert(),
 R"pbdoc(
-Compute aggregates for a matrix A stored in CSR format
+Compute aggregates for a matrix A stored in CSR format.
 
 Parameters
 ----------
 n_row : int
-    number of rows in A
+    Number of rows in A.
 Ap : array, n_row + 1
-    CSR row pointer
+    CSR row pointer.
 Aj : array, nnz
-    CSR column indices
+    CSR column indices.
 x : array, n_row, inplace
-    aggregate numbers for each node
+    Aggregate numbers for each node.
 y : array, n_row, inplace
-    will hold Cpts upon return
+    Will hold Cpts upon return.
 
 Returns
 -------
 int
-    The number of aggregates (``== max(x[:]) + 1``)
+    The number of aggregates (``== max(x[:]) + 1``).
 
 Notes
 -----
@@ -496,27 +497,27 @@ in possibly much higher complexities.)pbdoc");
     m.def("pairwise_aggregation", &_pairwise_aggregation<int, double>,
         py::arg("n_row"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert(),
 R"pbdoc(
-Compute aggregates for a matrix S stored in CSR format
+Compute aggregates for a matrix S stored in CSR format.
 
 Parameters
 ----------
 n_row : int
-    number of rows in S
+    Number of rows in S.
 Sp : array, n_row+1
-    CSR row pointer
+    CSR row pointer.
 Sj : array, nnz
-    CSR column indices
+    CSR column indices.
 Sx : array, nnz
-    CSR data array
+    CSR data array.
 x : array, n_row, inplace
-    aggregate numbers for each node
+    Aggregate numbers for each node.
 y : array, n_row, inplace
-    will hold Cpts upon return
+    Will hold Cpts upon return.
 
 Returns
 -------
 int
- The number of aggregates (== max(x[:]) + 1 )
+    The number of aggregates (``== max(x[:]) + 1``).
 
 Notes
 -----
@@ -546,37 +547,41 @@ R"pbdoc(
     m.def("satisfy_constraints_helper", &_satisfy_constraints_helper<int, std::complex<double>, double>,
         py::arg("rows_per_block"), py::arg("cols_per_block"), py::arg("num_block_rows"), py::arg("NullDim"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("z").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(),
 R"pbdoc(
-Helper routine for satisfy_constraints routine called
-by energy_prolongation_smoother(...) in smooth.py
+Helper routine for satisfy_constraints routine.
 
 Parameters
 ----------
 rows_per_block : int
-     rows per block in the BSR matrix, S
+     Rows per block in the BSR matrix, S.
 cols_per_block : int
-     cols per block in the BSR matrix, S
+     Cols per block in the BSR matrix, S.
 num_block_rows : int
-     Number of block rows, S.shape[0]/rows_per_block
+     Number of block rows, ``S.shape[0]/rows_per_block``.
 NullDim : int
-     Null-space dimension, i.e., the number of columns in B
+     Null-space dimension, i.e., the number of columns in B.
 x : array
-     Conjugate of near-nullspace vectors, B, in row major
+     Conjugate of near-nullspace vectors, B, in row major.
 y : array
-     S*B, in row major
+     S*B, in row major.
 z : array
-     BtBinv, in row major, i.e. z[i] = pinv(B_i.H Bi), where
+     BtBinv, in row major, i.e. ``z[i] = pinv(B_i.H Bi)``, where
      B_i is B restricted to the neighborhood of dof of i.
 Sp : array
-     Row pointer array for BSR matrix S
+     Row pointer array for BSR matrix S.
 Sj : array
-     Col index array for BSR matrix S
+     Col index array for BSR matrix S.
 Sx : array
-     Value array for BSR matrix S
+     Value array for BSR matrix S.
 
 Returns
 -------
-Sx is modified such that S*B = 0.  S ends up being the
-update to the prolongator in the energy_minimization algorithm.
+None
+    Sx is modified in place such that S*B = 0.  S ends up being the
+    update to the prolongator in the energy_minimization algorithm.
+
+See Also
+--------
+energy_prolongation_smoother
 
 Notes
 -----
@@ -591,7 +596,7 @@ This implements the python code:
        num_block_rows x cols_per_block x cols_per_block
   B  = asarray(B).reshape(-1,cols_per_block,B.shape[1])
   UB = asarray(UB).reshape(-1,rows_per_block,UB.shape[1])
-  rows = csr_matrix((U.indices,U.indices,U.indptr), \
+  rows = csr_array((U.indices,U.indices,U.indptr), \
           shape=(U.shape[0]/rows_per_block,U.shape[1]/cols_per_block)).tocoo(copy=False).row
   for n,j in enumerate(U.indices):
      i = rows[n]
@@ -608,16 +613,16 @@ This implements the python code:
     m.def("calc_BtB", &_calc_BtB<int, std::complex<double>, double>,
         py::arg("NullDim"), py::arg("Nnodes"), py::arg("cols_per_block"), py::arg("b").noconvert(), py::arg("BsqCols"), py::arg("x").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(),
 R"pbdoc(
-Helper routine for energy_prolongation_smoother
+Helper routine for energy_prolongation_smoother.
 
 Parameters
 ----------
 NullDim : int
-     Number of near nullspace vectors
+     Number of near nullspace vectors.
 Nnodes : int
-     Number of nodes, i.e. number of block rows in BSR matrix, S
+     Number of nodes, i.e. number of block rows in BSR matrix, S.
 cols_per_block : int
-     Columns per block in S
+     Columns per block in S.
 b : array
      Nnodes x BsqCols array, in row-major form.
      This is B-squared, i.e. it is each column of B
@@ -633,17 +638,17 @@ b : array
          b[:,5] = conjugate(B[:,2])*B[:,2]
 
 BsqCols : int
-     sum(range(NullDim+1)), i.e. number of columns in b
+     Sum(range(NullDim+1)), i.e. number of columns in b.
 x  : {float|complex array}
-     Modified inplace for output.  Should be zeros upon entry
+     Modified inplace for output.  Should be zeros upon entry.
 Sp,Sj : int array
-     BSR indptr and indices members for matrix, S
+     BSR indptr and indices members for matrix, S.
 
 Returns
 -------
 ``BtB[i] = B_i.H*B_i`` in column major format
 where B_i is B[colindices,:], colindices = all the nonzero
-column indices for block row i in S
+column indices for block row i in S.
 
 Notes
 -----
@@ -669,6 +674,8 @@ Calculates the following python code:
     m.def("incomplete_mat_mult_bsr", &_incomplete_mat_mult_bsr<int, std::complex<double>, double>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("n_brow"), py::arg("n_bcol"), py::arg("brow_A"), py::arg("bcol_A"), py::arg("bcol_B"),
 R"pbdoc(
+Mat-mul over a sparsity pattern.
+
 Calculate A*B = S, but only at the pre-existing sparsity
 pattern of S, i.e. do an exact, but incomplete mat-mat mult.
 
@@ -680,45 +687,44 @@ B.blocksize[1] must equal S.blocksize[1]
 
 Parameters
 ----------
-Ap : {int array}
-     BSR row pointer array
-Aj : {int array}
-     BSR col index array
-Ax : {float|complex array}
-     BSR value array
-Bp : {int array}
-     BSR row pointer array
-Bj : {int array}
-     BSR col index array
-Bx : {float|complex array}
-     BSR value array
-Sp : {int array}
-     BSR row pointer array
-Sj : {int array}
-     BSR col index array
-Sx : {float|complex array}
-     BSR value array
-n_brow : {int}
-     Number of block-rows in A
-n_bcol : {int}
-     Number of block-cols in S
-brow_A : {int}
-     row blocksize for A
-bcol_A : {int}
-     column blocksize for A
-bcol_B : {int}
-     column blocksize for B
+Ap : array
+     BSR row pointer array.
+Aj : array
+     BSR col index array.
+Ax : array
+     BSR value array.
+Bp : array
+     BSR row pointer array.
+Bj : array
+     BSR col index array.
+Bx : array
+     BSR value array.
+Sp : array
+     BSR row pointer array.
+Sj : array
+     BSR col index array.
+Sx : array
+     BSR value array.
+n_brow : int
+     Number of block-rows in A.
+n_bcol : int
+     Number of block-cols in S.
+brow_A : int
+     Row blocksize for A.
+bcol_A : int
+     Column blocksize for A.
+bcol_B : int
+     Column blocksize for B.
 
 Returns
 -------
-Sx is modified in-place to reflect S(i,j) = <A_{i,:}, B_{:,j}>
+Sx is modified in-place to reflect ``S(i,j) = <A_{i,:}, B_{:,j}>``
 but only for those entries already present in the sparsity pattern
 of S.
 
 Notes
 -----
-
-Algorithm is SMMP
+Algorithm is SMMP.
 
 Principle calling routine is energy_prolongation_smoother(...) in
 smooth.py.  Here it is used to calculate the descent direction
@@ -736,19 +742,28 @@ routine below, except when S has far few nonzeros than A or B.)pbdoc");
     m.def("truncate_rows_csr", &_truncate_rows_csr<int, std::complex<double>, double>,
         py::arg("n_row"), py::arg("k"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(),
 R"pbdoc(
-Truncate the entries in A, such that only the largest (in magnitude)
- k entries per row are left.   Smaller entries are zeroed out.
+Truncate the entries in A.
+
+ Only the largest (in magnitude) k entries per row are left.
+ Smaller entries are zeroed out.
 
  Parameters
-     n_row      - number of rows in A
-     k          - number of entries per row to keep
-     Sp[]       - CSR row pointer
-     Sj[]       - CSR index array
-     Sx[]       - CSR data array
+ ----------
+ n_row : int
+     Number of rows in A.
+ k : int
+     Number of entries per row to keep.
+ Sp : array
+     CSR row pointer.
+ Sj : array
+     CSR index array.
+ Sx : array
+     CSR data array.
 
-
- Returns:
-     Nothing, A will be stored in Sp, Sj, Sx with some entries zeroed out)pbdoc");
+ Returns
+ -------
+ None
+     A will be stored in Sp, Sj, Sx with some entries zeroed out.)pbdoc");
 
 }
 

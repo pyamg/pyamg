@@ -9,6 +9,7 @@ instantiate:
     - householder_hornerscheme
     - apply_givens
     - gauss_seidel
+    - sor_gauss_seidel
     - bsr_gauss_seidel
     - jacobi
     - bsr_jacobi
@@ -66,11 +67,12 @@ instantiate:
   functions:
     - csc_scale_rows
     - csc_scale_columns
-    - cluster_center
     - bellman_ford
+    - bellman_ford_balanced
     - lloyd_cluster
-    - lloyd_cluster_adv
-    - lloyd_cluster_exact
+    - floyd_warshall
+    - center_nodes
+    - most_interior_nodes
 
 - types:
     - [int, int]

@@ -2,12 +2,88 @@
 build-backend = "setuptools.build_meta"
 requires = [
     "setuptools>=42",
-    "setuptools_scm[toml]>=5",
+    "setuptools_scm[toml]==8.3.0",
     "pybind11>=2.8.0",
     "wheel",
 ]
 
 [tool.setuptools_scm]
 version_scheme = "no-guess-dev"
-write_to = "pyamg/version.py"
-fallback_version = "v4.2.3"
+version_file = "pyamg/version.py"
+
+[tool.ruff]
+line-length = 92
+indent-width = 4
+preview = true
+exclude = [
+    "pyamg/version.py",
+    "pyamg/amg_core/bindthem.py",
+]
+
+[tool.ruff.lint]
+# https://docs.astral.sh/ruff/rules/
+select = [
+    "B",    # flake8-bugbear
+    "C",    # flake8-comprehensions
+    "C4",   # flake8-commas
+    "D",    # pydocstyle
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "N",    # pep8-naming
+    "NPY",  # numpy
+    "PL",   # pylint
+    "PT",   # flake8-pytest-style
+    "UP",   # pyupgrade
+    "W",    # pycodestyle
+    "Q",    # flake8-quotes
+    "RUF",  # ruff
+]
+ignore = [
+    "D203",    # one-blank-line-before-class
+    "D213",    # multi-line-summary-second-line
+    "E741",    # do not use variables named ‘l’, ‘O’, or ‘I’
+    "E226",    # missing whitespace around arithmetic operator
+    "E241",    # multiple spaces after ','
+    "N806",    # variable in function should be lowercase
+    "PLR0912", # too-many-branches
+    "PLR0913", # too-many-arguments
+    "PLR0914", # too-many-locals
+    "PLR0915", # too-many-statements
+    "PLR0917", # too-many-positional
+    "C901",    # complex-structure
+    "PLR0911", # too-many-return-statements
+    "PLR2004", # magic-value-comparison
+    "PLR1702", # too-many-nested-blocks
+    "PLW2901", # redefined-loop-name
+    "PLR6201", # literal-membership 
+    "B028",    # no-explicit-stacklevel
+    "PLR6104", # non-augmented-assignment
+    "NPY002",  # numpy-legacy-random
+]
+
+[tool.ruff.lint.per-file-ignores]
+    "pyamg/gallery/tests/test_fem.py" = ["E201", "E202", "E203"]
+    "test*.py" = ["N802", "N803", "D101", "D102", "D103", "E221", "PLC0415", "PLR6301",
+                  "NPY002"]
+    "**/tests/__init__.py" = ["D104"]
+    "docs/logo/pyamg_logo.py" = ["PLR0916"]
+    "pyamg/util/utils.py" = ["PLC2701"]
+    "pyamg/amg_core/__init__.py" = ["RUF022"]
+
+[tool.ruff.lint.pep8-naming]
+ignore-names = [
+    # matrix and set-like names
+    "A", "M", "Dinv", "G", "S", "B", "T", "V", "E", "C", "R", "W", "F", "AggOp",
+    "U", "Q", "BtBinv", "B_old", "BH", "scale_T", "Cnodes",
+    "Cpt_params", "get_Cpt_params", "compute_P", "E2V",
+    "compute_BtBinv", "Atilde", "Findex", "Cindex",
+    "Bf", "P_I", "I_F", "rho_D_inv_A", "rho_block_D_inv_A",
+    # well-known methods with acronyms
+    "CF", "RS", "PMIS", "PMISc", "CLJP", "CLJPc", "CR", "MIS",
+    "Cpts", "Fpts", "_CRsweep",
+]
+
+[tool.ruff.lint.flake8-quotes]
+docstring-quotes = "double"
+inline-quotes = "single"
+multiline-quotes = "double"

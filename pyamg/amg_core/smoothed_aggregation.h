@@ -14,12 +14,13 @@
 
 
 /*
+ * Compute symmetric strength of connection.
+ *
  * Compute a strength of connection matrix using the standard symmetric
  * Smoothed Aggregation heuristic.  Both the input and output matrices
  * are stored in CSR format.  A nonzero connection A[i,j] is considered
  * strong if:
  *
- * ..
  *     abs(A[i,j]) >= theta * sqrt( abs(A[i,i]) * abs(A[j,j]) )
  *
  * The strength of connection matrix S is simply the set of nonzero entries
@@ -28,21 +29,21 @@
  * Parameters
  * ----------
  * num_rows : int
- *     number of rows in A
+ *     Number of rows in A.
  * theta : float
- *     stength of connection tolerance
+ *     Strength of connection tolerance.
  * Ap : array
- *     CSR row pointer
+ *     CSR row pointer.
  * Aj : array
- *     CSR index array
+ *     CSR index array.
  * Ax : array
- *     CSR data array
+ *     CSR data array.
  * Sp : array, inplace
- *     CSR row pointer
+ *     CSR row pointer.
  * Sj : array, inplace
- *     CSR index array
+ *     CSR index array.
  * Sx : array, inplace
- *     CSR data array
+ *     CSR data array.
  *
  * Notes
  * -----
@@ -106,25 +107,25 @@ void symmetric_strength_of_connection(const I n_row,
 
 
 /*
- * Compute aggregates for a matrix A stored in CSR format
+ * Compute aggregates for a matrix A stored in CSR format.
  *
  * Parameters
  * ----------
  * n_row : int
- *     number of rows in A
+ *     Number of rows in A.
  * Ap : array, n_row + 1
- *     CSR row pointer
+ *     CSR row pointer.
  * Aj : array, nnz
- *     CSR column indices
+ *     CSR column indices.
  * x : array, n_row, inplace
- *     aggregate numbers for each node
+ *     Aggregate numbers for each node.
  * y : array, n_row, inplace
- *     will hold Cpts upon return
+ *     Will hold Cpts upon return.
  *
  * Returns
  * -------
  * int
- *     The number of aggregates (``== max(x[:]) + 1``)
+ *     The number of aggregates (``== max(x[:]) + 1``).
  *
  * Notes
  * -----
@@ -237,25 +238,25 @@ I standard_aggregation(const I n_row,
 
 
 /*
- * Compute aggregates for a matrix A stored in CSR format
+ * Compute aggregates for a matrix A stored in CSR format.
  *
  * Parameters
  * ----------
  * n_row : int
- *     number of rows in A
+ *     Number of rows in A.
  * Ap : array, n_row + 1
- *     CSR row pointer
+ *     CSR row pointer.
  * Aj : array, nnz
- *     CSR column indices
+ *     CSR column indices.
  * x : array, n_row, inplace
- *     aggregate numbers for each node
+ *     Aggregate numbers for each node.
  * y : array, n_row, inplace
- *     will hold Cpts upon return
+ *     Will hold Cpts upon return.
  *
  * Returns
  * -------
  * int
- *     The number of aggregates (``== max(x[:]) + 1``)
+ *     The number of aggregates (``== max(x[:]) + 1``).
  *
  * Notes
  * -----
@@ -263,6 +264,7 @@ I standard_aggregation(const I n_row,
  * If it has been aggregated, skip over.  Otherwise, put dof
  * and any unaggregated neighbors in an aggregate.  Results
  * in possibly much higher complexities.
+ *
  */
 template <class I>
 I naive_aggregation(const I n_row,
@@ -302,32 +304,33 @@ I naive_aggregation(const I n_row,
 
 
 /*
- * Compute aggregates for a matrix S stored in CSR format
+ * Compute aggregates for a matrix S stored in CSR format.
  *
  * Parameters
  * ----------
  * n_row : int
- *     number of rows in S
+ *     Number of rows in S.
  * Sp : array, n_row+1
- *     CSR row pointer
+ *     CSR row pointer.
  * Sj : array, nnz
- *     CSR column indices
+ *     CSR column indices.
  * Sx : array, nnz
- *     CSR data array
+ *     CSR data array.
  * x : array, n_row, inplace
- *     aggregate numbers for each node
+ *     Aggregate numbers for each node.
  * y : array, n_row, inplace
- *     will hold Cpts upon return
+ *     Will hold Cpts upon return.
  *
  * Returns
  * -------
  * int
- *  The number of aggregates (== max(x[:]) + 1 )
+ *     The number of aggregates (``== max(x[:]) + 1``).
  *
  * Notes
  * -----
  * S is the strength matrix. Assumes that the strength matrix is for
  * classic strength with min norm.
+ *
  */
 template <class I, class T>
 I pairwise_aggregation(const I n_row,
@@ -426,8 +429,9 @@ I pairwise_aggregation(const I n_row,
 }
 
 
-
 /*
+ * Helper function to fit candidate vectors.
+ *
  * Given a set of near-nullspace candidates stored in the columns of B, and
  * an aggregation operator stored in A using BSR format, this method computes
  * Ax, the data array of the tentative prolongator in BSR format, and
@@ -435,31 +439,32 @@ I pairwise_aggregation(const I n_row,
  *
  * The tentative prolongator A and coarse near-nullspaces candidates satisfy
  * the following relationships:
+ *
  * - ``B = A @ R``
  * - ``transpose(A) @ A = identity``
  *
  * Parameters
  * ----------
  * num_rows : int
- *     number of rows in A
+ *     Number of rows in A.
  * num_cols : int
- *     number of columns in A
+ *     Number of columns in A.
  * K1 : int
- *     BSR row blocksize
+ *     BSR row blocksize.
  * K2 : int
- *     BSR column blocksize
+ *     BSR column blocksize.
  * Ap : array
- *     BSR row pointer
+ *     BSR row pointer.
  * Aj : array
- *     BSR index array
+ *     BSR index array.
  * Ax : array, inplace
- *     BSR data array
+ *     BSR data array.
  * B : array
- *     fine-level near-nullspace candidates (n_row x K2)
+ *     Fine-level near-nullspace candidates (n_row x K2).
  * R : array, inplace
- *     coarse-level near-nullspace candidates (n_coarse x K2)
- * tol :float
- *     tolerance used to drop numerically linearly dependent vectors
+ *     Coarse-level near-nullspace candidates (n_coarse x K2).
+ * tol : float
+ *     Tolerance used to drop numerically linearly dependent vectors.
  *
  * Notes
  * -----
@@ -473,7 +478,7 @@ I pairwise_aggregation(const I n_row,
  * nodes, the corresponding rows of A will simply be zero.  In this case,
  * the two relationships mentioned above do not hold.  Instead the following
  * relationships are maintained: ``B[i,:] = A[i,:] @ R`` where ``A[i,:]`` is nonzero
- * and ``transpose(A[i,:]) * A[i,:] = 1`` where ``A[i,:]``is nonzero
+ * and ``transpose(A[i,:]) * A[i,:] = 1`` where ``A[i,:]``is nonzero.
  *
  */
 template <class I, class S, class T, class DOT, class NORM>
@@ -656,37 +661,41 @@ void fit_candidates_complex(const I n_row,
 
 
 /*
- * Helper routine for satisfy_constraints routine called
- * by energy_prolongation_smoother(...) in smooth.py
+ * Helper routine for satisfy_constraints routine.
  *
  * Parameters
  * ----------
  * rows_per_block : int
- *      rows per block in the BSR matrix, S
+ *      Rows per block in the BSR matrix, S.
  * cols_per_block : int
- *      cols per block in the BSR matrix, S
+ *      Cols per block in the BSR matrix, S.
  * num_block_rows : int
- *      Number of block rows, S.shape[0]/rows_per_block
+ *      Number of block rows, ``S.shape[0]/rows_per_block``.
  * NullDim : int
- *      Null-space dimension, i.e., the number of columns in B
+ *      Null-space dimension, i.e., the number of columns in B.
  * x : array
- *      Conjugate of near-nullspace vectors, B, in row major
+ *      Conjugate of near-nullspace vectors, B, in row major.
  * y : array
- *      S*B, in row major
+ *      S*B, in row major.
  * z : array
- *      BtBinv, in row major, i.e. z[i] = pinv(B_i.H Bi), where
+ *      BtBinv, in row major, i.e. ``z[i] = pinv(B_i.H Bi)``, where
  *      B_i is B restricted to the neighborhood of dof of i.
  * Sp : array
- *      Row pointer array for BSR matrix S
+ *      Row pointer array for BSR matrix S.
  * Sj : array
- *      Col index array for BSR matrix S
+ *      Col index array for BSR matrix S.
  * Sx : array
- *      Value array for BSR matrix S
+ *      Value array for BSR matrix S.
  *
  * Returns
  * -------
- * Sx is modified such that S*B = 0.  S ends up being the
- * update to the prolongator in the energy_minimization algorithm.
+ * None
+ *     Sx is modified in place such that S*B = 0.  S ends up being the
+ *     update to the prolongator in the energy_minimization algorithm.
+ *
+ * See Also
+ * --------
+ * energy_prolongation_smoother
  *
  * Notes
  * -----
@@ -701,7 +710,7 @@ void fit_candidates_complex(const I n_row,
  *        num_block_rows x cols_per_block x cols_per_block
  *   B  = asarray(B).reshape(-1,cols_per_block,B.shape[1])
  *   UB = asarray(UB).reshape(-1,rows_per_block,UB.shape[1])
- *   rows = csr_matrix((U.indices,U.indices,U.indptr), \
+ *   rows = csr_array((U.indices,U.indices,U.indptr), \
  *           shape=(U.shape[0]/rows_per_block,U.shape[1]/cols_per_block)).tocoo(copy=False).row
  *   for n,j in enumerate(U.indices):
  *      i = rows[n]
@@ -763,16 +772,16 @@ void satisfy_constraints_helper(const I rows_per_block,
 
 
 /*
- * Helper routine for energy_prolongation_smoother
+ * Helper routine for energy_prolongation_smoother.
  *
  * Parameters
  * ----------
  * NullDim : int
- *      Number of near nullspace vectors
+ *      Number of near nullspace vectors.
  * Nnodes : int
- *      Number of nodes, i.e. number of block rows in BSR matrix, S
+ *      Number of nodes, i.e. number of block rows in BSR matrix, S.
  * cols_per_block : int
- *      Columns per block in S
+ *      Columns per block in S.
  * b : array
  *      Nnodes x BsqCols array, in row-major form.
  *      This is B-squared, i.e. it is each column of B
@@ -788,17 +797,17 @@ void satisfy_constraints_helper(const I rows_per_block,
  *          b[:,5] = conjugate(B[:,2])*B[:,2]
  *
  * BsqCols : int
- *      sum(range(NullDim+1)), i.e. number of columns in b
+ *      Sum(range(NullDim+1)), i.e. number of columns in b.
  * x  : {float|complex array}
- *      Modified inplace for output.  Should be zeros upon entry
+ *      Modified inplace for output.  Should be zeros upon entry.
  * Sp,Sj : int array
- *      BSR indptr and indices members for matrix, S
+ *      BSR indptr and indices members for matrix, S.
  *
  * Returns
  * -------
  * ``BtB[i] = B_i.H*B_i`` in column major format
  * where B_i is B[colindices,:], colindices = all the nonzero
- * column indices for block row i in S
+ * column indices for block row i in S.
  *
  * Notes
  * -----
@@ -897,7 +906,8 @@ void calc_BtB(const I NullDim,
     delete[] work;
 }
 
-/*
+/* Mat-mul over a sparsity pattern.
+ *
  * Calculate A*B = S, but only at the pre-existing sparsity
  * pattern of S, i.e. do an exact, but incomplete mat-mat mult.
  *
@@ -909,45 +919,44 @@ void calc_BtB(const I NullDim,
  *
  * Parameters
  * ----------
- * Ap : {int array}
- *      BSR row pointer array
- * Aj : {int array}
- *      BSR col index array
- * Ax : {float|complex array}
- *      BSR value array
- * Bp : {int array}
- *      BSR row pointer array
- * Bj : {int array}
- *      BSR col index array
- * Bx : {float|complex array}
- *      BSR value array
- * Sp : {int array}
- *      BSR row pointer array
- * Sj : {int array}
- *      BSR col index array
- * Sx : {float|complex array}
- *      BSR value array
- * n_brow : {int}
- *      Number of block-rows in A
- * n_bcol : {int}
- *      Number of block-cols in S
- * brow_A : {int}
- *      row blocksize for A
- * bcol_A : {int}
- *      column blocksize for A
- * bcol_B : {int}
- *      column blocksize for B
+ * Ap : array
+ *      BSR row pointer array.
+ * Aj : array
+ *      BSR col index array.
+ * Ax : array
+ *      BSR value array.
+ * Bp : array
+ *      BSR row pointer array.
+ * Bj : array
+ *      BSR col index array.
+ * Bx : array
+ *      BSR value array.
+ * Sp : array
+ *      BSR row pointer array.
+ * Sj : array
+ *      BSR col index array.
+ * Sx : array
+ *      BSR value array.
+ * n_brow : int
+ *      Number of block-rows in A.
+ * n_bcol : int
+ *      Number of block-cols in S.
+ * brow_A : int
+ *      Row blocksize for A.
+ * bcol_A : int
+ *      Column blocksize for A.
+ * bcol_B : int
+ *      Column blocksize for B.
  *
  * Returns
  * -------
- * Sx is modified in-place to reflect S(i,j) = <A_{i,:}, B_{:,j}>
+ * Sx is modified in-place to reflect ``S(i,j) = <A_{i,:}, B_{:,j}>``
  * but only for those entries already present in the sparsity pattern
  * of S.
  *
  * Notes
  * -----
- *
- * Algorithm is SMMP
+ * Algorithm is SMMP.
  *
  * Principle calling routine is energy_prolongation_smoother(...) in
  * smooth.py.  Here it is used to calculate the descent direction
@@ -1034,7 +1043,7 @@ void incomplete_mat_mult_bsr(const I Ap[], const int Ap_size,
 
 /* Swap x[i] and x[j], and
  *      y[i] and y[j]
- * Use in the qsort_twoarrays funcion
+ * Use in the qsort_twoarrays function
  */
 template<class I, class T>
 inline void swap(T x[], I y[], I i, I j )
@@ -1050,13 +1059,15 @@ inline void swap(T x[], I y[], I i, I j )
    y[j]   = temp_i;
 }
 
-/* Apply quicksort to the array x, while simultaneously shuffling
+/* 
+ * Apply quicksort to the array x, while simultaneously shuffling
  * the array y to mirror the swapping of entries done in x.   Then
  * aftwards x[i] and y[i] correspond to some x[k] and y[k]
  * before the sort.
  *
  * This function is particularly useful for sorting the rows (or columns)
  * of a sparse matrix according to the values
+ *
  * */
 template<class I, class T>
 void qsort_twoarrays( T x[], I y[], I left, I right )
@@ -1080,19 +1091,28 @@ void qsort_twoarrays( T x[], I y[], I left, I right )
 }
 
 /*
- *  Truncate the entries in A, such that only the largest (in magnitude)
- *  k entries per row are left.   Smaller entries are zeroed out.
+ *  Truncate the entries in A.
+ *
+ *  Only the largest (in magnitude) k entries per row are left.
+ *  Smaller entries are zeroed out.
  *
  *  Parameters
- *      n_row      - number of rows in A
- *      k          - number of entries per row to keep
- *      Sp[]       - CSR row pointer
- *      Sj[]       - CSR index array
- *      Sx[]       - CSR data array
+ *  ----------
+ *  n_row : int
+ *      Number of rows in A.
+ *  k : int
+ *      Number of entries per row to keep.
+ *  Sp : array
+ *      CSR row pointer.
+ *  Sj : array
+ *      CSR index array.
+ *  Sx : array
+ *      CSR data array.
  *
- *
- *  Returns:
- *      Nothing, A will be stored in Sp, Sj, Sx with some entries zeroed out
+ *  Returns
+ *  -------
+ *  None
+ *      A will be stored in Sp, Sj, Sx with some entries zeroed out.
  *
  */
 template<class I, class T, class F>

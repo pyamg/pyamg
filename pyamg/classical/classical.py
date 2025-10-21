@@ -2,18 +2,19 @@
 
 
 from warnings import warn
-from scipy.sparse import csr_matrix, isspmatrix_csr, SparseEfficiencyWarning
+from scipy.sparse import csr_array, issparse, SparseEfficiencyWarning
 import numpy as np
 
 from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
-from pyamg.strength import classical_strength_of_connection,\
-    symmetric_strength_of_connection, evolution_strength_of_connection,\
-    distance_strength_of_connection, energy_based_strength_of_connection,\
+from pyamg.strength import classical_strength_of_connection, \
+    symmetric_strength_of_connection, evolution_strength_of_connection, \
+    distance_strength_of_connection, energy_based_strength_of_connection, \
     algebraic_distance, affinity_distance
 from pyamg.classical.interpolate import direct_interpolation, classical_interpolation
 from . import split
 from .cr import CR
+from ..util.utils import asfptype
 
 
 def ruge_stuben_solver(A,
@@ -27,8 +28,8 @@ def ruge_stuben_solver(A,
 
     Parameters
     ----------
-    A : csr_matrix
-        Square matrix in CSR format
+    A : csr_array
+        Square matrix in CSR format.
     strength : str
         Valid strings are ['symmetric', 'classical', 'evolution', 'distance',
         'algebraic_distance','affinity', 'energy_based', None].
@@ -37,7 +38,7 @@ def ruge_stuben_solver(A,
         using a tuple, e.g. strength=('symmetric',{'theta': 0.25 }). If
         strength=None, all nonzero entries of the matrix are considered strong.
     CF : str or tuple, default 'RS'
-        Method used for coarse grid selection (C/F splitting)
+        Method used for coarse grid selection (C/F splitting).
         Supported methods are RS, PMIS, PMISc, CLJP, CLJPc, and CR.
     interpolation : str, default 'classical'
         Method for interpolation. Options include 'direct', 'classical'.
@@ -46,7 +47,7 @@ def ruge_stuben_solver(A,
         may be passed in using a tuple, e.g.
         presmoother=('gauss_seidel',{'sweep':'symmetric}), the default.
     postsmoother : str or dict
-        Postsmoothing method with the same usage as presmoother
+        Postsmoothing method with the same usage as presmoother.
     max_levels : int, default 30
         Maximum number of levels to be used in the multilevel solver.
     max_coarse : int, default 20
@@ -54,18 +55,18 @@ def ruge_stuben_solver(A,
     keep : bool, default False
         Flag to indicate keeping strength of connection (C) in the
         hierarchy for diagnostics.
+    **kwargs : dict
+        Extra keywords passed to MultilevelSolver class.
 
     Returns
     -------
-    ml : MultilevelSolver
-        Multigrid hierarchy of matrices and prolongation operators
+    MultilevelSolver
+        Multigrid hierarchy of matrices and prolongation operators.
 
-    Examples
+    See Also
     --------
-    >>> from pyamg.gallery import poisson
-    >>> from pyamg import ruge_stuben_solver
-    >>> A = poisson((10,),format='csr')
-    >>> ml = ruge_stuben_solver(A,max_coarse=3)
+    aggregation.smoothed_aggregation_solver, MultilevelSolver,
+    aggregation.rootnode_solver
 
     Notes
     -----
@@ -75,32 +76,33 @@ def ruge_stuben_solver(A,
     'gauss_seidel', ... ].  Additionally, coarse_solver may be a tuple
     (fn, args), where fn is a string such as ['splu', 'lu', ...] or a callable
     function, and args is a dictionary of arguments to be passed to fn.
-    See [2001TrOoSc]_ for additional details.
-
+    See [1]_ for additional details.
 
     References
     ----------
-    .. [2001TrOoSc] Trottenberg, U., Oosterlee, C. W., and Schuller, A.,
-       "Multigrid" San Diego: Academic Press, 2001.  Appendix A
+    .. [1] Trottenberg, U.; Oosterlee, C. W. & Schüller, A. (2001),
+           Multigrid, Vol. 33, Academic Press.
 
-    See Also
+    Examples
     --------
-    aggregation.smoothed_aggregation_solver, MultilevelSolver,
-    aggregation.rootnode_solver
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg import ruge_stuben_solver
+    >>> A = poisson((10,),format='csr')
+    >>> ml = ruge_stuben_solver(A,max_coarse=3)
+
     """
     levels = [MultilevelSolver.Level()]
 
     # convert A to csr
-    if not isspmatrix_csr(A):
+    if not issparse(A) or A.format != 'csr':
         try:
-            A = csr_matrix(A)
-            warn('Implicit conversion of A to CSR',
-                 SparseEfficiencyWarning)
-        except BaseException as e:
-            raise TypeError('Argument A must have type csr_matrix, '
-                            'or be convertible to csr_matrix') from e
+            A = csr_array(A)
+            warn('Implicit conversion of A to CSR', SparseEfficiencyWarning)
+        except Exception as e:
+            raise TypeError('Argument A must have type csr_array, '
+                            'or be convertible to csr_array') from e
     # preprocess A
-    A = A.asfptype()
+    A = asfptype(A)
     if A.shape[0] != A.shape[1]:
         raise ValueError('expected square matrix')
 
@@ -196,6 +198,6 @@ def _extend_hierarchy(levels, strength, CF, interpolation, keep):
 
     # Form next level through Galerkin product
     levels.append(MultilevelSolver.Level())
-    A = R * A * P
+    A = R @ A @ P
     levels[-1].A = A
     return False

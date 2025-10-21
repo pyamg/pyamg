@@ -3,7 +3,7 @@ import numpy as np
 from numpy.testing import (TestCase, assert_array_almost_equal,
                            assert_equal, assert_almost_equal)
 from scipy.linalg import solve
-import scipy.sparse as sparse
+from scipy import sparse
 
 import pyamg
 from pyamg.util.linalg import norm
@@ -25,7 +25,7 @@ class TestStoppingCriteria(TestCase):
         x0 = np.random.rand(n)
         A = 0.5 * (A + A.T) + n*np.eye(n, n)
         self.cases.append({'A': A, 'b': b, 'x0': x0, 'tol': 1e-8})
-        self.cases.append({'A': sparse.csr_matrix(A), 'b': b, 'x0': x0, 'tol': 1e-8})
+        self.cases.append({'A': sparse.csr_array(A), 'b': b, 'x0': x0, 'tol': 1e-8})
 
     def test_stoppingcriteria(self):
         for method, crits in [
@@ -165,7 +165,7 @@ class TestKrylov(TestCase):
                     residuals2 = []
                     (x2, flag2) = gmres_mgs(A_symm, b_symm, x0=x0_symm,
                                             maxiter=maxiter,
-                                            restrt=None,
+                                            restart=None,
                                             residuals=residuals2)
                     residuals3 = []
                     (x3, flag2) = cr(A_symm, b_symm, x0=x0_symm,

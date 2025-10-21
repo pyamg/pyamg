@@ -1,3 +1,5 @@
+"""Plotting for the example in the paper."""
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from common import set_figure
@@ -16,7 +18,7 @@ ax.semilogy(res, marker='o', color='tab:gray',
 ax.set_xlabel('V-cycle iterations')
 ax.set_ylabel('residual')
 
-xticks = [0,5,10,15,20,25]
+xticks = [0, 5, 10, 15, 20, 25]
 ax.set_xticks(xticks)
 ax.set_xticklabels([f'{x}' for x in xticks])
 
@@ -27,9 +29,7 @@ ax.set_yticklabels([rf'10\textsuperscript{{{y}}}' for y in yticks])
 ax.grid(True)
 
 figname = 'example.pdf'
-import sys
-if len(sys.argv) > 1:
-    if sys.argv[1] == '--savefig':
-        plt.savefig(figname, bbox_inches='tight')
+if '--savefig' in sys.argv:
+    plt.savefig(figname, bbox_inches='tight')
 else:
     plt.show()

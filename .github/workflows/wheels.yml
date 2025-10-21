@@ -15,28 +15,30 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-11]
+        # macos-13 is an intel runner, macos-14 is apple silicon
+        os: [ubuntu-latest, windows-latest, macos-13, macos-latest]
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
-          ref: v4.2.3
-          fetch-depth: 1
+          # uncomment to force a wheel build
+          ref: v5.3.0
+          fetch-depth: 0
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.12.1
+        uses: pypa/cibuildwheel@v3.1.4
         env:
-          CIBW_BUILD: "cp37-* cp38-* cp39-* cp310-* cp311-*"
-          CIBW_SKIP: pp*
-          CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
+          CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-*"
+          CIBW_ARCHS_MACOS: "auto"
           CIBW_ARCHS_WINDOWS: "AMD64 x86"
           CIBW_ARCHS_LINUX: "x86_64"
           CIBW_BUILD_VERBOSITY: 2
 
       - name: Save wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
 
   build_sdist:
@@ -44,9 +46,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
-          fetch-depth: 1
+          # uncomment to force a wheel build
+          ref: v5.3.0
+          fetch-depth: 0
 
       - name: Install pypa/build
         run: pip install 'build[virtualenv]'
@@ -55,21 +59,27 @@ jobs:
         run: python -m build --sdist
 
       - name: Save sdist
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: cibw-sdist
           path: dist/*.tar.gz
 
   upload_all:
+    name: upload to PyPI
     needs: [build_wheels, build_sdist]
+    environment: publish_pypi
+    permissions:
+          id-token: write
     runs-on: ubuntu-latest
-    if: github.event_name == 'release' && github.event.action == 'published'
     steps:
-    - uses: actions/download-artifact@v3
+    - name: retrieve artifacts
+      uses: actions/download-artifact@v5
       with:
-        name: artifact
+        pattern: cibw-*
         path: dist
-
-    - uses: pypa/gh-action-pypi-publish@v1.8.5
+        merge-multiple: true
+    - name: publish to pypi
+      uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        user: __token__
-        password: ${{ secrets.pypi_token }}
+        # switch to true to overwrite upload
+        skip-existing: false

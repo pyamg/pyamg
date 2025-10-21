@@ -1,0 +1,16 @@
+[default.extend-words]
+preconditioner = "preconditioner"
+MIS = "MIS"
+Cleary = "Cleary"
+ser = "ser"
+[default.extend-identifiers]
+[default]
+extend-ignore-re = [
+  "np.arange",
+]
+extend-ignore-identifiers-re = [
+  "sort_2nd",
+  ".*_fiter",
+]
+[type.cpp]
+extend-glob = ["*.h"]

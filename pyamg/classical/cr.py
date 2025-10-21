@@ -3,7 +3,7 @@
 from copy import deepcopy
 import numpy as np
 from scipy.linalg import norm
-from scipy.sparse import isspmatrix, spdiags, isspmatrix_csr
+from scipy.sparse import issparse, diags_array
 
 from pyamg import amg_core
 from ..relaxation.relaxation import gauss_seidel, gauss_seidel_indexed
@@ -19,7 +19,8 @@ def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
+        Target system matrix
     B : array like
         Target near null space mode
     Findex : array like
@@ -30,6 +31,8 @@ def _CRsweep(A, B, Findex, Cindex, nu, thetacr, method):
         minimum number of relaxation sweeps to do
     thetacr
         Desired convergence factor
+    method : {'concurrent', 'habituated'}
+        CR method
 
     Returns
     -------
@@ -81,7 +84,7 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         sparse matrix (n x n) usually matrix A of Ax=b
     method : {'habituated','concurrent'}
         Method used during relaxation:
@@ -145,7 +148,7 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
     if (thetacr >= 1) or (thetacr <= 0):
         raise ValueError('Must have 0 < thetacr < 1')
 
-    if not isspmatrix_csr(A):
+    if not issparse(A) or A.format != 'csr':
         raise TypeError('expecting csr sparse matrix A')
 
     if A.dtype == complex:
@@ -220,7 +223,7 @@ def binormalize(A, tol=1e-5, maxiter=10):
 
     Parameters
     ----------
-    A : csr_matrix
+    A : csr_array
         sparse matrix (n x n)
     tol : float
         tolerance
@@ -231,7 +234,7 @@ def binormalize(A, tol=1e-5, maxiter=10):
 
     Returns
     -------
-    C : csr_matrix
+    C : csr_array
         diagonally scaled A, C=DAD
 
     Notes
@@ -251,12 +254,12 @@ def binormalize(A, tol=1e-5, maxiter=10):
 
     References
     ----------
-    .. [1] Livne, Golub, "Scaling by Binormalization"
-       Tech Report SCCM-03-12, SCCM, Stanford, 2003
-       http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.3.1679
+    .. [1] Livne, O.E., Golub, G.H. Scaling by Binormalization.
+       Numerical Algorithms 35, 97-120 (2004).
+       https://doi.org/10.1023/B:NUMA.0000016606.32820.69
 
     """
-    if not isspmatrix(A):
+    if not issparse(A):
         raise TypeError('expecting sparse matrix A')
 
     if A.dtype == complex:
@@ -271,7 +274,7 @@ def binormalize(A, tol=1e-5, maxiter=10):
     d = B.diagonal().ravel()
 
     # 2.
-    beta = B * x
+    beta = B @ x
     betabar = (1.0/n) * np.dot(x, beta)
     stdev = rowsum_stdev(x, beta)
 
@@ -308,8 +311,8 @@ def binormalize(A, tol=1e-5, maxiter=10):
 
     # rescale for unit 2-norm
     d = np.sqrt(x)
-    D = spdiags(d.ravel(), [0], n, n)
-    C = D * A * D
+    D = diags_array([d.ravel()], offsets=[0], shape=(n, n))
+    C = D @ A @ D
     C = C.tocsr()
     beta = C.multiply(C).sum(axis=1)
     scale = np.sqrt((1.0/n) * np.sum(beta))
@@ -326,7 +329,9 @@ def rowsum_stdev(x, beta):
     Parameters
     ----------
     x : array
+        Target array for computing the std dev
     beta : array
+        Row-wise beta values
 
     Returns
     -------
@@ -334,7 +339,13 @@ def rowsum_stdev(x, beta):
 
     Notes
     -----
-    equation (7) in Livne/Golub
+    Equation (7) in [1]
+
+    References
+    ----------
+    .. [1] Livne, O.E., Golub, G.H. Scaling by Binormalization.
+       Numerical Algorithms 35, 97-120 (2004).
+       https://doi.org/10.1023/B:NUMA.0000016606.32820.69
 
     """
     n = x.size

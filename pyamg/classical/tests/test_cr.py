@@ -1,7 +1,7 @@
 """Test compatible relaxation."""
 import numpy as np
 from numpy.testing import TestCase
-from scipy.sparse import csr_matrix
+from scipy.sparse import csr_array
 from pyamg.gallery import poisson, load_example
 from pyamg.classical.cr import binormalize, CR
 
@@ -10,12 +10,10 @@ class TestCR(TestCase):
     def setUp(self):
         self.cases = []
 
-        #
-
         # Random matrices, cases 0-2
         np.random.seed(0)
         for N in [2, 3, 5]:
-            self.cases.append(csr_matrix(np.random.rand(N, N)))
+            self.cases.append(csr_array(np.random.rand(N, N)))
 
         # Poisson problems in 1D, cases 3-9
         for N in [2, 3, 5, 7, 10, 11, 19]:

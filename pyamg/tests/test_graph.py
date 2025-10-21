@@ -1,14 +1,16 @@
 """Test graph routings."""
 import numpy as np
 from scipy import sparse
-from scipy.sparse.csgraph import bellman_ford as bellman_ford_scipy
 
-from numpy.testing import TestCase, assert_equal, assert_array_almost_equal
+import pytest
+
+from numpy.testing import TestCase, assert_equal
 
 from pyamg.gallery import poisson, load_example
 from pyamg.graph import (maximal_independent_set, vertex_coloring,
-                         bellman_ford, lloyd_cluster, connected_components)
-from pyamg.graph_ref import bellman_ford_reference
+                         bellman_ford, lloyd_cluster, connected_components,
+                         metis_partition)
+from pyamg.graph_ref import bellman_ford_reference, bellman_ford_balanced_reference
 from pyamg import amg_core
 
 
@@ -16,7 +18,7 @@ def canonical_graph(G):
     # convert to expected format
     # - remove diagonal entries
     # - all nonzero values = 1
-    G = sparse.coo_matrix(G)
+    G = sparse.coo_array(G)
 
     mask = G.row != G.col
     G.row = G.row[mask]
@@ -33,7 +35,7 @@ def assert_is_mis(G, mis):
     if G.nnz > 0:
         assert (mis[G.row] + mis[G.col]).max() <= 1
     # all non-set vertices have set neighbor
-    assert (mis + G*mis).min() == 1
+    assert (mis + G@mis).min() == 1
 
 
 def assert_is_vertex_coloring(G, c):
@@ -82,7 +84,7 @@ class TestGraph(TestCase):
             for k in [1, 2, 3, 4]:
                 mis = maximal_independent_set(G, k=k)
                 if k > 1:
-                    G = (G + np.eye(G.shape[0]))**k
+                    G = sparse.linalg.matrix_power(G + np.eye(G.shape[0]), k)
                     G = canonical_graph(G)
                 assert_is_mis(G, mis)
 
@@ -105,23 +107,24 @@ class TestGraph(TestCase):
             G.data = np.random.rand(G.nnz)
             N = G.shape[0]
 
-            for n_seeds in [int(N/20), int(N/10), N-2, N]:
-                if n_seeds > G.shape[0] or n_seeds < 1:
+            for n_clusters in [int(N/20), int(N/10), N-2, N]:
+                if n_clusters > G.shape[0] or n_clusters < 1:
                     continue
 
-                seeds = np.random.permutation(N)[:n_seeds]
+                centers = np.random.permutation(N)[:n_clusters]
 
-                D_result, S_result = bellman_ford(G, seeds)
-                D_expected, S_expected = bellman_ford_reference(G, seeds)
+                for method in ['standard', 'balanced']:
+                    d_result, m_result, p_result = bellman_ford(G, centers, method=method)
+                    if method == 'standard':
+                        d_expected, m_expected, p_expected = \
+                            bellman_ford_reference(G, centers)
+                    if method == 'balanced':
+                        d_expected, m_expected, p_expected = \
+                            bellman_ford_balanced_reference(G, centers)
 
-                assert_array_almost_equal(D_result, D_expected)
-                assert_array_almost_equal(S_result, S_expected)
-
-                # test only small matrices with scipy
-                if G.shape[0] < 15:
-                    D = bellman_ford_scipy(csgraph=G.T)
-                    D_scipy = D[:, seeds].min(axis=1).ravel()
-                    assert_array_almost_equal(D_result, D_scipy)
+                assert_equal(d_result, d_expected)
+                assert_equal(m_result, m_expected)
+                assert_equal(p_result, p_expected)
 
     def test_bellman_ford_reference(self):
         Edges = np.array([[1, 4],
@@ -131,21 +134,21 @@ class TestGraph(TestCase):
                           [0, 2],
                           [3, 2],
                           [1, 2],
-                          [4, 3]])
+                          [4, 3]], dtype=np.int32)
         w = np.array([2, 1, 2, 1, 4, 5, 3, 1], dtype=float)
-        G = sparse.coo_matrix((w, (Edges[:, 0], Edges[:, 1])))
-        distances_FROM_seed = np.array([[0.,     1.,     4., 3.,     3.],
-                                        [np.inf, 0.,     3., 2.,     2.],
-                                        [np.inf, np.inf, 0., np.inf, np.inf],
-                                        [np.inf, 1.,     4., 0.,     3.],
-                                        [np.inf, 2.,     5., 1.,     0.]])
+        G = sparse.coo_array((w, (Edges[:, 0], Edges[:, 1])))
+        distances_FROM_center = np.array([[0.,     1.,     4., 3.,     3.],
+                                          [np.inf, 0.,     3., 2.,     2.],
+                                          [np.inf, np.inf, 0., np.inf, np.inf],
+                                          [np.inf, 1.,     4., 0.,     3.],
+                                          [np.inf, 2.,     5., 1.,     0.]])
 
-        for seed in range(5):
-            distance, nearest = bellman_ford_reference(G, [seed])
-            assert_equal(distance, distances_FROM_seed[seed])
+        for center in range(5):
+            distance, _nearest, _predecessor = bellman_ford_reference(G, [center])
+            assert_equal(distance, distances_FROM_center[center])
 
-            distance, nearest = bellman_ford(G, [seed])
-            assert_equal(distance, distances_FROM_seed[seed])
+            distance, _nearest, _predecessor = bellman_ford(G, [center])
+            assert_equal(distance, distances_FROM_center[center])
 
     def test_lloyd_cluster(self):
         np.random.seed(3125088753)
@@ -153,11 +156,11 @@ class TestGraph(TestCase):
         for G in self.cases:
             G.data = np.random.rand(G.nnz)
 
-            for n_seeds in [5]:
-                if n_seeds > G.shape[0]:
+            for n_clusters in [5]:
+                if n_clusters > G.shape[0]:
                     continue
 
-                distances, clusters, centers = lloyd_cluster(G, n_seeds)
+                _clusters, _centers = lloyd_cluster(G, n_clusters)
 
 
 class TestComplexGraph(TestCase):
@@ -194,11 +197,11 @@ class TestComplexGraph(TestCase):
         for G in self.cases:
             G.data = np.random.rand(G.nnz) + 1.0j*np.random.rand(G.nnz)
 
-            for n_seeds in [5]:
-                if n_seeds > G.shape[0]:
+            for n_clusters in [5]:
+                if n_clusters > G.shape[0]:
                     continue
 
-                distances, clusters, centers = lloyd_cluster(G, n_seeds)
+                _clusters, _centers = lloyd_cluster(G, n_clusters)
 
 
 class TestVertexColorings(TestCase):
@@ -211,7 +214,7 @@ class TestVertexColorings(TestCase):
                        [0, 1, 0, 0, 1],
                        [1, 1, 0, 0, 1],
                        [0, 1, 1, 1, 0]])
-        self.G0 = sparse.csr_matrix(G0)
+        self.G0 = sparse.csr_array(G0)
         # make sure graph is symmetric
         assert_equal((self.G0 - self.G0.T).nnz, 0)
 
@@ -224,7 +227,7 @@ class TestVertexColorings(TestCase):
                        [0, 1, 0, 0, 1, 1],
                        [0, 0, 0, 1, 0, 1],
                        [0, 0, 0, 1, 1, 0]])
-        self.G1 = sparse.csr_matrix(G1)
+        self.G1 = sparse.csr_array(G1)
         # make sure graph is symmetric
         assert_equal((self.G1 - self.G1.T).nnz, 0)
 
@@ -264,20 +267,20 @@ def test_breadth_first_search():
 
     BFS = breadth_first_search
 
-    G = sparse.csr_matrix([[0, 1, 0, 0],
-                           [1, 0, 1, 0],
-                           [0, 1, 0, 1],
-                           [0, 0, 1, 0]])
+    G = sparse.csr_array([[0, 1, 0, 0],
+                          [1, 0, 1, 0],
+                          [0, 1, 0, 1],
+                          [0, 0, 1, 0]])
 
     assert_equal(BFS(G, 0)[1], [0, 1, 2, 3])
     assert_equal(BFS(G, 1)[1], [1, 0, 1, 2])
     assert_equal(BFS(G, 2)[1], [2, 1, 0, 1])
     assert_equal(BFS(G, 3)[1], [3, 2, 1, 0])
 
-    G = sparse.csr_matrix([[0, 1, 0, 0],
-                           [1, 0, 1, 0],
-                           [0, 1, 0, 0],
-                           [0, 0, 0, 0]])
+    G = sparse.csr_array([[0, 1, 0, 0],
+                          [1, 0, 1, 0],
+                          [0, 1, 0, 0],
+                          [0, 0, 0, 0]])
 
     assert_equal(BFS(G, 0)[1], [0, 1, 2, -1])
     assert_equal(BFS(G, 1)[1], [1, 0, 1, -1])
@@ -288,55 +291,55 @@ def test_breadth_first_search():
 def test_connected_components():
 
     cases = []
-    cases.append(sparse.csr_matrix([[0, 1, 0, 0],
-                                    [1, 0, 1, 0],
-                                    [0, 1, 0, 1],
-                                    [0, 0, 1, 0]]))
+    cases.append(sparse.csr_array([[0, 1, 0, 0],
+                                   [1, 0, 1, 0],
+                                   [0, 1, 0, 1],
+                                   [0, 0, 1, 0]]))
 
-    cases.append(sparse.csr_matrix([[0, 1, 0, 0],
-                                    [1, 0, 0, 0],
-                                    [0, 0, 0, 1],
-                                    [0, 0, 1, 0]]))
+    cases.append(sparse.csr_array([[0, 1, 0, 0],
+                                   [1, 0, 0, 0],
+                                   [0, 0, 0, 1],
+                                   [0, 0, 1, 0]]))
 
-    cases.append(sparse.csr_matrix([[0, 1, 0, 0],
-                                    [1, 0, 0, 0],
-                                    [0, 0, 0, 0],
-                                    [0, 0, 0, 0]]))
+    cases.append(sparse.csr_array([[0, 1, 0, 0],
+                                   [1, 0, 0, 0],
+                                   [0, 0, 0, 0],
+                                   [0, 0, 0, 0]]))
 
-    cases.append(sparse.csr_matrix([[0, 0, 0, 0],
-                                    [0, 0, 0, 0],
-                                    [0, 0, 0, 0],
-                                    [0, 0, 0, 0]]))
+    cases.append(sparse.csr_array([[0, 0, 0, 0],
+                                   [0, 0, 0, 0],
+                                   [0, 0, 0, 0],
+                                   [0, 0, 0, 0]]))
 
     #  2        5
     #  | \    / |
     #  0--1--3--4
-    cases.append(sparse.csr_matrix([[0, 1, 1, 0, 0, 0],
-                                    [1, 0, 1, 1, 0, 0],
-                                    [1, 1, 0, 0, 0, 0],
-                                    [0, 1, 0, 0, 1, 1],
-                                    [0, 0, 0, 1, 0, 1],
-                                    [0, 0, 0, 1, 1, 0]]))
+    cases.append(sparse.csr_array([[0, 1, 1, 0, 0, 0],
+                                   [1, 0, 1, 1, 0, 0],
+                                   [1, 1, 0, 0, 0, 0],
+                                   [0, 1, 0, 0, 1, 1],
+                                   [0, 0, 0, 1, 0, 1],
+                                   [0, 0, 0, 1, 1, 0]]))
 
     #  2        5
     #  | \    / |
     #  0  1--3--4
-    cases.append(sparse.csr_matrix([[0, 0, 1, 0, 0, 0],
-                                    [0, 0, 1, 1, 0, 0],
-                                    [1, 1, 0, 0, 0, 0],
-                                    [0, 1, 0, 0, 1, 1],
-                                    [0, 0, 0, 1, 0, 1],
-                                    [0, 0, 0, 1, 1, 0]]))
+    cases.append(sparse.csr_array([[0, 0, 1, 0, 0, 0],
+                                   [0, 0, 1, 1, 0, 0],
+                                   [1, 1, 0, 0, 0, 0],
+                                   [0, 1, 0, 0, 1, 1],
+                                   [0, 0, 0, 1, 0, 1],
+                                   [0, 0, 0, 1, 1, 0]]))
 
     #  2        5
     #  | \    / |
     #  0--1  3--4
-    cases.append(sparse.csr_matrix([[0, 1, 1, 0, 0, 0],
-                                    [1, 0, 1, 0, 0, 0],
-                                    [1, 1, 0, 0, 0, 0],
-                                    [0, 0, 0, 0, 1, 1],
-                                    [0, 0, 0, 1, 0, 1],
-                                    [0, 0, 0, 1, 1, 0]]))
+    cases.append(sparse.csr_array([[0, 1, 1, 0, 0, 0],
+                                   [1, 0, 1, 0, 0, 0],
+                                   [1, 1, 0, 0, 0, 0],
+                                   [0, 0, 0, 0, 1, 1],
+                                   [0, 0, 0, 1, 0, 1],
+                                   [0, 0, 0, 1, 1, 0]]))
 
     # Compare to reference implementation #
     for G in cases:
@@ -362,55 +365,55 @@ def test_connected_components():
 def test_complex_connected_components():
 
     cases = []
-    cases.append(sparse.csr_matrix([[0, 1, 0, 0],
-                                    [1, 0, 1, 0],
-                                    [0, 1, 0, 1],
-                                    [0, 0, 1, 0]]))
+    cases.append(sparse.csr_array([[0, 1, 0, 0],
+                                   [1, 0, 1, 0],
+                                   [0, 1, 0, 1],
+                                   [0, 0, 1, 0]]))
 
-    cases.append(sparse.csr_matrix([[0, 1, 0, 0],
-                                    [1, 0, 0, 0],
-                                    [0, 0, 0, 1],
-                                    [0, 0, 1, 0]]))
+    cases.append(sparse.csr_array([[0, 1, 0, 0],
+                                   [1, 0, 0, 0],
+                                   [0, 0, 0, 1],
+                                   [0, 0, 1, 0]]))
 
-    cases.append(sparse.csr_matrix([[0, 1, 0, 0],
-                                    [1, 0, 0, 0],
-                                    [0, 0, 0, 0],
-                                    [0, 0, 0, 0]]))
+    cases.append(sparse.csr_array([[0, 1, 0, 0],
+                                   [1, 0, 0, 0],
+                                   [0, 0, 0, 0],
+                                   [0, 0, 0, 0]]))
 
-    cases.append(sparse.csr_matrix([[0, 0, 0, 0],
-                                    [0, 0, 0, 0],
-                                    [0, 0, 0, 0],
-                                    [0, 0, 0, 0]]))
+    cases.append(sparse.csr_array([[0, 0, 0, 0],
+                                   [0, 0, 0, 0],
+                                   [0, 0, 0, 0],
+                                   [0, 0, 0, 0]]))
 
     #  2        5
     #  | \    / |
     #  0--1--3--4
-    cases.append(sparse.csr_matrix([[0, 1, 1, 0, 0, 0],
-                                    [1, 0, 1, 1, 0, 0],
-                                    [1, 1, 0, 0, 0, 0],
-                                    [0, 1, 0, 0, 1, 1],
-                                    [0, 0, 0, 1, 0, 1],
-                                    [0, 0, 0, 1, 1, 0]]))
+    cases.append(sparse.csr_array([[0, 1, 1, 0, 0, 0],
+                                   [1, 0, 1, 1, 0, 0],
+                                   [1, 1, 0, 0, 0, 0],
+                                   [0, 1, 0, 0, 1, 1],
+                                   [0, 0, 0, 1, 0, 1],
+                                   [0, 0, 0, 1, 1, 0]]))
 
     #  2        5
     #  | \    / |
     #  0  1--3--4
-    cases.append(sparse.csr_matrix([[0, 0, 1, 0, 0, 0],
-                                    [0, 0, 1, 1, 0, 0],
-                                    [1, 1, 0, 0, 0, 0],
-                                    [0, 1, 0, 0, 1, 1],
-                                    [0, 0, 0, 1, 0, 1],
-                                    [0, 0, 0, 1, 1, 0]]))
+    cases.append(sparse.csr_array([[0, 0, 1, 0, 0, 0],
+                                   [0, 0, 1, 1, 0, 0],
+                                   [1, 1, 0, 0, 0, 0],
+                                   [0, 1, 0, 0, 1, 1],
+                                   [0, 0, 0, 1, 0, 1],
+                                   [0, 0, 0, 1, 1, 0]]))
 
     #  2        5
     #  | \    / |
     #  0--1  3--4
-    cases.append(sparse.csr_matrix([[0, 1, 1, 0, 0, 0],
-                                    [1, 0, 1, 0, 0, 0],
-                                    [1, 1, 0, 0, 0, 0],
-                                    [0, 0, 0, 0, 1, 1],
-                                    [0, 0, 0, 1, 0, 1],
-                                    [0, 0, 0, 1, 1, 0]]))
+    cases.append(sparse.csr_array([[0, 1, 1, 0, 0, 0],
+                                   [1, 0, 1, 0, 0, 0],
+                                   [1, 1, 0, 0, 0, 0],
+                                   [0, 0, 0, 0, 1, 1],
+                                   [0, 0, 0, 1, 0, 1],
+                                   [0, 0, 0, 1, 1, 0]]))
 
     # Create complex data entries
     cases = [G+1.0j*G for G in cases]
@@ -457,3 +460,74 @@ def reference_connected_components(G):
             components.add(frozenset(component))
 
     return components
+
+
+def test_metis():
+    # check if pymetis is available before testing
+    metis = pytest.importorskip('pymetis')  # noqa: F841
+
+    # 0        4
+    # | \    / |
+    # 1--2--3--5
+    # target [0, 0, 0, 1, 1, 1] or [1, 1, 1, 0, 0, 0]
+    Edges = np.array([[0, 1],
+                      [0, 2],
+                      [1, 2],
+                      [2, 3],
+                      [3, 4],
+                      [3, 5],
+                      [4, 5]])
+    w = np.ones(Edges.shape[0], dtype=int)
+    G = sparse.coo_array((w, (Edges[:, 0], Edges[:, 1])), shape=(6, 6))
+    G = G + G.T  # undirected
+    G = G.tocoo()
+
+    # set fake diagonal (which gets zeroed)
+    G.setdiag(4.4)
+    G = G.tocsr()
+
+    parts = metis_partition(G, nparts=2)
+
+    # check left part
+    assert_equal(parts[:3], parts[0]*np.ones(3, dtype=int))
+
+    # check right part
+    assert_equal(parts[3:], parts[3]*np.ones(3, dtype=int))
+
+    # 0 -- 1 -- 2
+    # |    +    +
+    # 3 ++ 4 -- 5
+    # |    |    |
+    # 6 ++ 7 -- 8
+    # make edges ++ small ~1
+    # make edges -- large ~10
+    # target [0, 0, 0, 0, 1, 1, 0, 1, 1]
+    #     or [1, 1, 1, 1, 0, 0, 1, 0, 0]
+    Edges = np.array([[0, 1], [0, 3],
+                      [1, 0], [1, 4], [1, 2],
+                      [2, 1], [2, 5],
+                      [3, 0], [3, 4], [3, 6],
+                      [4, 1], [4, 3], [4, 5], [4, 7],
+                      [5, 2], [5, 4], [5, 8],
+                      [6, 3], [6, 7],
+                      [7, 4], [7, 6], [7, 8],
+                      [8, 5], [8, 7]])
+    w = 10*np.ones(Edges.shape[0], dtype=int)
+    for i, e in enumerate(Edges):
+        if np.array_equal(np.sort([1, 4]), np.sort(e)) or \
+           np.array_equal(np.sort([2, 5]), np.sort(e)) or \
+           np.array_equal(np.sort([3, 4]), np.sort(e)) or \
+           np.array_equal(np.sort([6, 7]), np.sort(e)):
+            w[i] = 1
+    G = sparse.coo_array((w, (Edges[:, 0], Edges[:, 1])), shape=(9, 9))
+    G = G.tocsr()
+
+    parts = metis_partition(G, nparts=2)
+
+    # check first part
+    I = [0, 1, 2, 3, 6]
+    assert_equal(parts[I], parts[I[0]]*np.ones(5, dtype=int))
+
+    # check second part
+    I = [4, 5, 7, 8]
+    assert_equal(parts[I], parts[I[0]]*np.ones(4, dtype=int))

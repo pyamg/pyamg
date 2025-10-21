@@ -39,12 +39,12 @@ def generate_quadratic(V, E, return_edges=False):
         ne2 x 6 list of vertices
 
     Edges : ndarray
-        ned x 2 list of edges where the midpoint is generated
+        nedge x 2 list of edges where the midpoint is generated
 
     Notes
     -----
         - midpoints are introduced and globally numbered at the end of the vertex list
-        - the element list includes the new list beteen v0-v1, v1-v2, and v2-v0
+        - the element list includes the new list between v0-v1, v1-v2, and v2-v0
 
     Examples
     --------
@@ -66,6 +66,7 @@ def generate_quadratic(V, E, return_edges=False):
     >>> print(E2)
     [[0 1 2 4 5 6]
      [2 3 1 7 8 5]]
+
     """
     if not isinstance(V, np.ndarray) or not isinstance(E, np.ndarray):
         raise ValueError('V and E must be ndarray')
@@ -77,8 +78,8 @@ def generate_quadratic(V, E, return_edges=False):
 
     # make a vertext-to-vertex graph
     ID = np.kron(np.arange(0, ne), np.ones((3,), dtype=int))
-    G = sparse.coo_matrix((np.ones((ne*3,), dtype=int), (E.ravel(), ID,)))
-    V2V = G * G.T
+    G = sparse.coo_array((np.ones((ne*3,), dtype=int), (E.ravel(), ID,)))
+    V2V = G @ G.T
 
     # from the vertex graph, get the edges and create new midpoints
     V2Vmid = sparse.tril(V2V, -1)
@@ -125,10 +126,11 @@ def diameter(V, E):
     Examples
     --------
     >>> import numpy as np
+    >>> from pyamg.gallery import fem
     >>> dx = 1
     >>> V = np.array([[0,0], [dx,0], [0,dx], [dx,dx]])
     >>> E = np.array([[0,1,2], [2,3,1]])
-    >>> h = diameter(V, E)
+    >>> h = fem.diameter(V, E)
     >>> print(h)
     1.4142135623730951
 
@@ -183,6 +185,7 @@ def refine2dtri(V, E, marked_elements=None):
         /    \    / |
       /       \  /  |
     n0 --------n3-- n1
+
     """
     Nel = E.shape[0]
     Nv = V.shape[0]
@@ -196,8 +199,8 @@ def refine2dtri(V, E, marked_elements=None):
     col = E.ravel()
     row = np.kron(np.arange(0, Nel), [1, 1, 1])
     data = np.ones((Nel*3,))
-    V2V = sparse.coo_matrix((data, (row, col)), shape=(Nel, Nv))
-    V2V = V2V.T * V2V
+    V2V = sparse.coo_array((data, (row, col)), shape=(Nel, Nv))
+    V2V = V2V.T @ V2V
 
     # compute interior edges list
     V2V.data = np.ones(V2V.data.shape)
@@ -277,7 +280,7 @@ def refine2dtri(V, E, marked_elements=None):
 
 
 def l2norm(u, mesh):
-    """Calculate the L2 norm of a funciton on mesh (V,E).
+    """Calculate the L2 norm of a function on mesh (V,E).
 
     Parameters
     ----------
@@ -303,26 +306,28 @@ def l2norm(u, mesh):
     >>> from pyamg.gallery import fem
     >>> V = np.array([[0,0], [1,0], [0,1], [1,1]])
     >>> E = np.array([[0,1,2], [1,3,2]])
-    >>> mesh = Mesh(V, E, degree=1)
+    >>> mesh = fem.Mesh(V, E, degree=1)
     >>> X, Y = mesh.V[:, 0], mesh.V[:, 1]
     >>> u = X + Y
     >>> unorm = fem.l2norm(u, mesh)
     >>> print(f'{unorm:2.6}')
     1.08012
-    >>> mesh = Mesh(V, E, degree=2)
+    >>> mesh = fem.Mesh(V, E, degree=2)
     >>> X, Y = mesh.V2[:, 0], mesh.V2[:, 1]
     >>> u = X + Y
     >>> unorm = fem.l2norm(u, mesh)
     >>> print(f'{unorm:2.6}')
     1.08012
+
     """
     if mesh.degree == 1:
         V = mesh.V
         E = mesh.E
-
-    if mesh.degree == 2:
+    elif mesh.degree == 2:
         V = mesh.V2
         E = mesh.E2
+    else:
+        raise ValueError('only mesh.degree 1 or 2 supported')
 
     if not isinstance(u, np.ndarray):
         raise ValueError('u must be ndarray')
@@ -361,8 +366,7 @@ def l2norm(u, mesh):
                              x,
                              y])
         basis = basis1
-
-    if mesh.degree == 2:
+    elif mesh.degree == 2:
         I = np.arange(6)
 
         def basis2(x, y):
@@ -373,6 +377,8 @@ def l2norm(u, mesh):
                              4*x*y,
                              4*y*(1-x-y)])
         basis = basis2
+    else:
+        raise ValueError('only mesh.degree 1 or 2 supported')
 
     for e in E:
         x = V[e, 0]
@@ -393,7 +399,7 @@ class Mesh:
     """Simple mesh object that holds vertices and mesh functions."""
 
     # pylint: disable=too-many-instance-attributes
-    # This is reasonble for this class
+    # This is reasonable for this class
 
     def __init__(self, V, E, degree=1):
         """Initialize mesh.
@@ -402,9 +408,11 @@ class Mesh:
         ----------
         V : ndarray
             nv x 2 list of coordinates
-
         E : ndarray
             ne x 3 list of vertices
+        degree : int
+            Polynomial degree, either 1 or 2
+
         """
         # check to see if E is numbered 0 ... nv
         ids = np.full((E.max()+1,), False)
@@ -456,6 +464,7 @@ class Mesh:
         ----------
         levels : int
             Number of refinement levels.
+
         """
         self.V2 = None
         self.E2 = None
@@ -490,7 +499,7 @@ class Mesh:
         edge0 = self.E[:, [0, 0, 1, 1, 2, 2]].ravel()
         edge1 = self.E[:, [1, 2, 0, 2, 0, 1]].ravel()
         data = np.ones((edge0.shape[0],), dtype=int)
-        G = sparse.coo_matrix((data, (edge0, edge1)), shape=(nv, nv))
+        G = sparse.coo_array((data, (edge0, edge1)), shape=(nv, nv))
         G.sum_duplicates()
         G.eliminate_zeros()
 
@@ -548,12 +557,8 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
 
     Parameters
     ----------
-    V : ndarray
-        nv x 2 list of coordinates
-
-    E : ndarray
-        ne x 3 or 6 list of vertices
-
+    mesh : Mesh
+        Mesh object defining vertices and elements
     kappa : function
         diffusion coefficient, kappa(x,y) with vector input
         can either return a scalar value or a 2x2 matrix that transforms <grad u>
@@ -601,7 +606,7 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
     ...  [4, 5, 7],
     ...  [4, 7, 6],
     ...  [5, 8, 7]])
-    >>> mesh = Mesh(V, E)
+    >>> mesh = fem.Mesh(V, E)
     >>> A, b = fem.gradgradform(mesh)
     >>> print(A.toarray())
     [[ 1.  -0.5  0.  -0.5  0.   0.   0.   0.   0. ]
@@ -642,6 +647,7 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
     [0.  0.  0.  0.5 1.  0.5 0.  0.  0. ]
     >>> print(u)
     [0.  0.  0.  0.5 0.5 0.5 0.  0.  0. ]
+
     """
     if degree not in [1, 2]:
         raise ValueError('degree = 1 or 2 supported')
@@ -663,20 +669,21 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
         E = mesh.E
         X = mesh.X
         Y = mesh.Y
-
-    if degree == 2:
+    elif degree == 2:
         E = mesh.E2
         X = mesh.X2
         Y = mesh.Y2
+    else:
+        raise ValueError('only mesh.degree 1 or 2 supported')
 
     # allocate sparse matrix arrays
     m = 3 if degree == 1 else 6
     AA = np.zeros((ne, m**2))
-    IA = np.zeros((ne, m**2), dtype=int)
-    JA = np.zeros((ne, m**2), dtype=int)
+    IA = np.zeros((ne, m**2), dtype=np.int32)
+    JA = np.zeros((ne, m**2), dtype=np.int32)
     bb = np.zeros((ne, m))
-    ib = np.zeros((ne, m), dtype=int)
-    jb = np.zeros((ne, m), dtype=int)
+    ib = np.zeros((ne, m), dtype=np.int32)
+    jb = np.zeros((ne, m), dtype=np.int32)
 
     # Assemble A and b
     for ei in range(0, ne):
@@ -732,8 +739,8 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
                                   4*y*(1-x-y)])
 
                 dbasis = np.array([
-                    [4*x + 4*y - 3, 4*x-1,     0, -8*x - 4*y + 4, 4*y,           -4*y],
-                    [4*x + 4*y - 3,     0, 4*y-1,           -4*x, 4*x, -4*x - 8*y + 4]
+                    [4*x + 4*y - 3, 4*x-1,     0, -8*x - 4*y + 4, 4*y, -4*y],
+                    [4*x + 4*y - 3,     0, 4*y-1, -4*x, 4*x, -4*x - 8*y + 4]
                 ])
 
                 # Step 4
@@ -756,9 +763,9 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
         jb[ei, :] = 0
 
     # convert matrices
-    A = sparse.coo_matrix((AA.ravel(), (IA.ravel(), JA.ravel())))
+    A = sparse.coo_array((AA.ravel(), (IA.ravel(), JA.ravel())))
     A.sum_duplicates()
-    b = sparse.coo_matrix((bb.ravel(), (ib.ravel(), jb.ravel()))).toarray().ravel()
+    b = sparse.coo_array((bb.ravel(), (ib.ravel(), jb.ravel()))).toarray().ravel()
 
     # A = A.tocsr()
     return A, b
@@ -776,6 +783,7 @@ def divform(mesh):
     -------
     BX, BY : ndarray
         div block B = [BX, BY].T in [[A, B], [B.T 0]]
+
     """
     if mesh.V2 is None:
         mesh.generate_quadratic()
@@ -830,8 +838,8 @@ def divform(mesh):
             #                   4*y*(1-x-y)])
 
             dbasis = np.array([
-                [4*x + 4*y - 3, 4*x-1,     0, -8*x - 4*y + 4, 4*y,           -4*y],
-                [4*x + 4*y - 3,     0, 4*y-1,           -4*x, 4*x, -4*x - 8*y + 4]
+                [4*x + 4*y - 3, 4*x-1,     0, -8*x - 4*y + 4, 4*y, -4*y],
+                [4*x + 4*y - 3,     0, 4*y-1, -4*x, 4*x, -4*x - 8*y + 4]
             ])
 
             dphi = invJ.dot(dbasis)
@@ -844,36 +852,43 @@ def divform(mesh):
         DX[ei, :] = DXelem.ravel()
         DXI[ei, :] = np.repeat(K[np.arange(m2)], m1)
         DXJ[ei, :] = np.tile(K[np.arange(m1)], m2)
-        BX = sparse.coo_matrix((DX.ravel(), (DXI.ravel(), DXJ.ravel())))
-        BX.sum_duplicates()
 
         DY[ei, :] = DYelem.ravel()
         DYI[ei, :] = np.repeat(K[np.arange(m2)], m1)
         DYJ[ei, :] = np.tile(K[np.arange(m1)], m2)
-        BY = sparse.coo_matrix((DY.ravel(), (DYI.ravel(), DYJ.ravel())))
-        BY.sum_duplicates()
+
+    # Convert representation to COO
+    BX = sparse.coo_array((DX.ravel(), (DXI.ravel(), DXJ.ravel())))
+    BX.sum_duplicates()
+
+    BY = sparse.coo_array((DY.ravel(), (DYI.ravel(), DYJ.ravel())))
+    BY.sum_duplicates()
+
     return BX, BY
 
 
-def applybc(A, b, mesh, bc):
+def applybc(A, b, mesh, bc, remove_dirichlet=False):
     """Apply boundary conditions.
 
     Parameters
     ----------
     A : sparse matrix
-        Fully assembled sparse matrix
+        Fully assembled sparse matrix.
     b : ndarray
-        Fully assembled right-hand side
+        Fully assembled right-hand side.
     mesh : Mesh
-        Mesh object
+        Mesh object.
     bc : list
-       list of boundary conditions
-       bc = [bc1, bc2, ..., bck]
-       where bck = {'id': id,    a list of vertices for boundary "k"
-                     'g': g,     g = g(x,y) is a function for the vertices on boundary "k"
-                   'var': var    the variable, given as a start in the dof list
-                'degree': degree degree of the variable, either 1 or 2
-                   }
+       List of boundary conditions: bc = [bc1, bc2, ..., bck],
+       where
+
+           bck = {'id': id,    # a list of vertices for boundary "k"
+                   'g': g,     # g = g(x,y) is a function for the vertices on boundary "k"
+                 'var': var    # the variable, given as a start in the dof list
+              'degree': degree # degree of the variable, either 1 or 2
+                 }
+    remove_dirichlet : bool
+        Flag to remove Dirichlet boundary nodes from the matrix (size).
 
     Returns
     -------
@@ -881,6 +896,34 @@ def applybc(A, b, mesh, bc):
         Modified, assembled sparse matrix
     b : ndarray
         Modified, assembled right-hand side
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import scipy.sparse.linalg as sla
+    >>> from pyamg.gallery import fem, regular_triangle_mesh
+    >>> # mesh
+    >>> V, E = regular_triangle_mesh(50, 50)
+    >>> mesh = fem.Mesh(V, E)
+    >>> f = lambda x, y : 0*x + 1.0
+    >>> # BC
+    >>> g = lambda x, y : x*(1-x)*4
+    >>> tol = 1e-12
+    >>> X, Y = V[:,0], V[:,1]
+    >>> id1 = np.where(abs(Y) < tol)[0]      # south
+    >>> id2 = np.where(abs(Y-1) < tol)[0]    # north
+    >>> bc = [{'id': id1, 'g': g},           # Dirichlet
+    ...       {'id': id2, 'g': g}]           # Dirichlet
+    >>> # Assembly and apply BC
+    >>> A, b = fem.gradgradform(mesh, f=f)
+    >>> A, b = fem.applybc(A, b, mesh, bc)
+    >>> A = A.tocsr()
+    >>> u = sla.spsolve(A, b)
+    >>> # import matplotlib.pyplot as plt
+    >>> # plt.tricontourf(X, Y, E, u, 100);
+    >>> # plt.tricontour(X, Y, E, u, 100, linewidths=0.5, colors='k');
+    >>> # plt.show();
+
     """
     for c in bc:
         if not callable(c['g']):
@@ -893,7 +936,7 @@ def applybc(A, b, mesh, bc):
             c['var'] = 0
 
     # now extend the BC
-    # for each new id, are the orignal neighboring ids in a bc?
+    # for each new id, are the original neighboring ids in a bc?
     for c in bc:
         if c['degree'] == 2:
             idx = c['id']
@@ -914,10 +957,12 @@ def applybc(A, b, mesh, bc):
         elif c['degree'] == 2:
             X = mesh.X2
             Y = mesh.Y2
+        else:
+            raise ValueError('only mesh.degree 1 or 2 supported')
         u0[idx] = c['g'](X[idx], Y[idx])
 
     # lift (2 of 3)
-    b = b - A * u0
+    b = b - A @ u0
 
     # fix the values (3 of 3)
     for c in bc:
@@ -926,17 +971,25 @@ def applybc(A, b, mesh, bc):
 
     # set BC to identity in the matrix
     # collect all BC indices (1 of 2)
-    Dflag = np.full((A.shape[0],), False)
+    dirichlet = np.full(A.shape[0], False)
     for c in bc:
         idx = c['var'] + c['id']
-        Dflag[idx] = True
+        dirichlet[idx] = True
+
     # write identity (2 of 2)
-    for k, (i, j) in enumerate(zip(A.row, A.col)):
-        if Dflag[i] or Dflag[j]:
-            if i == j:
-                A.data[k] = 1.0
-            else:
-                A.data[k] = 0.0
+    # mark Dirichlet in the data array
+    dirichlet_idx = np.logical_or(dirichlet[A.row], dirichlet[A.col])
+    A.data[dirichlet_idx] = 0.0
+    if not remove_dirichlet:
+        diag_idx = np.logical_and(dirichlet_idx, A.row == A.col)
+        A.data[diag_idx] = 1.0
+        A.eliminate_zeros()
+        A = A.tocsr()
+    else:
+        A.eliminate_zeros()
+        A = A.tocsr()
+        not_dirichlet = np.logical_not(dirichlet)
+        A = A[not_dirichlet, :][:, not_dirichlet]
 
     return A, b
 
@@ -948,9 +1001,9 @@ def stokes(mesh, fu, fv):
     Av, bv = gradgradform(mesh, f=fv, degree=2)
     BX, BY = divform(mesh)
 
-    C = sparse.bmat([[Au, None, BX.T],
-                     [None, Av, BY.T],
-                     [BX, BY, None]])
+    C = sparse.block_array([[Au, None, BX.T],
+                            [None, Av, BY.T],
+                            [BX, BY, None]])
     b = np.hstack((bu, bv, np.zeros((BX.shape[0],))))
 
     return C, b
@@ -977,7 +1030,6 @@ def model(num=0):
     See Also
     --------
     poissonfem - build the FE matrix and right hand side
-    Notes
-    -----
+
     """
     raise NotImplementedError(f'model (num={num}) is unimplemented')

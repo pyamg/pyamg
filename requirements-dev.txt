@@ -1,5 +1,5 @@
 numpy
-scipy
+scipy>=1.11.0
 pytest
 pep8-naming
 flake8-quotes
@@ -8,3 +8,4 @@ flake8-use-fstring
 flake8-pytest-style
 flake8-docstrings
 pylint
+flake8

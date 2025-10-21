@@ -19,7 +19,7 @@ class TestAggregate(TestCase):
         # random matrices
         np.random.seed(2006482792)
         for N in [2, 3, 5]:
-            self.cases.append(sparse.csr_matrix(np.random.rand(N, N)))
+            self.cases.append(sparse.csr_array(np.random.rand(N, N)))
 
         # Poisson problems in 1D and 2D
         for N in [2, 3, 5, 7, 10, 11, 19]:
@@ -43,7 +43,7 @@ class TestAggregate(TestCase):
             assert_equal(np.setdiff1d(Cpts, expected_Cpts).shape[0], 0)
 
         # S is diagonal - no dofs aggregated
-        S = sparse.spdiags([[1, 1, 1, 1]], [0], 4, 4, format='csr')
+        S = sparse.diags_array([[1, 1, 1, 1]], offsets=[0], shape=(4, 4), format='csr')
         (result, Cpts) = standard_aggregation(S)
         expected = np.array([[0], [0], [0], [0]])
         assert_equal(result.toarray(), expected)
@@ -61,7 +61,7 @@ class TestAggregate(TestCase):
             assert_equal(np.setdiff1d(Cpts, expected_Cpts).shape[0], 0)
 
         # S is diagonal - no dofs aggregated
-        S = sparse.spdiags([[1, 1, 1, 1]], [0], 4, 4, format='csr')
+        S = sparse.diags_array([[1, 1, 1, 1]], offsets=[0], shape=(4, 4), format='csr')
         (result, Cpts) = naive_aggregation(S)
         expected = np.eye(4)
         assert_equal(result.toarray(), expected)
@@ -78,7 +78,7 @@ class TestAggregate(TestCase):
             assert_equal(np.setdiff1d(Cpts, expected_Cpts).shape[0], 0)
 
         # S is diagonal - no dofs aggregated
-        S = sparse.spdiags([[1.0, 1.0, 1.0, 1.0]], [0], 4, 4, format='csr')
+        S = sparse.diags_array([[1, 1, 1, 1]], offsets=[0], shape=(4, 4), format='csr')
         (result, Cpts) = pairwise_aggregation(S, matchings=1, theta=0.25, norm='min')
         expected = np.eye(4)
         assert_equal(result.todense(), expected)
@@ -171,10 +171,10 @@ def reference_standard_aggregation(C):
     assert len(R) == 0
 
     Pj = aggregates
-    Pp = np.arange(n+1)
+    Pp = np.arange(n + 1, dtype=aggregates.dtype)
     Px = np.ones(n)
 
-    return sparse.csr_matrix((Px, Pj, Pp)), np.array(Cpts)
+    return sparse.csr_array((Px, Pj, Pp)), np.array(Cpts)
 
 
 def reference_naive_aggregation(C):
@@ -198,16 +198,14 @@ def reference_naive_aggregation(C):
             R = np.union1d(R, unaggregated_neighbors)
             R = np.union1d(R, np.array([i]))
             Cpts.append(i)
-        else:
-            pass
 
     assert np.unique(R).shape[0] == n
 
     Pj = aggregates
-    Pp = np.arange(n+1)
+    Pp = np.arange(n + 1, dtype=aggregates.dtype)
     Px = np.ones(n)
 
-    return sparse.csr_matrix((Px, Pj, Pp)), np.array(Cpts)
+    return sparse.csr_array((Px, Pj, Pp)), np.array(Cpts)
 
 
 def reference_pairwise_aggregation(C):
@@ -236,7 +234,7 @@ def reference_pairwise_aggregation(C):
     while (count < n):
         for k in range(0, max_m+1):
             if mmap[k]:
-                i = list(mmap[k].keys())[0]
+                i = next(iter(mmap[k].keys()))
                 break
 
         row = S[i]
@@ -278,7 +276,7 @@ def reference_pairwise_aggregation(C):
     assert (np.unique(R).shape[0] == n)
 
     Pj = aggregates
-    Pp = np.arange(n+1)
+    Pp = np.arange(n + 1, dtype=aggregates.dtype)
     Px = np.ones(n)
 
-    return sparse.csr_matrix((Px, Pj, Pp)), np.array(Cpts)
+    return sparse.csr_array((Px, Pj, Pp)), np.array(Cpts)

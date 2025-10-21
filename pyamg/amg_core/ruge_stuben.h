@@ -18,44 +18,47 @@
 #define PRE_F_NODE 3
 
 /*
- *  Compute a strength of connection matrix using the classical strength
- *  of connection measure by Ruge and Stuben. Both the input and output
- *  matrices are stored in CSR format.  An off-diagonal nonzero entry
- *  A[i,j] is considered strong if:
+ * Classical strength of connection.
  *
- *  ..
- *      |A[i,j]| >= theta * max( |A[i,k]| )   where k != i
+ * Compute a strength of connection matrix using the classical strength
+ * of connection measure by Ruge and Stuben. Both the input and output
+ * matrices are stored in CSR format.  An off-diagonal nonzero entry
+ * A[i,j] is considered strong if::
+ *
+ *     |A[i,j]| >= theta * max( |A[i,k]| )   where k != i
  *
  * Otherwise, the connection is weak.
  *
  * Parameters
  * ----------
  * num_rows : int
- *     number of rows in A
+ *     Number of rows in A.
  * theta : float
- *     stength of connection tolerance
+ *     Strength of connection tolerance.
  * Ap : array
- *     CSR row pointer
+ *     CSR row pointer.
  * Aj : array
- *     CSR index array
+ *     CSR index array.
  * Ax : array
- *     CSR data array
+ *     CSR data array.
  * Sp : array
- *     CSR row pointer
+ *     CSR row pointer.
  * Sj : array
- *     CSR index array
+ *     CSR index array.
  * Sx : array
- *     CSR data array
+ *     CSR data array.
  *
  * Returns
  * -------
- * Nothing, S will be stored in Sp, Sj, Sx
+ * None
+ *     Array S is be stored in Sp, Sj, Sx.
  *
  * Notes
  * -----
  * Storage for S must be preallocated.  Since S will consist of a subset
  * of A's nonzero values, a conservative bound is to allocate the same
  * storage for S as is used by A.
+ *
  */
 template<class I, class T, class F>
 void classical_strength_of_connection_abs(const I n_row,
@@ -107,6 +110,49 @@ void classical_strength_of_connection_abs(const I n_row,
     }
 }
 
+/*
+ * Classical strength of connection.
+ *
+ * Compute a strength of connection matrix using the classical strength
+ * of connection measure by Ruge and Stuben. Both the input and output
+ * matrices are stored in CSR format.  An off-diagonal nonzero entry
+ * A[i,j] is considered strong if::
+ *
+ *     A[i,j] >= theta * max( -A[i,k] )   where k != i
+ *
+ * Otherwise, the connection is weak.
+ *
+ * Parameters
+ * ----------
+ * num_rows : int
+ *     Number of rows in A.
+ * theta : float
+ *     Strength of connection tolerance.
+ * Ap : array
+ *     CSR row pointer.
+ * Aj : array
+ *     CSR index array.
+ * Ax : array
+ *     CSR data array.
+ * Sp : array
+ *     CSR row pointer.
+ * Sj : array
+ *     CSR index array.
+ * Sx : array
+ *     CSR data array.
+ *
+ * Returns
+ * -------
+ * None
+ *     Array S is be stored in Sp, Sj, Sx.
+ *
+ * Notes
+ * -----
+ * Storage for S must be preallocated.  Since S will consist of a subset
+ * of A's nonzero values, a conservative bound is to allocate the same
+ * storage for S as is used by A.
+ *
+ */
 template<class I, class T>
 void classical_strength_of_connection_min(const I n_row,
                                           const T theta,
@@ -158,24 +204,26 @@ void classical_strength_of_connection_min(const I n_row,
 }
 
 /*
- * Compute the maximum in magnitude row value for a CSR matrix
+ * Compute the maximum in magnitude row value for a CSR matrix.
  *
  * Parameters
  * ----------
  * num_rows : int
- *     number of rows in A
- * x : array, inplace
- *      num_rows array
+ *     Number of rows in A.
+ * x : array
+ *     Num_rows array.
  * Ap : array
- *     CSR row pointer
+ *     CSR row pointer.
  * Aj : array
- *     CSR index array
+ *     CSR index array.
  * Ax : array
- *     CSR data array
+ *     CSR data array.
  *
  * Returns
  * -------
- * Nothing, x[i] will hold row i's maximum magnitude entry
+ * None
+ *     Array x[i] will hold row i's maximum magnitude entry
+ *     and is modified in place.
  *
  */
 template<class I, class T, class F>
@@ -202,7 +250,9 @@ void maximum_row_value(const I n_row,
 }
 
 
-/* Compute a C/F (coarse-fine( splitting using the classical coarse grid
+/* Ruge-Stuben splitting.
+ *
+ * Compute a C/F (coarse-fine( splitting using the classical coarse grid
  * selection method of Ruge and Stuben.  The strength of connection matrix S,
  * and its transpose T, are stored in CSR format.  Upon return, the  splitting
  * array will consist of zeros and ones, where C-nodes (coarse nodes) are
@@ -211,24 +261,25 @@ void maximum_row_value(const I n_row,
  * Parameters
  * ----------
  * n_nodes : int
- *     number of rows in A
+ *     Number of rows in A.
  * Sp : array
- *     CSR row pointer array for SOC matrix
+ *     CSR row pointer array for SOC matrix.
  * Sj : array
- *     CSR column index array for SOC matrix
+ *     CSR column index array for SOC matrix.
  * Tp : array
- *     CSR row pointer array for transpose of SOC matrix
+ *     CSR row pointer array for transpose of SOC matrix.
  * Tj : array
- *     CSR column index array for transpose of SOC matrix
+ *     CSR column index array for transpose of SOC matrix.
  * influence : array
- *     array that influences splitting (values stored here are
- *     added to lambda for each point)
+ *     Array that influences splitting (values stored here are
+ *     added to lambda for each point).
  * splitting : array, inplace
- *     array to store the C/F splitting
+ *     Array to store the C/F splitting.
  *
  * Notes
  * -----
- * The splitting array must be preallocated
+ * The splitting array must be preallocated.
+ *
  */
 template<class I>
 void rs_cf_splitting(const I n_nodes,
@@ -332,7 +383,7 @@ void rs_cf_splitting(const I n_nodes,
                 }
             }
 
-            // For each j in S^T_i /\ U marked as tentative F-point, modify lamdba
+            // For each j in S^T_i /\ U marked as tentative F-point, modify lambda
             // values for neighborhood of j
             for (I jj = Tp[i]; jj < Tp[i+1]; jj++)
             {
@@ -411,7 +462,24 @@ void rs_cf_splitting(const I n_nodes,
     }
 }
 
-
+/* Ruge-Stuben splitting pass 2.
+ *
+ * Parameters
+ * ----------
+ * n_nodes : int
+ *     Number of rows in A.
+ * Sp : array
+ *     CSR row pointer array for SOC matrix.
+ * Sj : array
+ *     CSR column index array for SOC matrix.
+ * splitting : array, inplace
+ *     Array to store the C/F splitting.
+ *
+ * Notes
+ * -----
+ * The splitting array must be preallocated.
+ *
+ */
 template<class I>
 void rs_cf_splitting_pass2(const I n_nodes,
                            const I Sp[], const int Sp_size,
@@ -475,32 +543,37 @@ void rs_cf_splitting_pass2(const I n_nodes,
 }
 
 
-/*
- * Compute a CLJP splitting
+/* 
+ * Compute a CLJP splitting.
  *
  * Parameters
  * ----------
  * n : int
- *     number of rows in A (number of vertices)
+ *     Number of rows in A (number of vertices).
  * Sp : array
- *     CSR row pointer (strength matrix)
+ *     CSR row pointer (strength matrix).
  * Sj : array
- *     CSR index array
+ *     CSR index array.
  * Tp : array
- *     CSR row pointer (transpose of the strength matrix)
+ *     CSR row pointer (transpose of the strength matrix).
  * Tj : array
- *     CSR index array
+ *     CSR index array.
  * splitting : array, inplace
- *     array to store the C/F splitting
+ *     Array to store the C/F splitting.
  * colorflag : int
- *     flag to indicate coloring
+ *     Flag to indicate coloring.
+ *
+ * Returns
+ * -------
+ * None
+ *     In place.
  *
  * Notes
  * -----
  * The splitting array must be preallocated.
  * CLJP naive since it requires the transpose.
+ *
  */
-
 template<class I>
 void cljp_naive_splitting(const I n,
                           const I Sp[], const int Sp_size,
@@ -669,30 +742,35 @@ void cljp_naive_splitting(const I n,
 
 
 /*
- * Produce the Ruge-Stuben prolongator using "Direct Interpolation"
+ * Produce the Ruge-Stuben prolongator using "Direct Interpolation".
  *
  *
  * The first pass uses the strength of connection matrix 'S'
  * and C/F splitting to compute the row pointer for the prolongator.
  *
- * The second pass fills in the nonzero entries of the prolongator
+ * The second pass fills in the nonzero entries of the prolongator.
  *
  * Parameters
  * ----------
  * n_nodes : int
- *     Number of nodes
+ *     Number of nodes.
  * Sp : array
- *     Strength matrix row pointer array
+ *     Strength matrix row pointer array.
  * Sj : array
- *     Strength matrix column index array
+ *     Strength matrix column index array.
  * splitting : array
- *     C/F splitting
+ *     C/F splitting.
  * Pp : array, inplace
- *     Row pointer array
+ *     Row pointer array.
  *
- * References
- * ----------
- * Page 479 of Multigrid
+ * Returns
+ * -------
+ * None
+ *     In place.
+ *
+ * Notes
+ * -----
+ * See page 479 of Multigrid.
  *
  */
 template<class I>
@@ -718,6 +796,38 @@ void rs_direct_interpolation_pass1(const I n_nodes,
 }
 
 
+/*
+ * RS direct interpolation pass 2.
+ *
+ * Parameters
+ * ----------
+ * Ap : array
+ *     Row pointer for matrix A.
+ * Aj : array
+ *     Column indices for matrix A.
+ * Ax : array
+ *     Data array for matrix A.
+ * Sp : array
+ *     Row pointer for SOC matrix, C.
+ * Sj : array
+ *     Column indices for SOC matrix, C.
+ * Sx : array
+ *     Data array for SOC matrix, C -- MUST HAVE VALUES OF A.
+ * splitting : array
+ *     Boolean array with 1 denoting C-points and 0 F-points.
+ * Pp : array
+ *     Row pointer for matrix P.
+ * Pj : array
+ *     Column indices for matrix P.
+ * Px : array
+ *     Data array for matrix P.
+ *
+ * Returns
+ * -------
+ * None
+ *     Arrays Pj and Px modified in place.
+ *
+ */
 template<class I, class T>
 void rs_direct_interpolation_pass2(const I n_nodes,
                                    const I Ap[], const int Ap_size,
@@ -797,33 +907,36 @@ void rs_direct_interpolation_pass2(const I n_nodes,
 }
 
 
-/* Helper function for compatible relaxation to perform steps 3.1d - 3.1f
- * in Falgout / Brannick (2010).
+/* Helper function for compatible relaxation.
+ *
+ * Perform steps 3.1d - 3.1f in Falgout / Brannick (2010).
  *
  * Parameters
  * ----------
  * Ap : array
- *      Row pointer for sparse matrix in CSR format.
+ *     Row pointer for sparse matrix in CSR format.
  * Aj : array
- *      Column indices for sparse matrix in CSR format.
+ *     Column indices for sparse matrix in CSR format.
  * B : array
- *      Target near null space vector for computing candidate set measure.
+ *     Target near null space vector for computing candidate set measure.
  * e : array, inplace
- *      Relaxed vector for computing candidate set measure.
+ *     Relaxed vector for computing candidate set measure.
  * indices : array, inplace
- *      Array of indices, where indices[0] = the number of F indices, nf,
- *      followed by F indices in elements 1:nf, and C indices in (nf+1):n.
+ *     Array of indices, where indices[0] = the number of F indices, nf,
+ *     followed by F indices in elements 1:nf, and C indices in (nf+1):n.
  * splitting : array, inplace
- *      Integer array with current C/F splitting of nodes, 0 = C-point,
- *      1 = F-point.
+ *     Integer array with current C/F splitting of nodes, 0 = C-point,
+ *     1 = F-point.
  * gamma : array, inplace
- *      Preallocated vector to store candidate set measure.
+ *     Preallocated vector to store candidate set measure.
  * thetacs : float
- *      Threshold for coarse grid candidates from set measure.
+ *     Threshold for coarse grid candidates from set measure.
  *
  * Returns
  * -------
- * Nothing, updated C/F-splitting and corresponding indices modified in place.
+ * None
+ *     Updated C/F-splitting and corresponding indices modified in place.
+ *
  */
 template<class I, class T>
 void cr_helper(const I Ap[], const int Ap_size,
@@ -943,25 +1056,27 @@ void cr_helper(const I Ap[], const int Ap_size,
     }
 }
 
-/* First pass of classical AMG interpolation to build row pointer for
- * P based on SOC matrix and CF-splitting.
+/* First pass of classical AMG interpolation.
+ *
+ * Build row pointer for P based on SOC matrix and CF-splitting.
  *
  * Parameters
  * ----------
  * n_nodes : int
- *     Number of rows in A
+ *     Number of rows in A.
  * Sp : array
- *     Row pointer for SOC matrix, C
+ *     Row pointer for SOC matrix, C.
  * Sj : array
- *     Column indices for SOC matrix, C
+ *     Column indices for SOC matrix, C.
  * splitting : array
- *     Boolean array with 1 denoting C-points and 0 F-points
+ *     Boolean array with 1 denoting C-points and 0 F-points.
  * Pp : array
- *     empty array to store row pointer for matrix P
+ *     Empty array to store row pointer for matrix P.
  *
  * Returns
  * -------
- * Nothing, Pp is modified in place.
+ * None
+ *     Pp is modified in place.
  *
  */
 template<class I>
@@ -988,7 +1103,10 @@ void rs_classical_interpolation_pass1(const I n_nodes,
 }
 
 
-/* Remove strong F-to-F connections that do NOT have a common C-point from
+/*
+ * Remove strong F-to-F connections.
+ *
+ * Remove strong F-to-F connections that do NOT have a common C-point from
  * the set of strong connections. Specifically, set the data value in CSR
  * format to 0. Removing zero entries afterwards will adjust row pointer
  * and column indices.
@@ -996,19 +1114,20 @@ void rs_classical_interpolation_pass1(const I n_nodes,
  * Parameters
  * ----------
  * n_nodes : int
- *     Number of rows in A
+ *     Number of rows in A.
  * Sp : array
- *     Row pointer for SOC matrix, C
+ *     Row pointer for SOC matrix, C.
  * Sj : array
- *     Column indices for SOC matrix, C
+ *     Column indices for SOC matrix, C.
  * Sx : array
- *     Data array for SOC matrix, C
+ *     Data array for SOC matrix, C.
  * splitting : array
- *     Boolean array with 1 denoting C-points and 0 F-points
+ *     Boolean array with 1 denoting C-points and 0 F-points.
  *
  * Returns
  * -------
- * Nothing, Sx[] is set to zero to eliminate connections.
+ * None
+ *     Array Sx is set to zero to eliminate connections.
  */
 template<class I, class T>
 void remove_strong_FF_connections(const I n_nodes,
@@ -1062,7 +1181,10 @@ void remove_strong_FF_connections(const I n_nodes,
 }
 
 
-/* Produce a classical AMG interpolation operator for the case in which
+/*
+ * RS classical interpolation pass 2.
+ *
+ * Produce a classical AMG interpolation operator for the case in which
  * two strongly connected F -points do NOT have a common C-neighbor. Formula
  * can be found in Sec. 3 Eq. (8) of [1] for modified=False and Eq. (9)
  * for modified=True.
@@ -1070,46 +1192,48 @@ void remove_strong_FF_connections(const I n_nodes,
  * Parameters
  * ----------
  * Ap : array
- *     Row pointer for matrix A
+ *     Row pointer for matrix A.
  * Aj : array
- *     Column indices for matrix A
+ *     Column indices for matrix A.
  * Ax : array
- *     Data array for matrix A
+ *     Data array for matrix A.
  * Sp : array
- *     Row pointer for SOC matrix, C
+ *     Row pointer for SOC matrix, C.
  * Sj : array
- *     Column indices for SOC matrix, C
+ *     Column indices for SOC matrix, C.
  * Sx : array
- *     Data array for SOC matrix, C -- MUST HAVE VALUES OF A
+ *     Data array for SOC matrix, C -- MUST HAVE VALUES OF A.
  * splitting : array
- *     Boolean array with 1 denoting C-points and 0 F-points
+ *     Boolean array with 1 denoting C-points and 0 F-points.
  * Pp : array
- *     Row pointer for matrix P
+ *     Row pointer for matrix P.
  * Pj : array
- *     Column indices for matrix P
+ *     Column indices for matrix P.
  * Px : array
- *     Data array for matrix P
+ *     Data array for matrix P.
  * modified : bool
- *     Use modified interpolation formula
+ *     Use modified interpolation formula.
+ *
+ * Returns
+ * -------
+ * None
+ *     Arrays Pj and Px modified in place.
  *
  * Notes
  * -----
  * For modified interpolation, it is assumed that SOC matrix C is
  * passed in WITHOUT any F-to-F connections that do not share a
  * common C-point neighbor. Any SOC matrix C can be set as such by
- * calling remove_strong_FF_connections().
- *
- * Returns
- * -------
- * Nothing, Pj[] and Px[] modified in place.
+ * calling ``remove_strong_FF_connections()``.
  *
  * References
  * ----------
- * [0] V. E. Henson and U. M. Yang, BoomerAMG: a parallel algebraic multigrid
- *      solver and preconditioner, Applied Numerical Mathematics 41 (2002).
+ * ..[0] V. E. Henson and U. M. Yang, BoomerAMG: a parallel algebraic multigrid
+ *       solver and preconditioner, Applied Numerical Mathematics 41 (2002).
  *
- * [1] "Distance-Two Interpolation for Parallel Algebraic Multigrid,"
- *      H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2008).
+ * ..[1] "Distance-Two Interpolation for Parallel Algebraic Multigrid,"
+ *       H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2008).
+ *
  */
 template<class I, class T>
 void rs_classical_interpolation_pass2(const I n_nodes,

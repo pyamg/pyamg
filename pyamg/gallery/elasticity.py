@@ -12,23 +12,22 @@ def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
     Parameters
     ----------
     grid : tuple
-        length 2 tuple of grid sizes, e.g. (10, 10)
+        Length 2 tuple of grid sizes, e.g. (10, 10).
     spacing : tuple
-        length 2 tuple of grid spacings, e.g. (1.0, 0.1)
+        Length 2 tuple of grid spacings, e.g. (1.0, 0.1).
     E : float
-        Young's modulus
+        Young's modulus.
     nu : float
-        Poisson's ratio
-    format : string
-        Format of the returned sparse matrix (eg. 'csr', 'bsr', etc.)
+        Poisson's ratio.
+    format : str
+        Format of the returned sparse matrix (eg. 'csr', 'bsr', etc.).
 
     Returns
     -------
-    A : csr_matrix
-        FE Q1 stiffness matrix
-
-    B : array
-        rigid body modes
+    csr_array
+        FE Q1 stiffness matrix.
+    array
+        Rigid body modes.
 
     See Also
     --------
@@ -36,12 +35,7 @@ def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
 
     Notes
     -----
-        - only 2d for now
-
-    Examples
-    --------
-    >>> from pyamg.gallery import linear_elasticity
-    >>> A, B = linear_elasticity((4, 4))
+    Only 2d.
 
     References
     ----------
@@ -49,6 +43,11 @@ def linear_elasticity(grid, spacing=None, E=1e5, nu=0.3, format=None):
        "Matlab implementation of the finite element method in elasticity"
        Computing, Volume 69,  Issue 3  (November 2002) Pages: 239 - 263
        http://www.math.hu-berlin.de/~cc/
+
+    Examples
+    --------
+    >>> from pyamg.gallery import linear_elasticity
+    >>> A, B = linear_elasticity((4, 4))
 
     """
     if len(grid) == 2:
@@ -92,7 +91,7 @@ def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True,
     vertices = np.array([[0, 0], [DX, 0], [DX, DY], [0, DY]])
     K = q12d_local(vertices, lame, mu)
 
-    nodes = np.arange((X+1)*(Y+1)).reshape(X+1, Y+1)
+    nodes = np.arange((X+1)*(Y+1), dtype=np.int32).reshape(X+1, Y+1)
     LL = nodes[:-1, :-1]
     Id = (2*LL).repeat(K.size).reshape(-1, 8, 8)
     J = Id.copy()
@@ -105,7 +104,7 @@ def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True,
     V = np.ravel(V)
 
     # sum duplicates
-    A = sparse.coo_matrix((V, (Id, J)), shape=(pts.size, pts.size)).tocsr()
+    A = sparse.coo_array((V, (Id, J)), shape=(pts.size, pts.size)).tocsr()
     A = A.tobsr(blocksize=(2, 2))
 
     del Id, J, V, LL, nodes
@@ -123,14 +122,14 @@ def q12d(grid, spacing=None, E=1e5, nu=0.3, dirichlet_boundary=True,
         data = np.zeros(((X-1)*(Y-1), 2, 2))
         data[:, 0, 0] = 1
         data[:, 1, 1] = 1
-        indices = np.arange((X-1)*(Y-1))
-        indptr = np.concatenate((np.array([0]), np.cumsum(mask)))
-        P = sparse.bsr_matrix((data, indices, indptr),
+        indices = np.arange((X-1)*(Y-1), dtype=np.int32)
+        indptr = np.concatenate((np.array([0]), np.cumsum(mask)), dtype=np.int32)
+        P = sparse.bsr_array((data, indices, indptr),
                               shape=(2*(X+1)*(Y+1), 2*(X-1)*(Y-1)))
         Pt = P.T
-        A = P.T * A * P
+        A = P.T @ A @ P
 
-        B = Pt * B
+        B = Pt @ B
 
     return A.asformat(format), B
 
@@ -140,6 +139,8 @@ def q12d_local(vertices, lame, mu):
 
     Parameters
     ----------
+    vertices : array
+        List of vertices
     lame : Float
         Lame's first parameter
     mu : Float
@@ -210,25 +211,32 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
 
     Parameters
     ----------
-    vertices : array_like
-        array of vertices of a triangle or tets
-    elements : array_like
-        array of vertex indices for tri or tet elements
+    vertices : array
+        Array of vertices of a triangle or tets.
+    elements : array
+        Array of vertex indices for tri or tet elements.
     E : float
-        Young's modulus
+        Young's modulus.
     nu : float
-        Poisson's ratio
-    format : string
-        'csr', 'csc', 'coo', 'bsr'
+        Poisson's ratio.
+    format : str
+        Sparse array format: 'csr', 'csc', 'coo', 'bsr'.
 
     Returns
     -------
-    A : csr_matrix
-        FE Q1 stiffness matrix
+    csr_array
+        FE Q1 stiffness matrix.
 
     Notes
     -----
-        - works in both 2d and in 3d
+    Both 2d and 3d.
+
+    References
+    ----------
+    .. [1] J. Alberty, C. Carstensen, S. A. Funken, and R. KloseDOI
+       "Matlab implementation of the finite element method in elasticity"
+       Computing, Volume 69,  Issue 3  (November 2002) Pages: 239 - 263
+       http://www.math.hu-berlin.de/~cc/
 
     Examples
     --------
@@ -237,13 +245,6 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
     >>> E = np.array([[0, 1, 2],[1, 3, 2]])
     >>> V = np.array([[0.0, 0.0],[1.0, 0.0],[0.0, 1.0],[1.0, 1.0]])
     >>> A, B = linear_elasticity_p1(V, E)
-
-    References
-    ----------
-    .. [1] J. Alberty, C. Carstensen, S. A. Funken, and R. KloseDOI
-       "Matlab implementation of the finite element method in elasticity"
-       Computing, Volume 69,  Issue 3  (November 2002) Pages: 239 - 263
-       http://www.math.hu-berlin.de/~cc/
 
     """
     # compute local stiffness matrix
@@ -260,17 +261,16 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
     if elements.shape[1] != D + 1:
         raise ValueError('dimension mismatch')
 
-    if D not in (2, 3):
-        raise ValueError('only dimension 2 and 3 are supported')
-
     if D == 2:
         local_K = p12d_local
     elif D == 3:
         local_K = p13d_local
+    else:
+        raise ValueError('only dimension 2 and 3 are supported')
 
     row = elements.repeat(D).reshape(-1, D)
     row *= D
-    row += np.arange(D)
+    row += np.arange(D, dtype=row.dtype)
     row = row.reshape(-1, D*(D+1)).repeat(D*(D+1), axis=0)
     row = row.reshape(-1, D*(D+1), D*(D+1))
     col = row.swapaxes(1, 2)
@@ -288,7 +288,7 @@ def linear_elasticity_p1(vertices, elements, E=1e5, nu=0.3, format=None):
     data = data.ravel()
 
     # sum duplicates
-    A = sparse.coo_matrix((data, (row, col)), shape=(DoF, DoF)).tocsr()
+    A = sparse.coo_array((data, (row, col)), shape=(DoF, DoF)).tocsr()
     A = A.tobsr(blocksize=(D, D))
 
     # compute rigid body modes

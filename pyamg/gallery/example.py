@@ -16,18 +16,31 @@ def load_example(name):
 
     Parameters
     ----------
-    name : string (e.g. 'airfoil')
-        Name of the example to load
+    name : str
+        Name of the example to load.
+
+    Returns
+    -------
+    dict
+        Dictionary with variable names and data.
 
     Notes
     -----
     Each example is stored in a dictionary with the following keys:
-        - 'A'        : sparse matrix
-        - 'B'        : near-nullspace candidates
-        - 'vertices' : dense array of nodal coordinates
-        - 'elements' : dense array of element indices
+        - ``A``        : sparse matrix
+        - ``B``        : near-nullspace candidates
+        - ``vertices`` : dense array of nodal coordinates
+        - ``elements`` : dense array of element indices
 
     Current example names are:%s
+        - ``airfoil``
+        - ``bar``
+        - ``helmholtz_2D``
+        - ``knot``
+        - ``local_disc_galerkin_diffusion``
+        - ``recirc_flow``
+        - ``unit_cube``
+        - ``unit_square``
 
     Examples
     --------
@@ -39,7 +52,3 @@ def load_example(name):
         raise ValueError(f'No example with name {name}')
 
     return loadmat(os.path.join(example_dir, name + '.mat'), struct_as_record=True)
-
-
-# insert the example names into the docstring
-load_example.__doc__ %= ('\n' + ' ' * 8).join([''] + example_names)

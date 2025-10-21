@@ -11,12 +11,16 @@ def relaxation_as_linear_operator(method, A, b, splitting=None):
 
     Parameters
     ----------
-    methods : {tuple or string}
+    method : {tuple or string}
         Relaxation descriptor: Each tuple must be of the form ('method','opts')
         where 'method' is the name of a supported smoother, e.g., gauss_seidel,
         and 'opts' a dict of keyword arguments to the smoother, e.g., opts =
         {'sweep':symmetric}.  If string, must be that of a supported smoother,
         e.g., gauss_seidel.
+    A : sparse matrix
+        System matrix in A x = b
+    b : array
+        Right-hand side in A x = b
 
     A : {sparse matrix}
         Matrix for which we define relaxation, i.e., the linear operator object

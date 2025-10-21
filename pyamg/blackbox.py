@@ -2,15 +2,15 @@
 
 
 import numpy as np
-from scipy.sparse import isspmatrix_csr, isspmatrix_bsr, csr_matrix
+from scipy.sparse import issparse, csr_array
 
 from .aggregation import smoothed_aggregation_solver
 from .util.linalg import ishermitian
+from .util.utils import asfptype
 
 
 def make_csr(A):
-    """
-    Convert A to CSR, if A is not a CSR or BSR matrix already.
+    """Convert A to CSR, if A is not a CSR or BSR matrix already.
 
     Parameters
     ----------
@@ -19,8 +19,8 @@ def make_csr(A):
 
     Returns
     -------
-    A : csr_matrix, bsr_matrix
-        If A is csr_matrix or bsr_matrix, then do nothing and return A.
+    A : csr_array, bsr_array
+        If A is csr_array or bsr_array, then do nothing and return A.
         Else, convert A to CSR if possible and return.
 
     Examples
@@ -33,28 +33,28 @@ def make_csr(A):
 
     """
     # Convert to CSR or BSR if necessary
-    if not (isspmatrix_csr(A) or isspmatrix_bsr(A)):
+    if not issparse(A) or A.format not in ('bsr', 'csr'):
         try:
-            A = csr_matrix(A)
+            A = csr_array(A)
             print('Implicit conversion of A to CSR in pyamg.blackbox.make_csr')
-        except BaseException as e:
-            raise TypeError('Argument A must have type csr_matrix or '
-                            'bsr_matrix, or be convertible to csr_matrix') from e
+        except Exception as e:
+            raise TypeError('Argument A must have type csr_array or '
+                            'bsr_array, or be convertible to csr_array') from e
 
     if A.shape[0] != A.shape[1]:
         raise TypeError('Argument A must be a square')
 
-    A = A.asfptype()
+    A = asfptype(A)
 
     return A
 
 
 def solver_configuration(A, B=None, verb=True):
-    """Generate a dictionary of SA parameters for an arbitray matrix A.
+    """Generate a dictionary of SA parameters for an arbitrary matrix A.
 
     Parameters
     ----------
-    A : array, matrix, csr_matrix, bsr_matrix
+    A : array, matrix, csr_array, bsr_array
         (n x n) matrix to invert, CSR or BSR format preferred for efficiency
     B : None, array
         Near null-space modes used to construct the smoothed aggregation solver
@@ -117,7 +117,7 @@ def solver_configuration(A, B=None, verb=True):
     # Determine near null-space modes B
     if B is None:
         # B is the constant for each variable in a node
-        if isspmatrix_bsr(A) and A.blocksize[0] > 1:
+        if issparse(A) and A.format == 'bsr' and A.blocksize[0] > 1:
             bsize = A.blocksize[0]
             config['B'] = np.kron(np.ones((int(A.shape[0] / bsize), 1),
                                           dtype=A.dtype), np.eye(bsize))
@@ -156,7 +156,7 @@ def solver(A, config):
 
     Parameters
     ----------
-    A : array, matrix, csr_matrix, bsr_matrix
+    A : array, matrix, csr_array, bsr_array
         Matrix to invert, CSR or BSR format preferred for efficiency
     config : dict
         A dictionary of solver configuration parameters that is used to
@@ -201,7 +201,7 @@ def solver(A, config):
                                         presmoother=config['presmoother'],
                                         postsmoother=config['postsmoother'],
                                         keep=config['keep'])
-    except BaseException as e:
+    except Exception as e:
         raise TypeError('Failed generating smoothed_aggregation_solver') from e
 
 
@@ -217,7 +217,7 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
 
     Parameters
     ----------
-    A : array, matrix, csr_matrix, bsr_matrix
+    A : array, matrix, csr_array, bsr_array
         Matrix to invert, CSR or BSR format preferred for efficiency
     b : array
         Right hand side.
@@ -263,7 +263,7 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
     >>> A = poisson((40,40),format='csr')
     >>> b = np.array(np.arange(A.shape[0]), dtype=float)
     >>> x = solve(A,b,verb=False)
-    >>> print(f'{norm(b - A*x)/norm(b):1.2e}')
+    >>> print(f'{norm(b - A@x)/norm(b):1.2e}')
     6.28e-06
 
     """
@@ -278,10 +278,9 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
         # Generate solver
         existing_solver = solver(A, config)
 
-    else:
-        if existing_solver.levels[0].A.shape[0] != A.shape[0]:
-            raise TypeError('Argument existing_solver must have level 0 matrix\
-                             of same size as A')
+    elif existing_solver.levels[0].A.shape[0] != A.shape[0]:
+        raise TypeError('Argument existing_solver must have level 0 matrix\
+                         of same size as A')
 
     # Krylov acceleration depends on symmetry of A
     if existing_solver.levels[0].A.symmetry == 'hermitian':
@@ -312,11 +311,11 @@ def solve(A, b, x0=None, tol=1e-5, maxiter=400, return_solver=False,
                               callback=callback2, residuals=residuals)
 
     if verb:
-        r0 = b - A * x0
-        rk = b - A * x
+        r0 = b - A @ x0
+        rk = b - A @ x
         M = existing_solver.aspreconditioner()
-        nr0 = np.sqrt(np.inner(np.conjugate(M * r0), r0))
-        nrk = np.sqrt(np.inner(np.conjugate(M * rk), rk))
+        nr0 = np.sqrt(np.inner(np.conjugate(M @ r0), r0))
+        nrk = np.sqrt(np.inner(np.conjugate(M @ rk), rk))
         print(f'  Residuals ||r_k||_M, ||r_0||_M = {nrk:1.2e}, {nr0:1.2e}')
         if np.abs(nr0) > 1e-15:
             ratio = nrk / nr0

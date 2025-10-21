@@ -11,29 +11,29 @@ def stencil_grid(S, grid, dtype=None, format=None):
     Parameters
     ----------
     S : ndarray
-        matrix stencil stored in N-d array
+        Matrix stencil stored in n-d array.
     grid : tuple
-        tuple containing the N grid dimensions
-    dtype :
-        data type of the result
-    format : string
-        sparse matrix format to return, e.g. "csr", "coo", etc.
+        Tuple containing the grid dimensions.
+    dtype : dtype
+        Data type of the result.
+    format : str
+        Sparse array format to return, e.g. "csr", "coo", etc.
 
     Returns
     -------
-    A : sparse matrix
-        Sparse matrix which represents the operator given by applying
+    sparray
+        Sparse array which represents the operator given by applying
         stencil S at each vertex of a regular grid with given dimensions.
 
     Notes
     -----
-    The grid vertices are enumerated as arange(prod(grid)).reshape(grid).
+    The grid vertices are enumerated as ``arange(prod(grid)).reshape(grid)``.
     This implies that the last grid dimension cycles fastest, while the
-    first dimension cycles slowest.  For example, if grid=(2,3) then the
+    first dimension cycles slowest.  For example, if ``grid=(2,3)`` then the
     grid vertices are ordered as (0,0), (0,1), (0,2), (1,0), (1,1), (1,2).
 
     This coincides with the ordering used by the NumPy functions
-    ndenumerate() and mgrid().
+    :meth:`numpy.ndenumerate` and :meth:`numpy.mgrid`.
 
     Examples
     --------
@@ -83,8 +83,8 @@ def stencil_grid(S, grid, dtype=None, format=None):
     diags = np.zeros(N_s, dtype=int)
 
     # compute index offset of each dof within the stencil
-    strides = np.cumprod([1] + list(reversed(grid)))[:-1]
-    indices = tuple(i.copy() for i in S.nonzero())
+    strides = np.cumprod([1] + list(reversed(grid)))[:-1]  # noqa: RUF005
+    indices = tuple(i.astype(np.int32) for i in S.nonzero())
     for i, s in zip(indices, S.shape):
         i -= s // 2
         # i = (i - s) // 2
@@ -131,5 +131,5 @@ def stencil_grid(S, grid, dtype=None, format=None):
         diags = new_diags
         data = new_data
 
-    return sparse.dia_matrix((data, diags),
+    return sparse.dia_array((data, diags),
                              shape=(N_v, N_v)).asformat(format)

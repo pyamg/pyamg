@@ -22,6 +22,7 @@ Function pointer for the appropriate relaxation method for level=lvl
 Examples
 --------
 See change_smoothers above
+
 """
 
 from functools import partial, update_wrapper
@@ -373,11 +374,12 @@ def change_smoothers(ml, presmoother, postsmoother):
 
 
 def rho_D_inv_A(A):
-    """Return the (approx.) spectral radius of D^-1 * A.
+    """Return the (approx.) spectral radius of D^-1 @ A.
 
     Parameters
     ----------
-    A : sparse-matrix
+    A : sparse matrix
+        Target matrix for computing the spectral radius
 
     Returns
     -------
@@ -387,9 +389,9 @@ def rho_D_inv_A(A):
     --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.relaxation.smoothing import rho_D_inv_A
-    >>> from scipy.sparse import csr_matrix
+    >>> from scipy.sparse import csr_array
     >>> import numpy as np
-    >>> A = csr_matrix(np.array([[1.0,0,0],[0,2.0,0],[0,0,3.0]]))
+    >>> A = csr_array(np.array([[1.0,0,0],[0,2.0,0],[0,0,3.0]]))
     >>> print(f'{rho_D_inv_A(A):2.2}')
     1.0
 
@@ -403,7 +405,7 @@ def rho_D_inv_A(A):
 
 
 def rho_block_D_inv_A(A, Dinv):
-    """Return the (approx.) spectral radius of block D^-1 * A.
+    """Return the (approx.) spectral radius of block D^-1 @ A.
 
     Parameters
     ----------
@@ -435,14 +437,14 @@ def rho_block_D_inv_A(A, Dinv):
         if Dinv.shape[0] != int(A.shape[0]/blocksize):
             raise ValueError('Dinv and A have incompatible dimensions')
 
-        Dinv = sparse.bsr_matrix((Dinv,
-                                  np.arange(Dinv.shape[0]),
-                                  np.arange(Dinv.shape[0]+1)),
-                                 shape=A.shape)
+        Dinv = sparse.bsr_array((Dinv,
+                                 np.arange(Dinv.shape[0], dtype=np.int32),
+                                 np.arange(Dinv.shape[0] + 1, dtype=np.int32)),
+                                shape=A.shape)
 
-        # Don't explicitly form Dinv*A
+        # Don't explicitly form Dinv @ A
         def matvec(x):
-            return Dinv*(A*x)
+            return Dinv @ (A @ x)
         D_inv_A = LinearOperator(A.shape, matvec, dtype=A.dtype)
 
         A.rho_block_D_inv = approximate_spectral_radius(D_inv_A)
@@ -482,7 +484,7 @@ def matrix_asformat(lvl, name, format, blocksize=None):
         setattr(lvl, desired_matrix, M)
     elif M.format == format and format == 'bsr':
         # convert to bsr with the right blocksize
-        # tobsr() will not do anything extra if this is uneeded
+        # tobsr() will not do anything extra if this is unneeded
         setattr(lvl, desired_matrix, M.tobsr(blocksize=blocksize))
     else:
         # convert
@@ -556,9 +558,9 @@ def setup_block_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, Dinv=None,
     """Set up block Jacobi."""
     # Determine Blocksize
     if blocksize is None and Dinv is None:
-        if sparse.isspmatrix_csr(lvl.A):
+        if sparse.issparse(lvl.A) and lvl.A.format == 'csr':
             blocksize = 1
-        elif sparse.isspmatrix_bsr(lvl.A):
+        elif sparse.issparse(lvl.A) and lvl.A.format == 'bsr':
             blocksize = lvl.A.blocksize[0]
     elif blocksize is None:
         blocksize = Dinv.shape[1]
@@ -587,9 +589,9 @@ def setup_block_gauss_seidel(lvl, iterations=DEFAULT_NITER,
     """Set up block Gauss-Seidel."""
     # Determine Blocksize
     if blocksize is None and Dinv is None:
-        if sparse.isspmatrix_csr(lvl.A):
+        if sparse.issparse(lvl.A) and lvl.A.format == 'csr':
             blocksize = 1
-        elif sparse.isspmatrix_bsr(lvl.A):
+        elif sparse.issparse(lvl.A) and lvl.A.format == 'bsr':
             blocksize = lvl.A.blocksize[0]
     elif blocksize is None:
         blocksize = Dinv.shape[1]
@@ -735,12 +737,12 @@ def setup_cf_block_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_
     """Set up coarse-fine block Jacobi."""
     # Determine Blocksize
     if blocksize is None and Dinv is None:
-        if sparse.isspmatrix_csr(lvl.A):
+        if sparse.issparse(lvl.A) and lvl.A.format == 'csr':
             blocksize = 1
-        elif sparse.isspmatrix_bsr(lvl.A):
+        elif sparse.issparse(lvl.A) and lvl.A.format == 'bsr':
             blocksize = lvl.A.blocksize[0]
     elif blocksize is None:
-        if sparse.isspmatrix_bsr(Dinv):
+        if sparse.issparse(Dinv) and Dinv.format == 'bsr':
             blocksize = Dinv.blocksize[1]
         else:
             blocksize = 1
@@ -778,12 +780,12 @@ def setup_fc_block_jacobi(lvl, f_iterations=DEFAULT_NITER, c_iterations=DEFAULT_
     """Set up coarse-fine block Jacobi."""
     # Determine Blocksize
     if blocksize is None and Dinv is None:
-        if sparse.isspmatrix_csr(lvl.A):
+        if sparse.issparse(lvl.A) and lvl.A.format == 'csr':
             blocksize = 1
-        elif sparse.isspmatrix_bsr(lvl.A):
+        elif sparse.issparse(lvl.A) and lvl.A.format == 'bsr':
             blocksize = lvl.A.blocksize[0]
     elif blocksize is None:
-        if sparse.isspmatrix_bsr(Dinv):
+        if sparse.issparse(Dinv) and Dinv.format == 'bsr':
             blocksize = Dinv.blocksize[1]
         else:
             blocksize = 1
@@ -856,11 +858,11 @@ def setup_fcf_block_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, Dinv=None,
     return smoother
 
 
-def setup_gmres(lvl, tol=1e-12, maxiter=DEFAULT_NITER, restrt=None, M=None, callback=None,
+def setup_gmres(lvl, tol=1e-12, maxiter=DEFAULT_NITER, restart=None, M=None, callback=None,
                 residuals=None):
     """Set up GMRES smoothing."""
     def smoother(A, x, b):
-        x[:] = gmres(A, b, x0=x, tol=tol, maxiter=maxiter, restrt=restrt, M=M,
+        x[:] = gmres(A, b, x0=x, tol=tol, maxiter=maxiter, restart=restart, M=M,
                      callback=callback, residuals=residuals)[0].reshape(x.shape)
     update_wrapper(smoother, gmres)  # set __name__
     return smoother
@@ -952,12 +954,14 @@ def rebuild_smoother(lvl):
     Parameters
     ----------
     lvl : Level object
+        Single level of the hierarchy
 
     Notes
     -----
     This rebuilds a smoother on level lvl using the existing pre
     and post smoothers.  If different methods are needed, see
     `change_smoothers`.
+
     """
     try:
         fn1 = lvl.presmoother.__name__

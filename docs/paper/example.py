@@ -1,8 +1,9 @@
+"""Example for the paper."""
 import pyamg
 import numpy as np
 
 np.random.seed(2022)
-n = 10000
+n = 1000
 A = pyamg.gallery.poisson((n, n), format='csr')
 ml = pyamg.smoothed_aggregation_solver(A, max_coarse=10)
 print(ml)

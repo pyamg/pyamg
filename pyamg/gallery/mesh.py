@@ -10,16 +10,16 @@ def regular_triangle_mesh(nx, ny):
     Parameters
     ----------
     nx : int
-       Number of nodes in the x-direction
+       Number of nodes in the x-direction.
     ny : int
-       Number of nodes in the y-direction
+       Number of nodes in the y-direction.
 
     Returns
     -------
     Vert : array
-        nx*ny x 2 vertex list
+        Vertex list of size (nx*ny, 2).
     E2V : array
-        Nex x 3 element list
+        Element list of size (Nex, 3).
 
     Examples
     --------
@@ -48,6 +48,6 @@ def regular_triangle_mesh(nx, ny):
 
     E2V1 = np.vstack((Vert1, Vert2, Vert3)).transpose()
     E2V2 = np.vstack((Vert1, Vert4, Vert2)).transpose()
-    E2V = np.vstack((E2V1, E2V2))
+    E2V = np.vstack((E2V1, E2V2)).astype(np.int32)
 
     return Vert, E2V
