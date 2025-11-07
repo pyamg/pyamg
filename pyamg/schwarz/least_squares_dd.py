@@ -10,7 +10,8 @@ from copy import deepcopy
 from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.util.utils import eliminate_diag_dom_nodes, get_blocksize, asfptype, \
-    levelize_strength_or_aggregation, levelize_smooth_or_improve_candidates, filter_matrix_rows
+    levelize_strength_or_aggregation, levelize_smooth_or_improve_candidates, \
+    levelize_weight, filter_matrix_rows
 from pyamg.strength import classical_strength_of_connection, \
     symmetric_strength_of_connection, evolution_strength_of_connection, \
     energy_based_strength_of_connection, distance_strength_of_connection, \
@@ -25,7 +26,8 @@ import time
 
 
 def least_squares_dd_solver(B, BT=None, A=None,
-                            smooth="msm",
+                            presmoother="ras",
+                            postsmoother="rasT",
                             symmetry='hermitian', 
                             strength=None,
                             aggregate='standard',
@@ -39,6 +41,7 @@ def least_squares_dd_solver(B, BT=None, A=None,
                             filteringA=(False,0),
                             filteringB=(False,0),
                             max_density=0.1,
+                            print_info=False,
                             **kwargs):
     if A is not None:
         A_provided = True
@@ -100,6 +103,8 @@ def least_squares_dd_solver(B, BT=None, A=None,
         levelize_strength_or_aggregation(strength, max_levels, max_coarse)
     max_levels, max_coarse, aggregate =\
         levelize_strength_or_aggregation(aggregate, max_levels, max_coarse)
+    kappa =  levelize_weight(kappa,max_levels)
+    min_coarsening = levelize_weight(min_coarsening,max_levels)
 
     # Construct multilevel structure
     levels = []
@@ -111,33 +116,65 @@ def least_squares_dd_solver(B, BT=None, A=None,
     levels[-1].A_provided = A_provided
     levels[-1].density = len(levels[-1].A.data) / (levels[-1].A.shape[0] ** 2)
 
-    pre_smoother = []
-    post_smoother = []
+    lvl = 0
+    pre_smooth = []
+    post_smooth = []
     while len(levels) < max_levels and \
         levels[-1].A.shape[0] > max_coarse and \
         levels[-1].density < max_density:
-        print("N = {}, density = {:.4g}".format( \
-            levels[-1].A.shape[0], levels[-1].density))
-        _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold,\
-            min_coarsening, diagonal_dominance, filteringA,filteringB)
+        if print_info:
+            print("N = {}, density = {:.4g}".format( \
+                levels[-1].A.shape[0], levels[-1].density))
+        _extend_hierarchy(levels, strength, aggregate, kappa[lvl], nev, threshold,\
+            min_coarsening[lvl], diagonal_dominance, filteringA, filteringB, print_info)
         # print("Hierarchy extended")
-        if smooth == "msm":
-            sm = ('schwarz', {'subdomain': levels[-2].subdomain,\
+        if presmoother == "msm":
+            sm1 = ('schwarz', {'subdomain': levels[-2].subdomain,\
                 'subdomain_ptr': levels[-2].subdomain_ptr,\
                 'iterations':1, 'sweep':'symmetric'})
-        elif smooth == "asm":
-            sm = ('additive_schwarz', {'subdomain': levels[-2].subdomain,\
+        elif presmoother == "asm":
+            sm1 = ('additive_schwarz', {'subdomain': levels[-2].subdomain,\
                 'subdomain_ptr': levels[-2].subdomain_ptr,'iterations':1})
-        elif smooth == "ras":
+        elif presmoother == "ras":
             levels[-2].PoU_flat = np.concatenate(levels[-2].PoU)
-            sm = ('rest_additive_schwarz', {'subdomain': levels[-2].subdomain,\
+            sm1 = ('rest_additive_schwarz', {'subdomain': levels[-2].subdomain,\
                 'subdomain_ptr': levels[-2].subdomain_ptr,
                 'POU': levels[-2].PoU_flat, 'iterations':1})
+        elif presmoother == "rasT":
+            levels[-2].PoU_flat = np.concatenate(levels[-2].PoU)
+            sm1 = ('rest_additive_schwarzT', {'subdomain': levels[-2].subdomain,\
+                'subdomain_ptr': levels[-2].subdomain_ptr,
+                'POU': levels[-2].PoU_flat, 'iterations':1})
+        elif presmoother == None:
+            sm1 = None
         else:
             raise ValueError("Invalid smoother type.")
 
-        pre_smoother.append(sm)
-        post_smoother.append(sm)
+        if postsmoother == "msm":
+            sm2 = ('schwarz', {'subdomain': levels[-2].subdomain,\
+                'subdomain_ptr': levels[-2].subdomain_ptr,\
+                'iterations':1, 'sweep':'symmetric'})
+        elif postsmoother == "asm":
+            sm2 = ('additive_schwarz', {'subdomain': levels[-2].subdomain,\
+                'subdomain_ptr': levels[-2].subdomain_ptr,'iterations':1})
+        elif postsmoother == "ras":
+            levels[-2].PoU_flat = np.concatenate(levels[-2].PoU)
+            sm2 = ('rest_additive_schwarz', {'subdomain': levels[-2].subdomain,\
+                'subdomain_ptr': levels[-2].subdomain_ptr,
+                'POU': levels[-2].PoU_flat, 'iterations':1})
+        elif postsmoother == "rasT":
+            levels[-2].PoU_flat = np.concatenate(levels[-2].PoU)
+            sm2 = ('rest_additive_schwarzT', {'subdomain': levels[-2].subdomain,\
+                'subdomain_ptr': levels[-2].subdomain_ptr,
+                'POU': levels[-2].PoU_flat, 'iterations':1})
+        elif postsmooth == None:
+            sm2 = None
+        else:
+            raise ValueError("Invalid smoother type.")
+
+        pre_smooth.append(sm1)
+        post_smooth.append(sm2)
+        lvl += 1
 
     ml = MultilevelSolver(levels, **kwargs)
 
@@ -149,17 +186,18 @@ def least_squares_dd_solver(B, BT=None, A=None,
     # pre_smoother = ('jacobi')
     # post_smoother = ('jacobi')
 
-    change_smoothers(ml, pre_smoother, post_smoother)
+    change_smoothers(ml, pre_smooth, post_smooth)
     
     t1 = time.perf_counter()
-    print("Smoother setup time = ", t1 - t0)
+    if print_info:
+        print("Smoother setup time = ", t1 - t0)
 
     return ml
 
 
 def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
     threshold, min_coarsening, diagonal_dominance, filteringA, \
-    filteringB):
+    filteringB, print_info):
     """Extend the multigrid hierarchy.
 
     Service routine to implement the strength of connection, aggregation,
@@ -178,17 +216,21 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
     # Filter operator.
     if len(levels) > 1:
         if (filteringB is not None) and (filteringB[1] != 0):
-            print("B NNZ before filtering", len(B.data))
-            print("BT NNZ before filtering", len(BT.data))
+            if print_info:
+                print("B NNZ before filtering", len(B.data))
+                print("BT NNZ before filtering", len(BT.data))
             filter_matrix_rows(B, filteringB[1], diagonal=True, lump=filteringB[0])
             filter_matrix_rows(BT, filteringB[1], diagonal=True, lump=filteringB[0])
-            print("B NNZ after filtering", len(B.data))
-            print("BT NNZ after filtering", len(BT.data))
+            if print_info:
+                print("B NNZ after filtering", len(B.data))
+                print("BT NNZ after filtering", len(BT.data))
 
         if (filteringA is not None) and (filteringA[1] != 0):
-            print("A NNZ before filtering", len(A.data))
+            if print_info:
+                print("A NNZ before filtering", len(A.data))
             filter_matrix_rows(A, filteringA[1], diagonal=True, lump=filteringA[0])
-            print("B NNZ after filtering", len(B.data))
+            if print_info:
+                print("B NNZ after filtering", len(B.data))
 
     t0 = time.perf_counter()
 
@@ -274,7 +316,8 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
     v_row_mult = np.zeros(B.shape[0])
 
     t1 = time.perf_counter()
-    print("\tAggregation time = {:.4g}".format(t1 - t0))
+    if print_info:
+        print("\tAggregation time = {:.4g}".format(t1 - t0))
 
     t0 = time.perf_counter()
 
@@ -330,8 +373,9 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
     levels[-1].number_of_colors = max(k_c)    
     levels[-1].multiplicity = max(v_row_mult)
     
-    print("\tMean blocksize = {:.4g}".format(np.mean(blocksize)))
-    print("\tMax blocksize = {:.4g}".format(np.max(blocksize)))
+    if print_info:
+        print("\tMean blocksize = {:.4g}".format(np.mean(blocksize)))
+        print("\tMax blocksize = {:.4g}".format(np.max(blocksize)))
 
     # Form partition of unity vector separting overlapping and nonoverlapping domains.
     for i in range(levels[-1].N):
@@ -347,7 +391,8 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
         levels[-1].PoU[i] = np.array(levels[-1].PoU[i])
 
     t1 = time.perf_counter()
-    print("\tAgg processing time = {:.4g}".format(t1 - t0))
+    if print_info:
+        print("\tAgg processing time = {:.4g}".format(t1 - t0))
 
     t0 = time.perf_counter()
 
@@ -386,7 +431,8 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
     levels[-1].auxiliary = np.zeros(levels[-1].submatrices_ptr[-1])
 
     t1 = time.perf_counter()
-    print("\tPOU check time = {:.4g}".format(t1 - t0))
+    if print_info:
+        print("\tPOU check time = {:.4g}".format(t1 - t0))
 
     t0 = time.perf_counter()
 
@@ -400,11 +446,12 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
 
     rows_flat = np.concatenate(levels[-1].overlapping_rows).astype(np.int32, copy=False)
     cols_flat = np.concatenate(levels[-1].overlapping_subdomain).astype(np.int32, copy=False)
+
     amg_core.local_outer_product(
         B.shape[0], B.shape[1],
         B.indptr, B.indices, B.data,
         BTT.indptr, BTT.indices, BTT.data,
-        v_row_mult[0],
+        v_row_mult,
         rows_flat, rows_indptr,
         cols_flat, cols_indptr,
         levels[-1].auxiliary, levels[-1].submatrices_ptr)
@@ -421,7 +468,8 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
     levels[-1].min_ev = 1e12
     
     t1 = time.perf_counter()
-    print("\tExtract subdomain time = {:.4g}".format(t1 - t0))
+    if print_info:
+        print("\tExtract subdomain time = {:.4g}".format(t1 - t0))
 
     t0 = time.perf_counter()
     for i in range(levels[-1].N):
@@ -447,7 +495,7 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
             np.linalg.inv(bb[overlap,:][:,overlap]) @ bb[overlap,:][:,nonoverlap]
 
         # Enforce minimum coarsening ratio on per aggregate basis
-        max_ev = bb.shape[0]
+        max_ev = aa.shape[0]
         this_nev = nev
         if min_coarsening is not None:
             max_ev = len(levels[-1].nonoverlapping_subdomain[i])//min_coarsening
@@ -455,10 +503,14 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
             this_nev = np.min([nev,max_ev])
 
         # When possible only compute necessary eigenvalues/vectors
-        if max_ev != S.shape[0] and max_ev > 0:
-            E, V = eigh(aa,S,subset_by_index=[S.shape[0]-max_ev,S.shape[0]-1])
-        elif max_ev > 0:
-            E, V = eigh(aa,S)
+        try:
+            if max_ev != S.shape[0] and max_ev > 0:
+                E, V = eigh(aa,S,subset_by_index=[S.shape[0]-max_ev,S.shape[0]-1])
+            elif max_ev > 0:
+                E, V = eigh(aa,S)
+        except:
+            import pdb
+            pdb.set_trace()
 
         if this_nev is not None and this_nev > 0:
             # NOTE : assumes eigenvalues in increasing order
@@ -500,7 +552,8 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
     levels[-1].R = levels[-1].P.T.conjugate().tocsr()
 
     t1 = time.perf_counter()
-    print("\tConstruct P time = {:.4g}".format(t1 - t0))
+    if print_info:
+        print("\tConstruct P time = {:.4g}".format(t1 - t0))
 
     t0 = time.perf_counter()
     B = B @ levels[-1].P
@@ -509,11 +562,11 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
     A.sort_indices()    # THIS IS IMPORTANT
 
     t1 = time.perf_counter()
-    print("\tP^TAP time = {:.4g}".format(t1 - t0))
-
-    print("\tAggregate size = {:.3g}".format(AggOp.shape[0]/AggOp.shape[1]))
-    print("\tEigenvectors/agg = {:.3g}".format(np.mean(levels[-1].nev)))
-    print("\tCoarsening ratio = {:.3g}".format(levels[-1].A.shape[0]/A.shape[0]))
+    if print_info:
+        print("\tP^TAP time = {:.4g}".format(t1 - t0))
+        print("\tAggregate size = {:.3g}".format(AggOp.shape[0]/AggOp.shape[1]))
+        print("\tEigenvectors/agg = {:.3g}".format(np.mean(levels[-1].nev)))
+        print("\tCoarsening ratio = {:.3g}".format(levels[-1].A.shape[0]/A.shape[0]))
 
     levels.append(MultilevelSolver.Level())
     levels[-1].A = A

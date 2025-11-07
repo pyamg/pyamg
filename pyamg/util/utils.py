@@ -1929,6 +1929,15 @@ def levelize_smooth_or_improve_candidates(to_levelize, max_levels):
     return to_levelize
 
 
+def levelize_weight(weight, max_levels):
+    """Turn scalar parameter in to a list per level.
+    """
+    if isinstance(weight, list):
+        return weight + [weight[-1]]*(max_levels-len(weight))
+    else:
+        return [weight]*max_levels
+
+
 def filter_matrix_columns(A, theta):
     """Filter each column of A with tol.
 
