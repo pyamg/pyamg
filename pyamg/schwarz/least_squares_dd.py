@@ -3,7 +3,8 @@
 
 from warnings import warn
 import numpy as np
-from scipy.sparse import csr_array, issparse, SparseEfficiencyWarning, coo_array, csc_array, hstack
+from scipy.sparse import csr_array, issparse, \
+    SparseEfficiencyWarning, coo_array, csc_array, hstack
 from scipy.linalg import eig, eigh
 from copy import deepcopy
 
@@ -29,13 +30,13 @@ def least_squares_dd_solver(B, BT=None, A=None,
                             symmetry='hermitian', 
                             strength=None,
                             aggregate='standard',
+                            agg_levels=1,
                             kappa=500,
                             nev=None,
                             threshold=None,
                             min_coarsening=None,
                             max_levels=10,
                             max_coarse=100,
-                            diagonal_dominance=False,
                             filteringA=(False,0),
                             filteringB=(False,0),
                             max_density=0.1,
@@ -118,8 +119,8 @@ def least_squares_dd_solver(B, BT=None, A=None,
         levels[-1].density < max_density:
         print("N = {}, density = {:.4g}".format( \
             levels[-1].A.shape[0], levels[-1].density))
-        _extend_hierarchy(levels, strength, aggregate, kappa, nev, threshold,\
-            min_coarsening, diagonal_dominance, filteringA,filteringB)
+        _extend_hierarchy(levels, strength, aggregate, agg_levels,
+            kappa, nev, threshold, min_coarsening, filteringA, filteringB)
         # print("Hierarchy extended")
         if smooth == "msm":
             sm = ('schwarz', {'subdomain': levels[-2].subdomain,\
@@ -157,9 +158,8 @@ def least_squares_dd_solver(B, BT=None, A=None,
     return ml
 
 
-def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
-    threshold, min_coarsening, diagonal_dominance, filteringA, \
-    filteringB):
+def _extend_hierarchy(levels, strength, aggregate, agg_levels, \
+    kappa, nev, threshold, min_coarsening, filteringA, filteringB):
     """Extend the multigrid hierarchy.
 
     Service routine to implement the strength of connection, aggregation,
@@ -229,36 +229,59 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
     fn, kwargs = unpack_arg(aggregate[len(levels)-1])
     C.eliminate_zeros()
     Cnodes = None
-    if fn == 'standard':
-        AggOp, Cnodes = standard_aggregation(C, **kwargs)
-    elif fn == 'naive':
-        AggOp, Cnodes = naive_aggregation(C, **kwargs)
-    elif fn == 'lloyd':
-        AggOp, Cnodes = lloyd_aggregation(C, **kwargs)
-    elif fn == 'balanced lloyd':
-        if 'pad' in kwargs:
-            kwargs['A'] = A
-        AggOp, Cnodes = balanced_lloyd_aggregation(C, **kwargs)
-    elif fn == 'metis':
-        C.data[:] = 1.0
-        if(len(levels) == 1):
-            AggOp = metis_aggregation(C, **kwargs)
+    Aggs = []
+    for i in range(0,agg_levels):
+        if fn == 'standard':
+            AggOp, Cnodes = standard_aggregation(C, **kwargs)
+        elif fn == 'd2C':
+            C = C @ C
+            AggOp, Cnodes = standard_aggregation(C, **kwargs)
+        elif fn == 'd3C':
+            C = C @ C @ C
+            AggOp, Cnodes = standard_aggregation(C, **kwargs)
+        elif fn == 'naive':
+            AggOp, Cnodes = naive_aggregation(C, **kwargs)
+        elif fn == 'lloyd':
+            AggOp, Cnodes = lloyd_aggregation(C, **kwargs)
+        elif fn == 'balanced lloyd':
+            if 'pad' in kwargs:
+                kwargs['A'] = A
+            AggOp, Cnodes = balanced_lloyd_aggregation(C, **kwargs)
+        elif fn == 'metis':
+            C.data[:] = 1.0
+            if(len(levels) == 1):
+                AggOp = metis_aggregation(C, **kwargs)
+            else:
+                ratio = levels[-2].N/16/levels[-1].A.shape[0]
+                # ratio = max(levels[-2].nev)*4/levels[-1].A.shape[0]
+                # AggOp = metis_aggregation(C, ratio=ratio)
+                AggOp = metis_aggregation(C, **kwargs)
+        elif fn == 'pairwise':
+            AggOp = pairwise_aggregation(A, **kwargs)[0]
+        elif fn == 'predefined':
+            AggOp = kwargs['AggOp'].tocsr()
         else:
-            ratio = levels[-2].N/16/levels[-1].A.shape[0]
-            # ratio = max(levels[-2].nev)*4/levels[-1].A.shape[0]
-            # AggOp = metis_aggregation(C, ratio=ratio)
-            AggOp = metis_aggregation(C, **kwargs)
-    elif fn == 'pairwise':
-        AggOp = pairwise_aggregation(A, **kwargs)[0]
-    elif fn == 'predefined':
-        AggOp = kwargs['AggOp'].tocsr()
-    else:
-        raise ValueError(f'Unrecognized aggregation method {fn!s}')
+            raise ValueError(f'Unrecognized aggregation method {fn!s}')
 
-    AggOp = AggOp.tocsc()
-    AggOp = _remove_empty_columns(AggOp)
-    AggOp = _add_columns_containing_isolated_nodes(AggOp)
-    AggOp = AggOp.tocsr()
+        Aggs.append(AggOp)
+        if i < agg_levels-1:
+            C = (AggOp.T @ C @ AggOp).tocsr()
+
+    # Create aggregation matrix as product of levels
+    AggOp = Aggs[0]
+    for i in range(1,agg_levels):
+        AggOp = AggOp @ Aggs[i]
+
+    # AggOp = AggOp.tocsc()
+    # AggOp = _remove_empty_columns(AggOp)
+    # AggOp = _add_columns_containing_isolated_nodes(AggOp)
+    # AggOp = AggOp.tocsr()
+    nc_temp = AggOp.shape[1]
+    print("\tNum aggregates = {:.4g}".format(nc_temp))
+    print("\tAv. aggregate size = {:.4g}".format(AggOp.shape[0]/AggOp.shape[1]))
+    AggOp = _fill_unaggregated_by_neighbors(A, AggOp, make_singletons=True)
+    print("\tNum singletons = {:.4g}".format(AggOp.shape[1]-nc_temp))
+
     levels[-1].AggOp = AggOp
     levels[-1].AggOpT = AggOp.T.tocsr()
     levels[-1].N = AggOp.shape[1]  # number of coarse grid points
@@ -404,7 +427,7 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
         B.shape[0], B.shape[1],
         B.indptr, B.indices, B.data,
         BTT.indptr, BTT.indices, BTT.data,
-        v_row_mult[0],
+        v_row_mult,
         rows_flat, rows_indptr,
         cols_flat, cols_indptr,
         levels[-1].auxiliary, levels[-1].submatrices_ptr)
@@ -434,17 +457,13 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
         b = levels[-1].auxiliary[levels[-1].submatrices_ptr[i]:levels[-1].submatrices_ptr[i+1]]
         bb = np.reshape(b,(int(np.sqrt(len(b))),int(np.sqrt(len(b)))))
 
-        # Local principle submatrix restricted to nonoverlapping aggregate
+        # Local principle submatrix of overlapping subdomain
         a = levels[-1].submatrices[levels[-1].submatrices_ptr[i]:levels[-1].submatrices_ptr[i+1]]
-        aa = np.reshape(a,(int(np.sqrt(len(a))),int(np.sqrt(len(a)))))[nonoverlap,:][:,nonoverlap]
+        aa = np.reshape(a,(int(np.sqrt(len(a))),int(np.sqrt(len(a)))))
 
         # Regularization
         normbb = np.linalg.norm(bb, ord=2)
         bb = bb + np.eye(bb.shape[0]) * (1e-10*normbb)
-
-        # Schur complement in nonoverlapping subdomain
-        S = bb[nonoverlap,:][:,nonoverlap] - bb[nonoverlap,:][:,overlap] @ \
-            np.linalg.inv(bb[overlap,:][:,overlap]) @ bb[overlap,:][:,nonoverlap]
 
         # Enforce minimum coarsening ratio on per aggregate basis
         max_ev = bb.shape[0]
@@ -453,6 +472,13 @@ def _extend_hierarchy(levels, strength, aggregate, kappa, nev,\
             max_ev = len(levels[-1].nonoverlapping_subdomain[i])//min_coarsening
         if nev is not None and min_coarsening is not None:
             this_nev = np.min([nev,max_ev])
+
+        # Local principle submatrix restricted to nonoverlapping aggregate
+        aa = aa[nonoverlap,:][:,nonoverlap]
+
+        # Schur complement of outer product in nonoverlapping subdomain
+        S = bb[nonoverlap,:][:,nonoverlap] - bb[nonoverlap,:][:,overlap] @ \
+            np.linalg.inv(bb[overlap,:][:,overlap]) @ bb[overlap,:][:,nonoverlap]
 
         # When possible only compute necessary eigenvalues/vectors
         if max_ev != S.shape[0] and max_ev > 0:
@@ -555,3 +581,90 @@ def _add_columns_containing_isolated_nodes(A):
         A = hstack([A,x])
         return A
               
+
+def _fill_unaggregated_by_neighbors(C, AggOp,
+    make_singletons=True, use_weights=True, iterate=False):
+    """
+    Assigns any unaggregated fine nodes (rows of AggOp with all zeros)
+    to one of the aggregates of their neighbors in C.
+
+    Parameters
+    ----------
+    C : csr_array (n_fine x n_fine)
+        Strength/adjacency (can be symmetric or not).
+    AggOp : csr_matrix (n_fine x n_coarse)
+        Aggregation operator with one nonzero per assigned row.
+    make_singletons : bool
+        If True, create a new singleton aggregate for any still-unassigned node.
+    use_weights : bool
+        If True, use |C| as weights; if False, just use sparsity pattern (all ones).
+    iterate : bool
+        If True, repeat voting once with the new assignments (rarely needed).
+
+    Returns
+    -------
+    AggOp_filled : csr_matrix (n_fine x n_coarse’)
+        Updated aggregation; columns may increase if make_singletons=True.
+    """
+    if not issparse(C) or C.format != 'csr':
+        raise TypeError('expected csr_array')
+
+    if not issparse(AggOp) or AggOp.format != 'csr':
+        raise TypeError('expected csr_array')
+
+    n_fine, n_coarse = AggOp.shape
+
+    # Use absolute weights or binary structure
+    W = C.copy().tocsr()
+    W.setdiag(0)  # ignore self-loops
+    W.eliminate_zeros()
+    if use_weights:
+        W.data = np.abs(W.data)
+    else:
+        W.data[:] = 1.0
+
+    def single_pass(A):
+        nnz_row = A.indptr[1:] - A.indptr[0:-1]
+        unassigned_rows = np.where(nnz_row==0)[0]
+        if unassigned_rows.size == 0:
+            return A, np.array([], dtype=int), np.array([], dtype=int)
+
+        # Vote: for each fine node, how strongly to each aggregate?
+        V = W @ A  # (n_fine x n_coarse)
+        # Pick best aggregate per unassigned row
+        new_rows, new_cols = [], []
+        for i in unassigned_rows:
+            start, end = V.indptr[i], V.indptr[i+1]
+            if end > start:
+                cols_i = V.indices[start:end]
+                vals_i = V.data[start:end]
+                j = cols_i[np.argmax(vals_i)]
+                new_rows.append(i)
+                new_cols.append(j)
+        if new_rows:
+            add = coo_array((np.ones(len(new_rows)), (new_rows, new_cols)), shape=A.shape)
+            A = (A + add).tocsr()
+        return A, unassigned_rows, np.array(new_rows, dtype=int)
+
+    # First pass
+    AggOp, all_unassigned, newly_assigned = single_pass(AggOp)
+
+    # Optional second pass to let just-assigned nodes help their neighbors
+    if iterate and all_unassigned.size > newly_assigned.size:
+        AggOp, _, _ = single_pass(AggOp)
+
+    # Handle any rows that remain unassigned
+    nnz_row = AggOp.indptr[1:] - AggOp.indptr[0:-1]
+    still_unassigned = np.where(nnz_row == 0)[0]
+    if make_singletons and still_unassigned.size > 0:
+        k = still_unassigned.size
+        # Create one new column per unassigned node
+        new_cols = np.arange(AggOp.shape[1], AggOp.shape[1] + k)
+        add = coo_array((np.ones(k), (still_unassigned, new_cols)), shape=(AggOp.shape[0], AggOp.shape[1] + k))
+        # Pad AggOp to the new width and add
+        pad = coo_array(([], ([], [])), shape=(AggOp.shape[0], k))
+        AggOp = csr_array(np.hstack((AggOp.toarray(), pad.toarray())))  # safe for modest sizes
+        AggOp = (AggOp + add.tocsr()).tocsr()
+
+    AggOp.eliminate_zeros()
+    return AggOp
