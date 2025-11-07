@@ -242,7 +242,9 @@ def change_smoothers(ml, presmoother, postsmoother):
 
             if not (fit1 == fit2 and cit1 == cit2):
                 ml.symmetric_smoothing = False
-        elif fn1 != fn2:
+        elif fn1 != fn2 and \
+            (fn1, fn2) not in [('rest_additive_schwarz','rest_additive_schwarzT'),
+                               ('rest_additive_schwarzT','rest_additive_schwarz')]:
             ml.symmetric_smoothing = False
         elif fn1 in KRYLOV_RELAXATION or fn2 in KRYLOV_RELAXATION:
             ml.symmetric_smoothing = False
@@ -592,6 +594,30 @@ def setup_rest_additive_schwarz(lvl, iterations=DEFAULT_NITER, subdomain=None,
     update_wrapper(smoother, relaxation.rest_additive_schwarz)  # set __name__
     return smoother
 
+def setup_rest_additive_schwarzT(lvl, iterations=DEFAULT_NITER, subdomain=None,
+                                subdomain_ptr=None, POU=None, inv_subblock=None,
+                                inv_subblock_ptr=None):
+    """Set up Adjoint Restricted Additive Schwarz."""
+    matrix_asformat(lvl, 'A', 'csr')
+    lvl.Acsr.sort_indices()
+
+    if subdomain is None or subdomain_ptr is None or POU is None:
+        raise ValueError('Subdomains and POU must be provided for RAS')
+
+    subdomain, subdomain_ptr, inv_subblock, inv_subblock_ptr = \
+        relaxation.schwarz_parameters(lvl.Acsr, subdomain, subdomain_ptr,
+                                      inv_subblock, inv_subblock_ptr)
+
+    def smoother(A, x, b):
+        relaxation.rest_additive_schwarzT(lvl.Acsr, x, b, iterations=iterations,
+                                    subdomain=subdomain,
+                                    subdomain_ptr=subdomain_ptr,
+                                    POU=POU,
+                                    inv_subblock=inv_subblock,
+                                    inv_subblock_ptr=inv_subblock_ptr)
+    update_wrapper(smoother, relaxation.rest_additive_schwarzT)  # set __name__
+    return smoother
+
 
 def setup_block_jacobi(lvl, iterations=DEFAULT_NITER, omega=1.0, Dinv=None,
                        blocksize=None, withrho=True):
@@ -892,6 +918,7 @@ def _setup_call(fn):
         'schwarz':                setup_schwarz,
         'additive_schwarz':       setup_additive_schwarz,
         'rest_additive_schwarz':  setup_rest_additive_schwarz,
+        'rest_additive_schwarzT': setup_rest_additive_schwarzT,
         'strength_based_schwarz': setup_strength_based_schwarz,
         'block_jacobi':           setup_block_jacobi,
         'block_gauss_seidel':     setup_block_gauss_seidel,

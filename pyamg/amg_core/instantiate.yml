@@ -23,6 +23,7 @@ instantiate:
     - overlapping_schwarz_csr
     - overlapping_asm
     - overlapping_ras
+    - overlapping_rasT
     - pinv_array
     - symmetric_strength_of_connection
     - satisfy_constraints_helper
