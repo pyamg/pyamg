@@ -1407,9 +1407,9 @@ def AIRplus(A, B, Bf, Cpt_params, InitialPattern='A_FC',  maxiter=1, degree=1, b
     I_C = Cpt_params[1]['I_C'].tocsr()
     P_I = Cpt_params[1]['P_I'].tocsr()
     Cpts = Cpt_params[1]['Cpts']
-    AFF = I_F * A * I_F
-    AFC = ((I_F*A)[:,Cpts]).tocsr()            # Used to compute residual for AIR-type operator
-    AtildeFC = ((I_F*Atilde)[:,Cpts]).tocsr()  # Used for sparsity pattern (to match classic AIR)
+    AFF = I_F @ A @ I_F
+    AFC = ((I_F@A)[:,Cpts]).tocsr()            # Used to compute residual for AIR-type operator
+    AtildeFC = ((I_F@Atilde)[:,Cpts]).tocsr()  # Used for sparsity pattern (to match classic AIR)
 
     ##
     # If no Cpts, then return zero matrix (P_I)
@@ -1441,16 +1441,16 @@ def AIRplus(A, B, Bf, Cpt_params, InitialPattern='A_FC',  maxiter=1, degree=1, b
     # Expanding the pattern through multiplication by Atilde
     pattern.data[:] = 1.0
     for _ in range(degree):
-        pattern = Atilde * pattern
-        #pattern = (I_F*Atilde*I_F) * pattern
+        pattern = Atilde @ pattern
+        #pattern = (I_F@Atilde@I_F) @ pattern
 
     #
     pattern.data[:] = 1.0
     #
     # Enforce identity at C-points
-    pattern = I_F*pattern
+    pattern = I_F@pattern
     pattern = P_I + pattern
-    num_ff_nnz = (I_F*pattern).nnz
+    num_ff_nnz = (I_F@pattern).nnz
     pattern.sort_indices()
 
     ##
@@ -1463,7 +1463,7 @@ def AIRplus(A, B, Bf, Cpt_params, InitialPattern='A_FC',  maxiter=1, degree=1, b
     BtBinv = compute_BtBinv(B, pattern)
     #
     # Compute (approx) block inverses for corresponding windows of A_FF
-    pattern_FF= (I_F*pattern).tocsc()
+    pattern_FF= (I_F@pattern).tocsc()
     pattern_FF.sort_indices()
     if block_solver == 'exact':
         block_invs = get_block_inverses(A, pattern_FF.indices, pattern_FF.indptr)
@@ -1473,10 +1473,10 @@ def AIRplus(A, B, Bf, Cpt_params, InitialPattern='A_FC',  maxiter=1, degree=1, b
         raise ValueError(f"Invalid block_solver option {block_solver}")
 
     ##
-    # Update T to satisfy the constraints (T*B = Bf), have identity at C-pts, and the 
+    # Update T to satisfy the constraints (T@B = Bf), have identity at C-pts, and the 
     # same sparsity pattern as "pattern"
     T = filter_operator(T, pattern, B, Bf, BtBinv)     # Comment out this line to match output from classic AIR
-    T = I_F*T + P_I
+    T = I_F@T + P_I
     T = T.multiply(pattern) + 1e-12*pattern_FF
     T.data[ T.data == 1e-12] = 0.0
     T.sort_indices()
@@ -1487,11 +1487,11 @@ def AIRplus(A, B, Bf, Cpt_params, InitialPattern='A_FC',  maxiter=1, degree=1, b
     # Iteratively solve the AIR equations
     #    A_FF W_update = - A_FC - A_FF W_T
     # where W_T is the weight block from T and each iteration, W_update is
-    # projected so that W_update*B = 0.  Note, the original W satisfies the
+    # projected so that W_update@B = 0.  Note, the original W satisfies the
     # constraints.
     for i in range(maxiter):
         # Compute right-hand-side, making sure to have same nonzero pattern as "pattern"
-        RHS = -AFC - AFF*T
+        RHS = -AFC - AFF@T
         if RHS.data.ravel().shape[0] > 0:
             smallest = 1e-12*np.abs(RHS.data.ravel()).min()
         elif A.data.ravel().shape[0] > 0:
@@ -1515,7 +1515,7 @@ def AIRplus(A, B, Bf, Cpt_params, InitialPattern='A_FC',  maxiter=1, degree=1, b
         #
         T_hat = T_hat.tobsr(blocksize=(1,1))
 
-        # Project update so that T_hat*B = 0
+        # Project update so that T_hat@B = 0
         satisfy_constraints(T_hat, B, BtBinv)      # Comment out this line to match output from classic AIR
         # Add update to T
         T = T + T_hat.tocsr()

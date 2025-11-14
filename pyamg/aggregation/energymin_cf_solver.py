@@ -452,10 +452,10 @@ def _extend_hierarchy(levels, strength, aggregate, restrict, interpolation, impr
     fn, kwargs = unpack_arg(improve_candidates[len(levels)-1])
     if fn is not None:
         b = np.zeros((A.shape[0], 1), dtype=A.dtype)
-        B = relaxation_as_linear_operator((fn, kwargs), A, b, np.array(splitting, dtype=bool)) * B
+        B = relaxation_as_linear_operator((fn, kwargs), A, b, np.array(splitting, dtype=bool)) @ B
         levels[-1].B = B
         if A.symmetry == 'nonsymmetric':
-            BH = relaxation_as_linear_operator((fn, kwargs), AH, b, np.array(splitting, dtype=bool)) * BH
+            BH = relaxation_as_linear_operator((fn, kwargs), AH, b, np.array(splitting, dtype=bool)) @ BH
             levels[-1].BH = BH
     
    ## Normalize each column of B, not found to be useful, so far, could maybe be deleted
@@ -488,9 +488,9 @@ def _extend_hierarchy(levels, strength, aggregate, restrict, interpolation, impr
      
     # Set coarse grid near nullspace modes as injected fine grid near
     # null-space modes
-    B = Cpt_params[1]['P_I'].T*levels[-1].B
+    B = Cpt_params[1]['P_I'].T @ levels[-1].B
     if A.symmetry == 'nonsymmetric':
-        BH = Cpt_params[1]['P_I'].T*levels[-1].BH
+        BH = Cpt_params[1]['P_I'].T @ levels[-1].BH
 
     # Create prolongator through either smoothing, AIR, or a classical approach
     fn, kwargs = unpack_arg(interpolation[len(levels)-1])
@@ -557,8 +557,8 @@ def _extend_hierarchy(levels, strength, aggregate, restrict, interpolation, impr
     levels[-1].Cpts = Cpt_params[1]['Cpts']      # Cpts (i.e., rootnodes)
 
     levels.append(MultilevelSolver.Level())
-    A = (R * A * P).tocsr()                      # Galerkin operator 
-    #A = R * A * P                                 # Galerkin operator (convert to CSR above, needed for filter_op to work)
+    A = (R @ A @ P).tocsr()                      # Galerkin operator 
+    #A = R @ A @ P                                 # Galerkin operator (convert to CSR above, needed for filter_op to work)
 
     A.symmetry = symmetry
     levels[-1].A = A
