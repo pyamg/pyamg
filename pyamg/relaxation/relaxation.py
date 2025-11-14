@@ -1180,9 +1180,9 @@ def ff_l1_jacobi(A, x, b, Cpts, Fpts, iterations=1):
     D_inv_A = scale_rows(A, D_inv, copy=True)
 
     for _iter in range(iterations):
-        #x[Cpts] = x[Cpts] - (D_inv_A*x)[Cpts]
-        x[Fpts] = x[Fpts] - (D_inv_A*x)[Fpts]
-        x[Fpts] = x[Fpts] - (D_inv_A*x)[Fpts]
+        #x[Cpts] = x[Cpts] - (D_inv_A @ x)[Cpts]
+        x[Fpts] = x[Fpts] - (D_inv_A @ x)[Fpts]
+        x[Fpts] = x[Fpts] - (D_inv_A @ x)[Fpts]
 
 
 def fcf_jacobi(A, x, b, Cpts, Fpts, iterations=1, omega=1.0):
