@@ -138,7 +138,7 @@ class TestKrylov(TestCase):
         #  same result, and for symmetric (but possibly indefinite) matrices CR
         #  and GMRES should give same result
         for maxiter in [1, 2, 3]:
-            for case, symm_case in zip(self.cases, self.symm_cases):
+            for case, symm_case in zip(self.cases, self.symm_cases, strict=False):
                 A = case['A']
                 b = case['b']
                 x0 = case['x0']

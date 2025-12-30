@@ -169,7 +169,7 @@ def gauge_laplacian(npts, spacing=1.0, beta=0.1):
         new_c.append(i - N + 1)
         new_diff.append(1)
 
-    for i, (r, c) in enumerate(zip(new_r, new_c)):
+    for i, (r, c) in enumerate(zip(new_r, new_c, strict=False)):
         diff = new_diff[i]
         index = min(r, c)
         if r > c:

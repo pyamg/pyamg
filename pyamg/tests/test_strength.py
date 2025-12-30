@@ -544,10 +544,10 @@ def reference_classical_soc(A, theta, norm='abs'):
 
     # Note abs(.) takes the complex modulus
     if norm == 'abs':
-        for i, v in zip(S.row, S.data):
+        for i, v in zip(S.row, S.data, strict=False):
             max_offdiag[i] = max(max_offdiag[i], abs(v))
     if norm == 'min':
-        for i, v in zip(S.row, S.data):
+        for i, v in zip(S.row, S.data, strict=False):
             max_offdiag[i] = max(max_offdiag[i], -v)
 
     # strong connections

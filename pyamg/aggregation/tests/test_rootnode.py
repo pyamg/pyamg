@@ -369,7 +369,7 @@ class TestSolverPerformance(TestCase):
                                   strength=strength, presmoother=smoother,
                                   postsmoother=smoother,
                                   improve_candidates=None, **SA_build_args)
-        for (symm_lvl, nonsymm_lvl) in zip(sa_nonsymm.levels, sa_symm.levels):
+        for (symm_lvl, nonsymm_lvl) in zip(sa_nonsymm.levels, sa_symm.levels, strict=False):
             assert_array_almost_equal(symm_lvl.A.toarray(),
                                       nonsymm_lvl.A.toarray())
 
@@ -539,6 +539,6 @@ class TestComplexSolverPerformance(TestCase):
                                   strength=strength, presmoother=smoother,
                                   postsmoother=smoother,
                                   improve_candidates=None, **SA_build_args)
-        for (symm_lvl, nonsymm_lvl) in zip(sa_nonsymm.levels, sa_symm.levels):
+        for (symm_lvl, nonsymm_lvl) in zip(sa_nonsymm.levels, sa_symm.levels, strict=False):
             assert_array_almost_equal(symm_lvl.A.toarray(),
                                       nonsymm_lvl.A.toarray())

@@ -388,7 +388,7 @@ def l2norm(u, mesh):
         jac = np.abs((x[1]-x[0])*(y[2]-y[0]) - (x[2]-x[0])*(y[1]-y[0]))
 
         # add up each quadrature point
-        for wv, xv, yv in zip(ww, xx, yy):
+        for wv, xv, yv in zip(ww, xx, yy, strict=False):
             val += (jac / 2) * wv * np.dot(u[e[I]], basis(xv, yv))**2
 
     # take the square root for the norm
@@ -729,7 +729,7 @@ def gradgradform(mesh, kappa=None, f=None, degree=1):
             Aelem = np.zeros((m, m))
             belem = np.zeros((m,))
 
-            for w, x, y in zip(ww, xx, yy):
+            for w, x, y in zip(ww, xx, yy, strict=False):
                 # Step 3
                 basis = np.array([(1-x-y)*(1-2*x-2*y),
                                   x*(2*x-1),
@@ -827,7 +827,7 @@ def divform(mesh):
         DXelem = np.zeros((3, 6))
         DYelem = np.zeros((3, 6))
 
-        for w, x, y in zip(ww, xx, yy):
+        for w, x, y in zip(ww, xx, yy, strict=False):
             basis1 = np.array([1-x-y, x, y])
 
             # basis2 = np.array([(1-x-y)*(1-2*x-2*y),
@@ -941,7 +941,7 @@ def applybc(A, b, mesh, bc, remove_dirichlet=False):
         if c['degree'] == 2:
             idx = c['id']
             newidx = []
-            for j, ed in zip(mesh.newID, mesh.Edges):
+            for j, ed in zip(mesh.newID, mesh.Edges, strict=False):
                 if ed[0] in idx and ed[1] in idx:
                     newidx.append(j)
             c['id'] = np.hstack((idx, newidx))
