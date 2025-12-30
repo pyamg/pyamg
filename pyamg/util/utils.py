@@ -884,7 +884,7 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2,
 
     if header:
         # Append Column Headers
-        for elmt, elmtwidth in zip(table[0], colwidths):
+        for elmt, elmtwidth in zip(table[0], colwidths, strict=False):
             table_str += centering(str(elmt), elmtwidth) + delim
         if table[0] != []:
             table_str = table_str[:-len(delim)].rstrip() + '\n'
@@ -899,7 +899,7 @@ def print_table(table, title='', delim='|', centering='center', col_padding=2,
         table = table[1:]
 
     for row in table:
-        for elmt, elmtwidth in zip(row, colwidths):
+        for elmt, elmtwidth in zip(row, colwidths, strict=False):
             table_str += centering(str(elmt), elmtwidth) + delim
         if row != []:
             table_str = table_str[:-len(delim)].rstrip() + '\n'

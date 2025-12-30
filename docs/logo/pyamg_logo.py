@@ -56,10 +56,10 @@ def plotaggs(AggOp, V, E, G,
                         G[j1, j2]                             # j1/j2 are connected
                        ):
                         found = True                       # i-j1-j2 are in the aggregate
-                        coords = list(zip(V[[i, j1, j2], 0], V[[i, j1, j2], 1]))
+                        coords = list(zip(V[[i, j1, j2], 0], V[[i, j1, j2], 1], strict=False))
                         todraw.append(sg.Polygon(coords))  # add the triangle to the list
                 if not found and i != j1 and j1 in aggids:   # if triangle found, then ...
-                    coords = list(zip(V[[i, j1], 0], V[[i, j1], 1]))
+                    coords = list(zip(V[[i, j1], 0], V[[i, j1], 1], strict=False))
                     newobj = sg.LineString(coords)         # add a line object to the list
                     todraw.append(newobj)
 

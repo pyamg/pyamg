@@ -256,7 +256,7 @@ class TestUtils(TestCase):
 
         for method in methods:
             for kwargs in params:
-                for (A, x, b) in zip(As, xs, bs):
+                for (A, x, b) in zip(As, xs, bs, strict=False):
                     kwargs_linop = dict(kwargs)
                     # run relaxation as a linear operator
                     if kwargs_linop == {}:

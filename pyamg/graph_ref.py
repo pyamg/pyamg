@@ -39,7 +39,7 @@ def bellman_ford_reference(A, c):
     cnt = 0
     while not done:
         done = True
-        for i, j, Aij in zip(A.row, A.col, A.data):
+        for i, j, Aij in zip(A.row, A.col, A.data, strict=False):
             if d[i] + Aij < d[j]:
                 d[j] = d[i] + Aij
                 m[j] = m[i]
@@ -93,7 +93,7 @@ def bellman_ford_balanced_reference(A, c):
 
     while not done:
         done = True
-        for i, j, Aij in zip(A.row, A.col, A.data):
+        for i, j, Aij in zip(A.row, A.col, A.data, strict=False):
             if m[i] < 0:
                 continue
 
