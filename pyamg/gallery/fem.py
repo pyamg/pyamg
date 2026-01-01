@@ -516,7 +516,8 @@ class Mesh:
                      (Vnew[edge0, 1] - Vnew[edge1, 1])**2
 
         maxit = 100
-        for _it in range(maxit):
+        totalit = 0
+        for it in range(maxit):
             Vnew = G @ Vnew
             Vnew /= W[:, None]  # scale the columns by 1/W
             Vnew[bid, :] = self.V[bid, :]
@@ -525,10 +526,11 @@ class Mesh:
             move = np.max(np.abs(newedgelength - edgelength) / newedgelength)
             edgelength = newedgelength
             if move < tol:
+                totalit = it
                 break
 
         self.V = Vnew
-        return _it
+        return totalit
 
 
 def _compute_diffusion_matrix(kappa_lmbda, x, y):
