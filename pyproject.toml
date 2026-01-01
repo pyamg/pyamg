@@ -138,6 +138,12 @@ ignore = [
     "docs/logo/pyamg_logo.py" = ["PLR0916"]
     "pyamg/util/utils.py" = ["PLC2701"]
     "pyamg/amg_core/__init__.py" = ["RUF022"]
+    "pyamg/classical/classical.py" = ["B006"]
+    "pyamg/classical/air.py" = ["B006"]
+    "pyamg/aggregation/adaptive.py" = ["B006"]
+    "pyamg/aggregation/aggregation.py" = ["B006"]
+    "pyamg/aggregation/pairwise.py" = ["B006"]
+    "pyamg/aggregation/rootnode.py" = ["B006"]
 
 [tool.ruff.lint.pep8-naming]
 ignore-names = [

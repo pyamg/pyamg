@@ -1,7 +1,6 @@
 """Example memory profiler for PyAMG."""
 from memory_profiler import profile
 import numpy as np
-import scipy.sparse
 import scipy.io
 import pyamg
 
