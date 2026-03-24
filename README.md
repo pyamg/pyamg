@@ -128,29 +128,29 @@ ml = pyamg.ruge_stuben_solver(A)                    # construct the multigrid hi
 print(ml)                                           # print hierarchy information
 b = np.random.rand(A.shape[0])                      # pick a random right hand side
 x = ml.solve(b, tol=1e-10)                          # solve Ax=b to a tolerance of 1e-10
-print("residual: ", np.linalg.norm(b-A*x))          # compute norm of residual vector
+print("residual: ", np.linalg.norm(b-A@x))          # compute norm of residual vector
 ````
 
 Program output:
 
 <pre>
-multilevel_solver
+MultilevelSolver
 Number of Levels:     9
-Operator Complexity:  2.199
-Grid Complexity:      1.667
-Coarse Solver:        'pinv2'
+Operator Complexity:   2.198
+Grid Complexity:       1.667
+Coarse Solver:        'pinv'
   level   unknowns     nonzeros
-    0       250000      1248000 [45.47%]
-    1       125000      1121002 [40.84%]
-    2        31252       280662 [10.23%]
-    3         7825        70657 [ 2.57%]
-    4         1937        17971 [ 0.65%]
-    5          483         4725 [ 0.17%]
-    6          124         1352 [ 0.05%]
-    7           29          293 [ 0.01%]
-    8            7           41 [ 0.00%]
+     0      250000      1248000 [45.50%]
+     1      125000      1121002 [40.87%]
+     2       31372       280840 [10.24%]
+     3        7814        69818 [2.55%]
+     4        1953        17559 [0.64%]
+     5         481         4421 [0.16%]
+     6         123         1145 [0.04%]
+     7          30          282 [0.01%]
+     8          10           76 [0.00%]
 
-residual:  1.24748994988e-08
+residual:  4.772211803542084e-09
 </pre>
 
 # Conda
