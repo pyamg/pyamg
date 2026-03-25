@@ -33,15 +33,15 @@ class PytestTester:
     Calling this test function finds and runs all tests associated with the
     module and all its sub-modules.
 
-    Attributes
-    ----------
-    module_name : str
-        Full path to the package to test.
-
     Parameters
     ----------
     module_name : module name
         The name of the module to test.
+
+    Attributes
+    ----------
+    module_name : str
+        Full path to the package to test.
 
     """
 

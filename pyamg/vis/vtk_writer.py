@@ -38,6 +38,10 @@ def write_vtu(V, cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     -------
     writes a .vtu file for use in Paraview
 
+    See Also
+    --------
+    write_mesh
+
     Notes
     -----
     - Poly data not supported
@@ -103,10 +107,6 @@ def write_vtu(V, cells, pdata=None, pvdata=None, cdata=None, cvdata=None,
     >>> cdata={5:np.ones((12,2)),3:np.ones((1,2)),1:np.ones((4,2))}
     >>> cvdata={5:np.ones((3*12,2)),3:np.ones((3*1,2)), 1:np.ones((3*4,2))}
     >>> write_vtu(V=V, cells=cells, fname='test.vtu')
-
-    See Also
-    --------
-    write_mesh
 
     """
     # number of indices per cell for each cell type
@@ -392,6 +392,10 @@ def write_basic_mesh(V, E2V=None, mesh_type='tri',
     -------
     writes a .vtu file for use in Paraview
 
+    See Also
+    --------
+    write_vtu
+
     Notes
     -----
     The difference between write_basic_mesh and write_vtu is that write_vtu is
@@ -433,10 +437,6 @@ def write_basic_mesh(V, E2V=None, mesh_type='tri',
     >>> write_basic_mesh(V, E2V=E2V, mesh_type='tri',pdata=pdata,
     ...                  pvdata=pvdata, cdata=cdata, cvdata=cvdata,
     ...                  fname='test.vtu')
-
-    See Also
-    --------
-    write_vtu
 
     """
     if E2V is None:

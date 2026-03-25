@@ -1297,6 +1297,21 @@ def scale_T(T, P_I, I_F):
     T : {bsr_array}
         Tentative prolongator scaled to be identity at C-pt nodes
 
+    Notes
+    -----
+    This routine is primarily used in
+    pyamg.aggregation.smooth.energy_prolongation_smoother, where it is used to
+    generate a suitable initial guess for the energy-minimization process, when
+    root-node style SA is used.  This function, scale_T, takes an existing
+    tentative prolongator and ensures that it injects from the coarse-grid to
+    fine-grid root-nodes.
+
+    When generating initial guesses for root-node style prolongation operators,
+    this function is usually called after pyamg.uti.utils.filter_operator
+
+    This function assumes that the eventual coarse-grid nullspace vectors
+    equal coarse-grid injection applied to the fine-grid nullspace vectors.
+
     Examples
     --------
     >>> from scipy.sparse import csr_array, bsr_array
@@ -1327,21 +1342,6 @@ def scale_T(T, P_I, I_F):
            [0. , 0.5, 0. ],
            [0. , 0. , 4. ],
            [0. , 0. , 1. ]])
-
-    Notes
-    -----
-    This routine is primarily used in
-    pyamg.aggregation.smooth.energy_prolongation_smoother, where it is used to
-    generate a suitable initial guess for the energy-minimization process, when
-    root-node style SA is used.  This function, scale_T, takes an existing
-    tentative prolongator and ensures that it injects from the coarse-grid to
-    fine-grid root-nodes.
-
-    When generating initial guesses for root-node style prolongation operators,
-    this function is usually called after pyamg.uti.utils.filter_operator
-
-    This function assumes that the eventual coarse-grid nullspace vectors
-    equal coarse-grid injection applied to the fine-grid nullspace vectors.
 
     """
     if not issparse(T) or T.format != 'bsr':
@@ -1420,6 +1420,13 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     Fpts : {array}
         An array of all non root node dofs, corresponding to the F/C splitting
 
+    Notes
+    -----
+    The principal calling routine is
+    aggregation.smooth.energy_prolongation_smoother,
+    which uses the Cpt_param dictionary for root-node style
+    prolongation smoothing
+
     Examples
     --------
     >>> from numpy import array
@@ -1447,13 +1454,6 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
            [0., 1.],
            [0., 0.],
            [0., 0.]])
-
-    Notes
-    -----
-    The principal calling routine is
-    aggregation.smooth.energy_prolongation_smoother,
-    which uses the Cpt_param dictionary for root-node style
-    prolongation smoothing
 
     """
     if not issparse(A) or A.format not in ('bsr', 'csr'):
@@ -1552,6 +1552,16 @@ def compute_BtBinv(B, C):
         BtBinv[i] = inv(B_i.T B_i), where B_i is B restricted to the nonzero
         pattern of block row i in C.
 
+    Notes
+    -----
+    The principal calling routines are
+    aggregation.smooth.energy_prolongation_smoother, and
+    util.utils.filter_operator.
+
+    BtBinv is used in the prolongation smoothing process that incorporates B
+    into the span of prolongation with row-wise projection operators.  It is
+    these projection operators that BtBinv is part of.
+
     Examples
     --------
     >>> from numpy import array
@@ -1571,16 +1581,6 @@ def compute_BtBinv(B, C):
            [[0.25]],
     <BLANKLINE>
            [[0.25]]])
-
-    Notes
-    -----
-    The principal calling routines are
-    aggregation.smooth.energy_prolongation_smoother, and
-    util.utils.filter_operator.
-
-    BtBinv is used in the prolongation smoothing process that incorporates B
-    into the span of prolongation with row-wise projection operators.  It is
-    these projection operators that BtBinv is part of.
 
     """
     if not issparse(C) or C.format not in ('csr', 'bsr'):

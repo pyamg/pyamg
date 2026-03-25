@@ -16,13 +16,13 @@ def set_tol(dtype):
     tol : float
         A smallish value based on precision
 
-    Notes
-    -----
-    Handles both real and complex (through the .lower() case)
-
     See Also
     --------
     numpy.typecodes, numpy.sctypes
+
+    Notes
+    -----
+    Handles both real and complex (through the .lower() case)
 
     """
     if dtype.char.lower() == 'f':
