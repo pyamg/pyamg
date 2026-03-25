@@ -129,6 +129,7 @@ ignore = [
     "B028",    # no-explicit-stacklevel
     "PLR6104", # non-augmented-assignment
     "NPY002",  # numpy-legacy-random
+    "RUF069",  # unreliable-float-equality
 ]
 
 [tool.ruff.lint.per-file-ignores]
