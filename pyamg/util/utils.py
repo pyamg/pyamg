@@ -1252,6 +1252,7 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
         A = A.tobsr((rows_per_block, cols_per_block))
     else:
         A = A.tocsr()
+    A.sum_duplicates()
 
     # Calculate difference between A @ B and Bf
     diff = A @ B - Bf
