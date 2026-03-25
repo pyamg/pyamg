@@ -1242,7 +1242,7 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     C = C.copy()
     C.data[:] = 1
     A = A.multiply(C)
-    # add explicit zeros to A wherever C is nonzero, but A is zero
+    # add explicit zeros to A wherever C is nonzero
     A = A.tocoo()
     C = C.tocoo()
     A.data = np.hstack((np.zeros(C.data.shape, dtype=A.dtype), A.data))
@@ -1252,6 +1252,8 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
         A = A.tobsr((rows_per_block, cols_per_block))
     else:
         A = A.tocsr()
+    # eliminate redundant zeros created by the above
+    A.sum_duplicates()
 
     # Calculate difference between A @ B and Bf
     diff = A @ B - Bf
