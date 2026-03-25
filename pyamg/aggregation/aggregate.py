@@ -200,6 +200,16 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
         form with identity of size bsize x bsize on each aggregate
         if A is BSR.
 
+    See Also
+    --------
+    amg_core.pairwise_aggregation
+
+    References
+    ----------
+    [0] Notay, Y. (2010). An aggregation-based algebraic multigrid
+    method. Electronic transactions on numerical analysis, 37(6),
+    123-146.
+
     Examples
     --------
     >>> from scipy.sparse import csr_array
@@ -221,16 +231,6 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
            [1],
            [1],
            [1]], dtype=int32)
-
-    See Also
-    --------
-    amg_core.pairwise_aggregation
-
-    References
-    ----------
-    [0] Notay, Y. (2010). An aggregation-based algebraic multigrid
-    method. Electronic transactions on numerical analysis, 37(6),
-    123-146.
 
     """
     # Get SOC matrix
@@ -464,6 +464,11 @@ def balanced_lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5,
     array
         Array of centers or Cpts, i.e., centers[i] = root node of aggregate i.
 
+    See Also
+    --------
+    amg_core.standard_aggregation
+    amg_core.balanced_lloyd_cluster
+
     Notes
     -----
     If pad is not None, then C will be augmented by
@@ -472,10 +477,13 @@ def balanced_lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5,
     As an example, if pad is small and if measure='inv' is used, then C + E
     will have "long" edges for the pad.
 
-    See Also
-    --------
-    amg_core.standard_aggregation
-    amg_core.balanced_lloyd_cluster
+    References
+    ----------
+    ..[1] Zaman, Tareq, Nicolas Nytko, Ali Taghibakhshi, Scott MacLachlan,
+          Luke Olson, and Matthew West.
+          "Generalizing lloyd's algorithm for graph clustering."
+          SIAM Journal on Scientific Computing 46, no. 5 (2024): A2819-A2847.
+          https://epubs.siam.org/doi/abs/10.1137/23M1556800?journalCode=sjoce3
 
     Examples
     --------
@@ -488,14 +496,6 @@ def balanced_lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5,
     >>> G.data[:] = np.ones(len(G.data))
     >>> np.random.seed(787888)
     >>> AggOp, seeds = balanced_lloyd_aggregation(G)
-
-    References
-    ----------
-    ..[1] Zaman, Tareq, Nicolas Nytko, Ali Taghibakhshi, Scott MacLachlan,
-          Luke Olson, and Matthew West.
-          "Generalizing lloyd's algorithm for graph clustering."
-          SIAM Journal on Scientific Computing 46, no. 5 (2024): A2819-A2847.
-          https://epubs.siam.org/doi/abs/10.1137/23M1556800?journalCode=sjoce3
 
     """
     if C.shape[0] != C.shape[1]:

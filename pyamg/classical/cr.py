@@ -245,18 +245,18 @@ def binormalize(A, tol=1e-5, maxiter=10):
         - easily done with tol=0 if B=DA, but this is not symmetric
         - algorithm is O(N log (1.0/tol))
 
+    References
+    ----------
+    .. [1] Livne, O.E., Golub, G.H. Scaling by Binormalization.
+       Numerical Algorithms 35, 97-120 (2004).
+       https://doi.org/10.1023/B:NUMA.0000016606.32820.69
+
     Examples
     --------
     >>> from pyamg.gallery import poisson
     >>> from pyamg.classical.cr import binormalize
     >>> A = poisson((10,),format='csr')
     >>> C = binormalize(A)
-
-    References
-    ----------
-    .. [1] Livne, O.E., Golub, G.H. Scaling by Binormalization.
-       Numerical Algorithms 35, 97-120 (2004).
-       https://doi.org/10.1023/B:NUMA.0000016606.32820.69
 
     """
     if not issparse(A):
