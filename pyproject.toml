@@ -136,6 +136,7 @@ ignore = [
     "test*.py" = ["N802", "N803", "D101", "D102", "D103", "E221", "PLC0415", "PLR6301",
                   "NPY002"]
     "**/tests/__init__.py" = ["D104"]
+    "__init__.py" = ["RUF067"]
     "docs/logo/pyamg_logo.py" = ["PLR0916"]
     "pyamg/util/utils.py" = ["PLC2701"]
     "pyamg/amg_core/__init__.py" = ["RUF022"]
