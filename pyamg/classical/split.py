@@ -240,6 +240,49 @@ def PMISc(S, method='JP'):
     return MIS(G, weights)
 
 
+def PMISR(S):
+    """C/F splitting using PMIS for Reduction (PMISR).
+
+    Computes an independent set in S + S^T using a Luby-type parallel
+    algorithm, but selects the F-points as the independent set with the
+    smallest measure. This keeps off-diagonal entries in A_ff small for
+    nonsymmetric problems and is intended for use with reduction-based
+    AMG (e.g., AIR).
+
+    Parameters
+    ----------
+    S : csr_array
+        Strength of connection matrix indicating the strength between nodes i
+        and j (S_ij)
+
+    Returns
+    -------
+    splitting : ndarray
+        Array of length of S of ones (coarse) and zeros (fine)
+
+    See Also
+    --------
+    PMIS, MIS
+
+    Examples
+    --------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.classical.split import PMISR
+    >>> S = poisson((7,), format='csr') # 1D mesh with 7 vertices
+    >>> splitting = PMISR(S)
+
+    """
+    S = remove_diagonal(S)
+    weights, G, S, T = _preprocess(S)
+    del S, T
+    # Negate weights so the Luby-type MIS selects local minima of the
+    # original measure. Those vertices become the F-set.
+    f_set = MIS(G, -weights)
+    splitting = (1 - f_set).astype('intc')
+    _set_dirichlet(G, splitting)
+    return splitting
+
+
 def CLJP(S, color=False):
     """Compute a C/F splitting using the parallel CLJP algorithm.
 

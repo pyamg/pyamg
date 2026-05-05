@@ -14,7 +14,7 @@ from ..util.utils import filter_matrix_rows, asfptype
 from ..classical.interpolate import (direct_interpolation, classical_interpolation,
                                      injection_interpolation, one_point_interpolation,
                                      local_air)
-from .split import RS, PMIS, PMISc, CLJP, CLJPc
+from .split import RS, PMIS, PMISc, CLJP, CLJPc, PMISR
 from .cr import CR
 
 
@@ -44,7 +44,10 @@ def air_solver(A,
         strength=None, all nonzero entries of the matrix are considered strong.
     CF : {string} : default 'RS' with second pass
         Method used for coarse grid selection (C/F splitting)
-        Supported methods are RS, PMIS, PMISc, CLJP, CLJPc, and CR.
+        Supported methods are RS, PMIS, PMISR, PMISc, CLJP, CLJPc, and CR.
+        PMISR is a PMIS variant that selects the F-set with the smallest
+        measure, keeping off-diagonal entries in A_ff small for nonsymmetric
+        problems.
     interpolation : str
         Options include 'direct', 'classical', 'inject' and 'one-point'.
     restrict : str
@@ -183,6 +186,8 @@ def extend_hierarchy(levels, strength, CF, interpolation, restrict, filter_opera
         splitting = RS(C, **kwargs)
     elif fn == 'PMIS':
         splitting = PMIS(C, **kwargs)
+    elif fn == 'PMISR':
+        splitting = PMISR(C, **kwargs)
     elif fn == 'PMISc':
         splitting = PMISc(C, **kwargs)
     elif fn == 'CLJP':

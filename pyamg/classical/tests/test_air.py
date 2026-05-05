@@ -30,6 +30,16 @@ class TestAIR(TestCase):
             del x_sol
             assert (res[1] < 1e-12)
 
+            # CSR case with PMISR splitting
+            ml = air_solver(A, CF='PMISR', postsmoother=f_relax, max_levels=2)
+
+            res = []
+            x = np.random.rand(A.shape[0])
+            b = A@np.random.rand(A.shape[0])  # zeros_like(x)
+            x_sol = ml.solve(b, x0=x, maxiter=1, tol=1e-12, residuals=res)
+            del x_sol
+            assert (res[1] < 1e-12)
+
             # BSR case
             A.sort_indices()
             b1 = np.array([1, -1, 1, 1])
