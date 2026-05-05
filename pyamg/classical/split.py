@@ -37,6 +37,18 @@ PMISc: Parallel Modified Independent Set in Color
     - Augments random weights with a (graph) vertex coloring
     - See References [1]
 
+PMISR: PMIS for Reduction
+    - Variant of PMIS that selects the F-set as the independent set with the
+      smallest measure, keeping off-diagonal entries in A_ff small.
+    - Intended for reduction-based AMG (e.g., AIR) on nonsymmetric problems.
+    - See Reference [5]
+
+PMISR-DDC: PMISR with Diagonal Dominance Cleanup
+    - PMISR followed by one or more cleanup passes that convert the most
+      diagonally-dominated F-points to C-points.
+    - Weakly enforces diagonally-dominant A_ff for reduction-based AMG.
+    - See Reference [5]    
+
 CLJP: Cleary-Luby-Jones-Plassmann
     - Parallel method with cost and complexity comparable to Ruge-Stuben.
     - Convergence can deteriorate with increasing problem
@@ -61,6 +73,8 @@ from coloring.
        RS        no        no      moderate
       PMIS      yes        no      very low
       PMISc     yes       yes        low
+      PMISR     yes        no      very low
+      PMISR-DDC yes        no        low
       CLJP      yes        no      moderate
       CLJPc     yes       yes      moderate
     ========  ========  ========  ==========
@@ -86,6 +100,12 @@ References
     In Multigrid Methods, McCormick SF (ed.),
     Frontiers in Applied Mathematics, vol. 3.
     SIAM: Philadelphia, PA, 1987; 73-130.
+
+..  [5] S. Dargaville, R. P. Smedley-Stevenson, P. N. Smith, C. C. Pain.
+    "Coarsening and parallelism with reduction multigrids for hyperbolic
+    Boltzmann transport"
+    The International Journal of High Performance Computing Applications
+    2025; 39(3):364-384.
 
 """
 import numpy as np
@@ -280,6 +300,118 @@ def PMISR(S):
     f_set = MIS(G, -weights)
     splitting = (1 - f_set).astype('intc')
     _set_dirichlet(G, splitting)
+    return splitting
+
+
+def PMISR_DDC(S, A, fraction_swap=0.1, ddc_its=1):
+    """C/F splitting using PMISR with Diagonal Dominance Cleanup (DDC).
+
+    First runs PMISR, then performs one or more cleanup passes that convert
+    the most diagonally-dominated F-points to C-points. For each F-row, the
+    row-wise diagonal dominance ratio is
+
+        theta_i = sum_{j in F, j != i} |A[i, j]| / |A[i, i]|.
+
+    F-points with theta above a threshold are swapped to C-points. This
+    gives diagonally dominant A_ff which gives good convergence for
+    reduction-based AMG (e.g., AIR) on nonsymmetric problems.
+
+    Parameters
+    ----------
+    S : csr_array
+        Strength of connection matrix.
+    A : csr_array
+        System matrix used to compute diagonal dominance ratios.
+    fraction_swap : float, default 0.1
+        If positive, the local fraction of F-points to convert to C-points
+        based on diagonal dominance (the threshold is found by binning
+        theta values into 1000 bins on [0, 1]).
+        If negative, any F-row with diagonal dominance ratio greater than
+        or equal to ``-fraction_swap`` is converted to a C-point.
+    ddc_its : int, default 1
+        Number of DDC cleanup passes to perform. Each pass recomputes
+        theta against the current F-set and swaps F-points to C-points
+        according to ``fraction_swap``.
+
+    Returns
+    -------
+    splitting : ndarray
+        Array of length of S of ones (coarse) and zeros (fine).
+
+    See Also
+    --------
+    PMIS, PMISR, MIS
+
+    Examples
+    --------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.classical.split import PMISR_DDC
+    >>> A = poisson((7,), format='csr')
+    >>> S = A.copy()
+    >>> splitting = PMISR_DDC(S, A)
+
+    """
+    if not issparse(A) or A.format != 'csr':
+        raise TypeError('expected csr_array for A')
+    if A.shape != S.shape:
+        raise ValueError(f'A and S must have the same shape, '
+                         f'got {A.shape} and {S.shape}')
+    if ddc_its < 0:
+        raise ValueError('ddc_its must be >= 0')
+
+    splitting = PMISR(S)
+
+    A_abs = abs(A).tocsr()
+    diag = np.abs(A.diagonal())
+
+    for _ in range(ddc_its):
+        # Compute diagonal dominance ratio for F points
+        # Row-restricted F-column sum |A[i,:]| @ f_mask, minus the diagonal
+        # contribution to enforce j != i, then divide by |A[i,i]|.
+        f_mask = (splitting == 0)
+        f_mask_f = f_mask.astype(A_abs.dtype)
+
+        masked_sums = A_abs.dot(f_mask_f) - diag * f_mask_f
+
+        theta = np.zeros(A.shape[0])
+        valid = f_mask & (diag > 0)
+        theta[valid] = masked_sums[valid] / diag[valid]
+
+        F_idx = np.where(f_mask)[0]
+        num_F = F_idx.size
+        if num_F == 0:
+            break
+
+        F_theta = theta[F_idx]
+
+        if fraction_swap < 0:
+            swap_threshold = -fraction_swap
+        else:
+            target = int(num_F * fraction_swap)
+            if target <= 0:
+                break
+
+            # Bin theta on [0, 1] (overflow lumped into the top bin) and walk
+            # bins from the top down to find the lowest bin needed to cover
+            # the worst `target` F-points; that bin's lower edge is the threshold.
+            n_bins = 1000
+            bin_idx = np.floor(F_theta * n_bins).astype(np.int64)
+            bin_idx = np.where((bin_idx < 0) | (bin_idx >= n_bins),
+                               n_bins - 1, bin_idx)
+            counts = np.bincount(bin_idx, minlength=n_bins)
+
+            cumsum_top = np.cumsum(counts[::-1])
+            idx = np.searchsorted(cumsum_top, target)
+            bin_boundary = n_bins - int(idx)
+            swap_threshold = (bin_boundary - 1) / n_bins
+
+        # Skip theta == 0 rows
+        swap_mask = (F_theta != 0) & (F_theta >= swap_threshold)
+        if not swap_mask.any():
+            break
+        # Swap the worst F points to C
+        splitting[F_idx[swap_mask]] = 1
+
     return splitting
 
 
