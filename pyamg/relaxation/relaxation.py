@@ -9,6 +9,7 @@ from scipy.linalg import lapack as la
 from ..util.utils import type_prep, get_diagonal, get_block_diag
 from ..util.params import set_tol
 from ..util.linalg import norm
+from ..util.sparse_blas import matvec as _matvec
 from .. import amg_core
 
 
@@ -649,12 +650,12 @@ def polynomial(A, x, b, coefficients, iterations=1):
         if norm(x) == 0:
             residual = b
         else:
-            residual = b - A @ x
+            residual = b - _matvec(A, x)
 
         h = coefficients[0]*residual
 
         for c in coefficients[1:]:
-            h = c*residual + A@h
+            h = c*residual + _matvec(A, h)
 
         x += h
 
@@ -980,7 +981,7 @@ def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
         raise ValueError('valid sweep directions: "forward", "backward", and "symmetric"')
 
     # Calculate initial residual
-    r = b - A @ x
+    r = b - _matvec(A, x)
 
     for _i in range(iterations):
         amg_core.gauss_seidel_nr(A.indptr, A.indices, A.data,

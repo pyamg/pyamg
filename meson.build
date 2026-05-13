@@ -17,6 +17,7 @@ amg_core_headers = ['air',
 
 py = import('python').find_installation(pure: false)
 pybind11_dep = dependency('pybind11')
+openmp_dep = dependency('openmp', required: false)
 
 foreach header : amg_core_headers
   py.extension_module(header,
@@ -26,6 +27,17 @@ foreach header : amg_core_headers
       dependencies : [pybind11_dep],
   )
 endforeach
+
+# Threaded sparse BLAS kernels (SpMV; SpGEMM and fused RAP forthcoming).
+# OpenMP is optional: the kernels are guarded by `#ifdef _OPENMP` and run
+# serially if OpenMP is unavailable at build time.
+py.extension_module('sparse_blas',
+    'pyamg/amg_core/sparse_blas/sparse_blas_bind.cpp',
+    install: true,
+    subdir: 'pyamg/amg_core',
+    include_directories: include_directories('pyamg/amg_core/sparse_blas'),
+    dependencies : [pybind11_dep, openmp_dep],
+)
 
 py.extension_module('bind_examples',
     'pyamg/amg_core/tests/bind_examples_bind.cpp',

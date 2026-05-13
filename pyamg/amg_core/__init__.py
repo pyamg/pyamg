@@ -1,7 +1,7 @@
 """amg_core - a C++ implementation of AMG-related routines."""
 
 from . import (evolution_strength, graph, krylov, linalg, relaxation,
-               ruge_stuben, smoothed_aggregation)
+               ruge_stuben, smoothed_aggregation, sparse_blas)
 
 from .evolution_strength import (apply_absolute_distance_filter, apply_distance_filter,
                                  min_blocks, evolution_strength_helper,

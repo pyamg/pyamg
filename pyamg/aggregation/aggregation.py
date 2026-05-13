@@ -17,12 +17,15 @@ from .aggregate import standard_aggregation, naive_aggregation,\
     lloyd_aggregation, balanced_lloyd_aggregation,\
     metis_aggregation, pairwise_aggregation
 from .tentative import fit_candidates
+from ..util.sparse_blas import rap as _rap, rap_compatible as _rap_ok, \
+    with_serial_blas as _with_serial_blas
 from .smooth import jacobi_prolongation_smoother, \
     richardson_prolongation_smoother, energy_prolongation_smoother
 
 from ..relaxation.utils import relaxation_as_linear_operator
 
 
+@_with_serial_blas
 def smoothed_aggregation_solver(A, B=None, BH=None,
                                 symmetry='hermitian', strength='symmetric',
                                 aggregate='standard',
@@ -422,7 +425,10 @@ def _extend_hierarchy(levels, strength, aggregate, smooth, improve_candidates,
     levels[-1].R = R  # restriction operator
 
     levels.append(MultilevelSolver.Level())
-    A = R @ A @ P              # Galerkin operator
+    if _rap_ok(R, A, P):
+        A = _rap(R, A, P)
+    else:
+        A = R @ A @ P              # Galerkin operator
     A.symmetry = symmetry
     levels[-1].A = A
     levels[-1].B = B           # right near nullspace candidates

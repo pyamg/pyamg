@@ -19,6 +19,7 @@ from .util.linalg import approximate_spectral_radius
 from .util.utils import (scale_rows_by_largest_entry, amalgamate, scale_rows,
                          get_block_diag, scale_columns)
 from .util.params import set_tol
+from .util.sparse_blas import matmat
 
 
 def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
@@ -455,7 +456,7 @@ def energy_based_strength_of_connection(A, theta=0.0, k=2):
     S = sparse.csc_array(A.shape, dtype=A.dtype)  # empty matrix
     Id = sparse.eye_array(A.shape[0], A.shape[1], format='csc')
     for _i in range(k + 1):
-        S = S + omega * (Dinv @ (Id - A @ S))
+        S = S + omega * (Dinv @ (Id - matmat(A, S)))
 
     # Calculate the strength entries in S column-wise, but only strength
     # values at the sparsity pattern of A
@@ -669,11 +670,11 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
 
         # Calculate (Atilde^nsquare)^T = (Atilde^T)^nsquare
         for _i in range(nsquare):
-            Atilde = Atilde @ Atilde
+            Atilde = matmat(Atilde, Atilde)
 
         JacobiStep = (Id - (1.0 / rho_DinvA) @ Dinv_A).T.tocsr()
         for _i in range(ninc):
-            Atilde = Atilde @ JacobiStep
+            Atilde = matmat(Atilde, JacobiStep)
         del JacobiStep
 
         # Apply mask to Atilde, zeros in mask have already been eliminated at
@@ -696,7 +697,7 @@ def evolution_strength_of_connection(A, B=None, epsilon=4.0, k=2,
         # Use computational short-cut for case (ninc == 0) and (nsquare > 0)
         # Calculate Atilde^k only at the sparsity pattern of mask.
         for _i in range(nsquare - 1):
-            Atilde = Atilde @ Atilde
+            Atilde = matmat(Atilde, Atilde)
 
         # Call incomplete mat-mat mult
         AtildeCSC = Atilde.tocsc()

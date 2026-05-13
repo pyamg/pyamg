@@ -7,6 +7,7 @@ from scipy import sparse
 from .. import amg_core
 from ..graph import lloyd_cluster, balanced_lloyd_cluster, metis_partition
 from ..strength import classical_strength_of_connection
+from ..util.sparse_blas import rap as _rap, rap_compatible as _rap_ok
 
 
 def standard_aggregation(C):
@@ -299,7 +300,11 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
         # Form coarse grid operator for next matching
         if i < (matchings-1):
             if sparse.issparse(T_temp) and T_temp.format == 'csr':
-                Ac = T_temp.T.tocsr() @ Ac @ T_temp
+                R_t = T_temp.T.tocsr()
+                if _rap_ok(R_t, Ac, T_temp):
+                    Ac = _rap(R_t, Ac, T_temp)
+                else:
+                    Ac = R_t @ Ac @ T_temp
             else:
                 Ac = T_temp.T @ Ac @ T_temp
 

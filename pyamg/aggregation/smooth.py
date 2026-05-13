@@ -11,6 +11,7 @@ from ..util.utils import scale_rows, get_diagonal, get_block_diag, \
     truncate_rows
 from ..util.linalg import approximate_spectral_radius
 from ..util import upcast
+from ..util.sparse_blas import matmat
 
 
 # satisfy_constraints is a helper function for prolongation smoothing routines
@@ -184,7 +185,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
         # apply satisfy constraints so that U@B = 0
         P = T
         for _ in range(degree):
-            U = (D_inv_S@P).tobsr(blocksize=P.blocksize)
+            U = matmat(D_inv_S, P).tobsr(blocksize=P.blocksize)
 
             # Enforce U@B = 0 (1) Construct array of inv(Bi'Bi), where Bi is B
             # restricted to row i's sparsity pattern in pattern. This
@@ -201,7 +202,7 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
         # Carry out Jacobi as normal
         P = T
         for _ in range(degree):
-            P = P - (D_inv_S @ P)
+            P = P - matmat(D_inv_S, P)
 
     return P
 
@@ -267,7 +268,7 @@ def richardson_prolongation_smoother(S, T, omega=4.0/3.0, degree=1):
 
     P = T
     for _ in range(degree):
-        P = P - weight*(S@P)
+        P = P - weight*matmat(S, P)
 
     return P
 
@@ -1071,7 +1072,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
 
         AtildeCopy = Atilde.copy()
         for _ in range(degree):
-            pattern = AtildeCopy @ pattern
+            pattern = matmat(AtildeCopy, pattern)
 
         # Optional filtering of sparsity pattern before smoothing
         if 'theta' in prefilter and 'k' in prefilter:
@@ -1110,7 +1111,7 @@ def energy_prolongation_smoother(A, T, Atilde, B, Bf, Cpt_params,
 
     # If using root nodes, enforce identity at C-points
     if Cpt_params[0]:
-        pattern = Cpt_params[1]['I_F'] @ pattern
+        pattern = matmat(Cpt_params[1]['I_F'], pattern)
         pattern = Cpt_params[1]['P_I'] + pattern
 
     # Construct array of inv(Bi'Bi), where Bi is B restricted to row i's

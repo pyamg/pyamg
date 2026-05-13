@@ -9,8 +9,11 @@ from pyamg.multilevel import MultilevelSolver
 from pyamg.relaxation.smoothing import change_smoothers
 from pyamg.util.utils import get_blocksize, levelize_strength_or_aggregation, asfptype
 from .aggregate import pairwise_aggregation
+from ..util.sparse_blas import rap as _rap, rap_compatible as _rap_ok, \
+    with_serial_blas as _with_serial_blas
 
 
+@_with_serial_blas
 def pairwise_solver(A,
                     aggregate=('pairwise', {'theta': 0.25,
                                'norm': 'min', 'matchings': 2}),
@@ -144,5 +147,8 @@ def _extend_hierarchy(levels, aggregate):
     levels[-1].R = R  # restriction operator
 
     levels.append(MultilevelSolver.Level())
-    A = R @ A @ P              # Galerkin operator
+    if _rap_ok(R, A, P):
+        A = _rap(R, A, P)
+    else:
+        A = R @ A @ P              # Galerkin operator
     levels[-1].A = A

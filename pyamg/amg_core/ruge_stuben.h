@@ -486,57 +486,55 @@ void rs_cf_splitting_pass2(const I n_nodes,
                            const I Sj[], const int Sj_size,
                                  I splitting[], const int splitting_size)
 {
-    // For each F-point
-    for (I row=0; row<n_nodes; row++) {
-        if (splitting[row] == F_NODE) {
+    // Per-row marker tracking the current S[row] /\ C set as splitting
+    // mutates during the F-neighbor scan. Round counter avoids per-row
+    // reset; on splitting changes we update the marker incrementally to
+    // keep it in sync with the dynamic C-neighbor set the original
+    // implementation tested against. Reduces O(nnz^3) to O(nnz^2).
+    std::vector<I> mark(n_nodes, -1);
+    I round = 0;
 
-            // Tentative C-point count
-            I Cpt0 = -1;
+    for (I row = 0; row < n_nodes; row++) {
+        if (splitting[row] != F_NODE) continue;
 
-            // For each j in S_row /\ F, test dependence of j on S_row /\ C
-            for (I jj=Sp[row]; jj<Sp[row+1]; jj++) {
-                I j = Sj[jj];
+        I Cpt0 = -1;
+        ++round;
 
-                if (splitting[j] == F_NODE) {
+        // Initial mark: S[row] /\ C as currently classified.
+        for (I ii = Sp[row]; ii < Sp[row+1]; ii++) {
+            const I row_ind = Sj[ii];
+            if (splitting[row_ind] == C_NODE) {
+                mark[row_ind] = round;
+            }
+        }
 
-                    // Test dependence, i.e. check that S_j /\ S_row /\ C is
-                    // nonempty. This is simply checking that nodes j and row
-                    // have a common strong C-point connection.
-                    bool dependence = false;
-                    for (I ii=Sp[row]; ii<Sp[row+1]; ii++) {
-                        I row_ind = Sj[ii];
-                        if (splitting[row_ind] == C_NODE) {
-                            for (I kk=Sp[j]; kk<Sp[j+1]; kk++) {
-                                if (Sj[kk] == row_ind) {
-                                    dependence = true;
-                                }
-                            }
-                        }
-                        if (dependence) {
-                            break;
-                        }
-                    }
+        // For each j in S_row /\ F, test dependence in O(nnz(S_j)).
+        for (I jj = Sp[row]; jj < Sp[row+1]; jj++) {
+            const I j = Sj[jj];
+            if (splitting[j] != F_NODE) continue;
 
-                    // Node j passed dependence test
-                    if (dependence) {
-                        continue;
-                    }
-                    // Node j did not pass dependence test
-                    else {
-                        // If no tentative C-point, mark j as tentative C-point
-                        if (Cpt0 < 0) {
-                            Cpt0 = j;
-                            splitting[j] = C_NODE;
-                        }
-                        // If there is a tentative C-point already, put it back in
-                        // set of F-points and mark j as tentative C-point.
-                        else {
-                            splitting[Cpt0] = F_NODE;
-                            Cpt0 = j;
-                            splitting[j] = C_NODE;
-                        }
-                    }
+            bool dependence = false;
+            for (I kk = Sp[j]; kk < Sp[j+1]; kk++) {
+                if (mark[Sj[kk]] == round) {
+                    dependence = true;
+                    break;
                 }
+            }
+            if (dependence) continue;
+
+            // No common C-neighbor: promote j (and possibly demote previous
+            // tentative Cpt0). Update the marker incrementally so subsequent
+            // dependence tests see the new C-neighbor set.
+            if (Cpt0 < 0) {
+                Cpt0 = j;
+                splitting[j] = C_NODE;
+                mark[j] = round;  // j is in S[row] (we iterated it from there)
+            } else {
+                splitting[Cpt0] = F_NODE;
+                mark[Cpt0] = -1;  // Cpt0 was previously promoted from S[row]
+                Cpt0 = j;
+                splitting[j] = C_NODE;
+                mark[j] = round;
             }
         }
     }
@@ -1136,45 +1134,43 @@ void remove_strong_FF_connections(const I n_nodes,
                                         T Sx[], const int Sx_size,
                                   const I splitting[], const int splitting_size)
 {
+    // Per-row marker: mark[k] == round means column k is in S[row] /\ C for
+    // the current outer row. Round counter trick (Gustavson) avoids
+    // resetting between rows. Reduces the F-F shared-C-neighbor test from
+    // O(nnz_per_row^2) per F-F pair to O(nnz_per_row) total per F-row,
+    // taking the whole kernel from O(nnz^3) to O(nnz^2).
+    std::vector<I> mark(n_nodes, -1);
+    I round = 0;
+
     // For each F-point
-    for (I row=0; row<n_nodes; row++) {
-        if (splitting[row] == F_NODE) {
+    for (I row = 0; row < n_nodes; row++) {
+        if (splitting[row] != F_NODE) continue;
 
-            // For each j in S_row /\ F, test dependence of j on S_row /\ C
-            for (I jj=Sp[row]; jj<Sp[row+1]; jj++) {
-                I j = Sj[jj];
+        // Mark S[row] /\ C in O(nnz(S_row)).
+        ++round;
+        for (I ii = Sp[row]; ii < Sp[row+1]; ii++) {
+            const I row_ind = Sj[ii];
+            if (splitting[row_ind] == C_NODE) {
+                mark[row_ind] = round;
+            }
+        }
 
-                if (splitting[j] == F_NODE) {
+        // For each j in S_row /\ F, test if any column in S[j] is marked.
+        for (I jj = Sp[row]; jj < Sp[row+1]; jj++) {
+            const I j = Sj[jj];
+            if (splitting[j] != F_NODE) continue;
 
-                    // Test dependence, i.e. check that S_j /\ S_row /\ C is
-                    // nonempty. This is simply checking that nodes j and row
-                    // have a common strong C-point connection.
-                    bool dependence = false;
-                    for (I ii=Sp[row]; ii<Sp[row+1]; ii++) {
-                        I row_ind = Sj[ii];
-                        if (splitting[row_ind] == C_NODE) {
-                            for (I kk=Sp[j]; kk<Sp[j+1]; kk++) {
-                                if (Sj[kk] == row_ind) {
-                                    dependence = true;
-                                }
-                            }
-                        }
-                        if (dependence) {
-                            break;
-                        }
-                    }
-
-                    // Node j passed dependence test
-                    if (dependence) {
-                        continue;
-                    }
-                    // Node j did not pass dependence test. That is, the two F-points
-                    // do not have a common C neighbor, and we thus remove the strong
-                    // connection.
-                    else {
-                        Sx[jj] = 0;
-                    }
+            bool dependence = false;
+            for (I kk = Sp[j]; kk < Sp[j+1]; kk++) {
+                if (mark[Sj[kk]] == round) {
+                    dependence = true;
+                    break;
                 }
+            }
+
+            // No common C neighbor → remove strong connection.
+            if (!dependence) {
+                Sx[jj] = 0;
             }
         }
     }
@@ -1235,6 +1231,15 @@ void remove_strong_FF_connections(const I n_nodes,
  *       H. De Sterck, R. Falgout, J. Nolting, U. M. Yang, (2008).
  *
  */
+// Implementation note: this kernel is structured as a Gustavson-style sparse
+// accumulator (Gustavson, F.G., "Two Fast Algorithms for Sparse Matrices",
+// ACM TOMS 4(3), 1978). For each output row i, we mark the strongly-connected
+// C-neighbors of i in a dense per-column scratch `p_marker` whose value
+// doubles as "this column is a C-neighbor of i" and "this column's position
+// in P[i,:]". The numeric pass then walks A[k,:] *sequentially* for each
+// F-neighbor k of i, gated by p_marker — never doing a pointwise lookup
+// A[k, j]. The marker is reset by walking the same set of columns we set
+// (cheap), so storage is O(n_nodes) and amortizes perfectly.
 template<class I, class T>
 void rs_classical_interpolation_pass2(const I n_nodes,
                                       const I Ap[], const int Ap_size,
@@ -1249,129 +1254,120 @@ void rs_classical_interpolation_pass2(const I n_nodes,
                                             T Px[], const int Px_size,
                                       const bool modified)
 {
+    // Per-column SPA marker. -1 means "not a C-neighbor of the current row";
+    // any non-negative value means "this column is the corresponding entry's
+    // index into Pj/Px for the current row". `static thread_local` so the
+    // backing storage is reused across calls and never freed.
+    static thread_local std::vector<I> p_marker;
+    if (p_marker.size() < static_cast<std::size_t>(n_nodes)) {
+        p_marker.assign(n_nodes, -1);
+    }
+
     for (I i = 0; i < n_nodes; i++) {
-        // If node i is a C-point, then set interpolation as injection
-        if(splitting[i] == C_NODE) {
+        // C-points: identity row (will be remapped to C-point indexing below).
+        if (splitting[i] == C_NODE) {
             Pj[Pp[i]] = i;
             Px[Pp[i]] = 1;
+            continue;
         }
-        // Otherwise, use RS classical interpolation formula
-        else {
 
-            // Calculate denominator
-            T denominator = 0;
+        // Row denominator: a_ii + sum_{j in A[i,:] weakly connected} a_ij.
+        // Computed as (sum of A[i,:]) - (sum of strong off-diagonals in S[i,:]).
+        T denominator = 0;
+        for (I mm = Ap[i]; mm < Ap[i + 1]; mm++) denominator += Ax[mm];
+        for (I mm = Sp[i]; mm < Sp[i + 1]; mm++) {
+            if (Sj[mm] != i) denominator -= Sx[mm];
+        }
 
-            // Start by summing entire row of A
-            for (I mm = Ap[i]; mm < Ap[i+1]; mm++) {
-                denominator += Ax[mm];
+        // Symbolic pass: stamp p_marker for each strongly-connected C-neighbor
+        // of i, and seed Px[pos] with the leading numerator term a_ij = Sx[jj].
+        // Pj is filled with a temporary global index here; remapped at the end.
+        I nnz = Pp[i];
+        for (I jj = Sp[i]; jj < Sp[i + 1]; jj++) {
+            const I j = Sj[jj];
+            if (splitting[j] == C_NODE) {
+                Pj[nnz]      = j;
+                Px[nnz]      = Sx[jj];   // numerator seed: a_ij
+                p_marker[j]  = nnz;
+                nnz++;
             }
+        }
 
-            // Then subtract off the strong connections so that you are left with
-            // denominator = a_ii + sum_{m in weak connections} a_im
-            for (I mm = Sp[i]; mm < Sp[i+1]; mm++) {
-                if ( Sj[mm] != i ) {
-                    denominator -= Sx[mm]; // making sure to leave the diagonal entry in there
+        // Numeric pass: distribute contributions from each strongly-connected
+        // F-neighbor k of i. The original interpolation formula has, for each
+        // C-neighbor j of i, a numerator update
+        //
+        //     numerator_j += a_ik * a_kj / sum_{l in S[i,:] /\ C} a_kl
+        //
+        // (with sign filters for the `modified` variant). We compute the
+        // denominator sum and the per-j contributions by walking A[k,:]
+        // *sequentially* and gating each entry on p_marker — entries whose
+        // column is not a C-neighbor of i are skipped, entries whose column
+        // is a C-neighbor of i are accumulated (denominator) or distributed
+        // (numerator).
+        for (I kk = Sp[i]; kk < Sp[i + 1]; kk++) {
+            const I k = Sj[kk];
+            if (splitting[k] != F_NODE || k == i) continue;
+            const T a_ik = Sx[kk];
+
+            // For modified interpolation we need a_kk for the sign filter.
+            T a_kk = 0;
+            if (modified) {
+                for (I jj1 = Ap[k]; jj1 < Ap[k + 1]; jj1++) {
+                    if (Aj[jj1] == k) { a_kk = Ax[jj1]; break; }
                 }
             }
 
-            // Set entries in P (interpolation weights w_ij from strongly connected C-points)
-            I nnz = Pp[i];
-            for (I jj = Sp[i]; jj < Sp[i+1]; jj++) {
-
-                if (splitting[Sj[jj]] == C_NODE) {
-
-                    // Set temporary value for Pj as global index, j. Will be mapped to
-                    // appropriate coarse-grid column index after all data is filled in.
-                    Pj[nnz] = Sj[jj];
-                    I j = Sj[jj];
-
-                    // Initialize numerator as a_ij
-                    T numerator = Sx[jj];
-
-                    // Sum over strongly connected fine points
-                    for (I kk = Sp[i]; kk < Sp[i+1]; kk++) {
-                        if ( (splitting[Sj[kk]] == F_NODE) && (Sj[kk] != i) ) {
-
-                            // Get column k and value a_ik
-                            I k = Sj[kk];
-                            T a_ik = Sx[kk];
-
-                            // Get a_kj (have to search over k'th row in A for connection a_kj)
-                            T a_kj = 0;
-                            T a_kk = 0;
-                            if (modified) {
-                                for (I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++) {
-                                    if (Aj[search_ind] == j) {
-                                        a_kj = Ax[search_ind];
-                                    }
-                                    else if (Aj[search_ind] == k) {
-                                        a_kk = Ax[search_ind];
-                                    }
-                                }
-                            }
-                            else {
-                                for (I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++) {
-                                    if ( Aj[search_ind] == j ) {
-                                        a_kj = Ax[search_ind];
-                                        break;
-                                    }
-                                }
-                            }
-
-                            // If sign of a_kj matches sign of a_kk, ignore a_kj in sum
-                            // (i.e. leave as a_kj = 0) for modified interpolation
-                            if ( modified && (signof(a_kj) == signof(a_kk)) ) {
-                                a_kj = 0;
-                            }
-
-                            // If a_kj == 0, then we don't need to do any more work, otherwise
-                            // proceed to account for node k's contribution
-                            if (std::abs(a_kj) > 1e-15*std::abs(a_ik)) {
-
-                                // Calculate sum for inner denominator (loop over strongly connected C-points)
-                                T inner_denominator = 0;
-                                for (I ll = Sp[i]; ll < Sp[i+1]; ll++) {
-                                    if (splitting[Sj[ll]] == C_NODE) {
-
-                                        // Get column l
-                                        I l = Sj[ll];
-
-                                        // Add connection a_kl if present in matrix (search over kth row in A for connection)
-                                        // Only add if sign of a_kl does not equal sign of a_kk
-                                        for (I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++) {
-                                            if (Aj[search_ind] == l) {
-                                                T a_kl = Ax[search_ind];
-                                                if ( (!modified) || (signof(a_kl) != signof(a_kk)) ) {
-                                                    inner_denominator += a_kl;
-                                                }
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-
-                                // Add a_ik * a_kj / inner_denominator to the numerator
-                                if (std::abs(inner_denominator) < 1e-15*std::abs(a_ik * a_kj)) {
-                                    printf("Inner denominator was zero.\n");
-                                }
-                                numerator += a_ik * a_kj / inner_denominator;
-                            }
-                        }
+            // Pass over A[k,:] to compute the inner denominator
+            // sum_{l: p_marker[l] >= 0} a_kl, with sign filter for `modified`.
+            T inner_denominator = 0;
+            for (I jj1 = Ap[k]; jj1 < Ap[k + 1]; jj1++) {
+                if (p_marker[Aj[jj1]] >= 0) {
+                    const T a_kl = Ax[jj1];
+                    if (!modified || signof(a_kl) != signof(a_kk)) {
+                        inner_denominator += a_kl;
                     }
-
-                    // Set w_ij = -numerator/denominator
-                    if (std::abs(denominator) < 1e-15*std::abs(numerator)) {
-                        printf("Outer denominator was zero: diagonal plus sum of weak connections was zero.\n");
-                    }
-                    Px[nnz] = -numerator / denominator;
-                    nnz++;
                 }
             }
+
+            // If inner_denominator is exactly zero, no entry of A[k,:] hits a
+            // C-neighbor of i (with the surviving sign) — there's nothing to
+            // distribute from k. Skip; matches the original kernel's degenerate-
+            // case semantics without dividing by zero.
+            if (inner_denominator == T(0)) continue;
+            const T factor = a_ik / inner_denominator;
+
+            // Pass over A[k,:] again to distribute factor * a_kj into Px at
+            // each C-neighbor j's position.
+            for (I jj1 = Ap[k]; jj1 < Ap[k + 1]; jj1++) {
+                const I pos = p_marker[Aj[jj1]];
+                if (pos < 0) continue;
+                const T a_kj = Ax[jj1];
+                if (std::abs(a_kj) <= 1e-15 * std::abs(a_ik)) continue;
+                if (modified && signof(a_kj) == signof(a_kk)) continue;
+                Px[pos] += factor * a_kj;
+            }
+        }
+
+        // Reset p_marker to -1 at exactly the columns we stamped above.
+        // Cost is O(row_nnz_S) per row, so O(nnz(S)) for the whole kernel —
+        // negligible vs. the numeric work and avoids any per-call memset.
+        for (I jj = Sp[i]; jj < Sp[i + 1]; jj++) {
+            if (splitting[Sj[jj]] == C_NODE) {
+                p_marker[Sj[jj]] = -1;
+            }
+        }
+
+        // Finalize the row: w_ij = -numerator_j / denominator.
+        if (std::abs(denominator) < 1e-15) {
+            printf("Outer denominator was zero: diagonal plus sum of weak connections was zero.\n");
+        }
+        for (I jj = Pp[i]; jj < nnz; jj++) {
+            Px[jj] = -Px[jj] / denominator;
         }
     }
 
-    // Column indices were initially stored as global indices. Build map to switch
-    // to C-point indices.
+    // Pj was filled with global indices; remap to C-point indices.
     std::vector<I> map(n_nodes);
     for (I i = 0, sum = 0; i < n_nodes; i++) {
         map[i]  = sum;

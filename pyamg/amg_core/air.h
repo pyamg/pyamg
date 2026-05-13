@@ -227,6 +227,17 @@ void approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
 {
     I is_col_major = true;
 
+    const I n_A = static_cast<I>(Ap_size) - 1;
+
+    // Per-column SPA marker for the current row's F-neighborhood. -1 means
+    // "this column is not in the current neighborhood"; a non-negative
+    // value gives the column's index within the neighborhood (0 .. size_N-1).
+    // `static thread_local` so storage is reused across rows and calls.
+    static thread_local std::vector<I> nbhd_pos;
+    if (nbhd_pos.size() < static_cast<std::size_t>(n_A)) {
+        nbhd_pos.assign(n_A, -1);
+    }
+
     // Build column indices and data for each row of R.
     for (I row=0; row<Cpts_size; row++) {
 
@@ -263,49 +274,48 @@ void approx_ideal_restriction_pass2(const I Rp[], const int Rp_size,
                          ", Rp[row+1] = " << Rp[row+1] << "\n";
         }
 
-        // Build local linear system as the submatrix A restricted to the neighborhood,
-        // Nf, of strongly connected F-points to the current C-point, that is A0 =
-        // A[Nf, Nf]^T, stored in column major form. Since A in row-major = A^T in
-        // column-major, A (CSR) is iterated through and A[Nf,Nf] stored in row-major.
-        I size_N = ind - Rp[row];
-        std::vector<T> A0(size_N*size_N);
-        I temp_A = 0;
-        for (I j=Rp[row]; j<ind; j++) { 
-            I this_ind = Rj[j];
-            for (I i=Rp[row]; i<ind; i++) {
-                // Search for indice in row of A
-                I found_ind = 0;
-                for (I k=Ap[this_ind]; k<Ap[this_ind+1]; k++) {
-                    if (Rj[i] == Aj[k]) {
-                        A0[temp_A] = Ax[k];
-                        found_ind = 1;
-                        temp_A += 1;
-                        break;
-                    }
-                }
-                // If indice not found, set element to zero
-                if (found_ind == 0) {
-                    A0[temp_A] = 0.0;
-                    temp_A += 1;
+        // Build local linear system A0 = A[Nf, Nf]^T (col-major), where Nf is
+        // the F-neighborhood. The original kernel did size_N² random lookups
+        // into A; instead we mark each neighborhood column with its index in
+        // `nbhd_pos` and walk A's relevant rows sequentially, writing only
+        // the entries that land in the neighborhood. Absent entries stay
+        // zero from the vector value-init.
+        const I size_N = ind - Rp[row];
+        std::vector<T> A0(size_N * size_N, T(0));
+
+        // Stamp neighborhood: nbhd_pos[Rj[Rp[row] + i]] = i for i in 0..size_N-1.
+        for (I i_idx = 0; i_idx < size_N; i_idx++) {
+            nbhd_pos[Rj[Rp[row] + i_idx]] = i_idx;
+        }
+
+        // Fill A0 by walking A[Rj[Rp[row] + j], :] sequentially for each j.
+        // Position layout: A0[j_idx * size_N + i_idx] = A[Rj[Rp[row]+j_idx],
+        // Rj[Rp[row]+i_idx]] — matching the original kernel's row-major-of-A
+        // == col-major-of-A^T storage ordering.
+        for (I j_idx = 0; j_idx < size_N; j_idx++) {
+            const I this_ind = Rj[Rp[row] + j_idx];
+            const I col_base = j_idx * size_N;
+            for (I jj1 = Ap[this_ind]; jj1 < Ap[this_ind + 1]; jj1++) {
+                const I i_idx = nbhd_pos[Aj[jj1]];
+                if (i_idx >= 0) {
+                    A0[col_base + i_idx] = Ax[jj1];
                 }
             }
         }
 
-        // Build local right hand side given by b_j = -A_{cpt,N_j}, where N_j
-        // is the jth indice in the neighborhood of strongly connected F-points
-        // to the current C-point. 
-        I temp_b = 0;
-        std::vector<T> b0(size_N, 0);
-        for (I i=Rp[row]; i<ind; i++) {
-            // Search for indice in row of A. If indice not found, b0 has been
-            // initialized to zero.
-            for (I k=Ap[cpoint]; k<Ap[cpoint+1]; k++) {
-                if (Rj[i] == Aj[k]) {
-                    b0[temp_b] = -Ax[k];
-                    break;
-                }
+        // Build local right-hand side b0[i] = -A[cpoint, Rj[Rp[row]+i]] by a
+        // single sequential walk of row cpoint of A. Absent entries stay zero.
+        std::vector<T> b0(size_N, T(0));
+        for (I jj1 = Ap[cpoint]; jj1 < Ap[cpoint + 1]; jj1++) {
+            const I i_idx = nbhd_pos[Aj[jj1]];
+            if (i_idx >= 0) {
+                b0[i_idx] = -Ax[jj1];
             }
-            temp_b += 1;
+        }
+
+        // Reset nbhd_pos: O(size_N) per row, no full-array memset.
+        for (I i_idx = 0; i_idx < size_N; i_idx++) {
+            nbhd_pos[Rj[Rp[row] + i_idx]] = -1;
         }
 
         // Solve linear system (least squares solves exactly when full rank)

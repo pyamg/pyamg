@@ -265,7 +265,8 @@ def lloyd_cluster(G, centers, maxiter=5):
     changed = True
     it = 0
 
-    _dist, _near, _pred = bellman_ford(G, centers, method='standard')
+    # Results not used; commented out to avoid an unused full Bellman-Ford pass.
+    # _dist, _near, _pred = bellman_ford(G, centers, method='standard')
 
     while changed and it < maxiter:
         if it > 0:

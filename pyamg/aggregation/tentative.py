@@ -139,6 +139,14 @@ def fit_candidates(AggOp, B, tol=1e-10):
 
     AggOp_csc = AggOp.tocsc()
 
+    # Ensure int32 indices: amg_core.fit_candidates is a pybind11 binding that
+    # only accepts NDArray[int32]. Some aggregation methods (e.g. balanced_lloyd)
+    # produce AggOp with int64 indices, causing a TypeError.
+    if AggOp_csc.indptr.dtype != np.int32:
+        AggOp_csc.indptr = AggOp_csc.indptr.astype(np.int32)
+    if AggOp_csc.indices.dtype != np.int32:
+        AggOp_csc.indices = AggOp_csc.indices.astype(np.int32)
+
     fn = amg_core.fit_candidates
     fn(N_fine, N_coarse, K1, K2,
        AggOp_csc.indptr, AggOp_csc.indices, Qx.ravel(),
