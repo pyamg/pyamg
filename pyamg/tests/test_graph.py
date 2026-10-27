@@ -475,7 +475,7 @@ def reference_connected_components(G):
 
 def test_metis():
     # check if pymetis is available before testing
-    metis = pytest.importorskip('pymetis')  # noqa: F841
+    pytest.importorskip('pymetis')
 
     # 0        4
     # | \    / |
