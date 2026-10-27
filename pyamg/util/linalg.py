@@ -421,9 +421,7 @@ def condest(A, maxiter=25, symmetric=False):
     C = aslinearoperator(A)
     power = 1
     if not symmetric:
-        def matvec(v):
-            return C.rmatvec(C.A @ v)
-        C.matvec = matvec
+        C = C.H @ C
         power = 0.5
 
     [evect, ev, H, V, breakdown_flag] =\
