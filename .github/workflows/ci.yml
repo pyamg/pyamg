@@ -37,3 +37,24 @@ jobs:
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v5
+
+  Test-min-deps:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+
+    - name: Set up uv
+      uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e  # v10.3.2
+
+    - name: Test with lowest supported numpy/scipy
+      run: >
+        uv run --isolated --no-project --python 3.10
+        --resolution lowest-direct
+        --no-build-package numpy --no-build-package scipy
+        --with . --with "pytest>=8"
+        pytest --pyargs pyamg

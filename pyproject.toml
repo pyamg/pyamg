@@ -48,8 +48,8 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-    "numpy",
-    "scipy>=1.11.0"
+    "numpy>=1.22.4",
+    "scipy>=1.12.0"
 ]
 
 [project.optional-dependencies]
@@ -84,7 +84,7 @@ distance-dirty = "{next_version}.dev{distance}+{vcs}{rev}.d{build_date:%Y%m%d}"
 [tool.ruff]
 line-length = 92
 indent-width = 4
-preview = true
+preview = false
 exclude = [
     "pyamg/version.py",
     "pyamg/amg_core/bindthem.py",
