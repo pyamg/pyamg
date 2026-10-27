@@ -5,6 +5,7 @@
 #include <stack>
 #include <cassert>
 #include <limits>
+#include <string>
 #include <vector>
 #include <iostream>
 
@@ -748,7 +749,7 @@ bool bellman_ford_balanced(const I num_nodes,
   bool done;            // did we make any changes during this iteration?
   bool changed = false; // indicate a change for the return
   bool swap;            // should we swap node i to the same clusters as node j?
-  int iter = 0;         // iteration count for safety check
+  long long iter = 0;   // iteration count for safety check
   const double tol = 1e-14; // precision tolerance
 
   do{
@@ -799,8 +800,12 @@ bool bellman_ford_balanced(const I num_nodes,
     }
 
     // safety check, regular unweighted BF is actually O(|V|.|E|)
-    if (++iter > num_nodes*num_nodes){
-      throw std::runtime_error("pyamg-error (amg_core) -- too many iterations!");
+    // use long to avoid overflow
+    if (++iter > static_cast<long long>(num_nodes)*num_nodes){
+      throw std::runtime_error("pyamg-error (amg_core) -- too many iterations! "
+                               "bellman_ford_balanced did not converge after "
+                               + std::to_string(iter) + " sweeps (num_nodes = "
+                               + std::to_string(num_nodes) + ")");
     }
   } while(!done);
   return changed;

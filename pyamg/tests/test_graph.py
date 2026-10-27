@@ -150,6 +150,17 @@ class TestGraph(TestCase):
             distance, _nearest, _predecessor = bellman_ford(G, [center])
             assert_equal(distance, distances_FROM_center[center])
 
+    def test_bellman_ford_balanced_large(self):
+        """Check for overflow with large num_nodes."""
+        n = 65536
+        G = sparse.diags_array([np.ones(n - 1), np.ones(n - 1)], offsets=[-1, 1],
+                               format='csr')
+        centers = np.arange(0, n, 100)
+
+        d_balanced, _, _ = bellman_ford(G, centers, method='balanced')
+        d_standard, _, _ = bellman_ford(G, centers, method='standard')
+        assert_equal(d_balanced, d_standard)
+
     def test_lloyd_cluster(self):
         np.random.seed(3125088753)
 
