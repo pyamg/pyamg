@@ -125,7 +125,7 @@ ignore = [
     "PLR2004", # magic-value-comparison
     "PLR1702", # too-many-nested-blocks
     "PLW2901", # redefined-loop-name
-    "PLR6201", # literal-membership 
+    "PLR6201", # literal-membership
     "B028",    # no-explicit-stacklevel
     "PLR6104", # non-augmented-assignment
     "NPY002",  # numpy-legacy-random
@@ -168,14 +168,21 @@ multiline-quotes = "double"
 
 [tool.coverage.run]
 branch = true
-source = [
+source_pkgs = [
     "pyamg",
 ]
 omit = [
-    "*tests/*",
+    "*/tests/*",
     "*__init__.py",
-    "pyamg/amg_core/bindthem.py",
-    "pyamg/gallery/demo.py",
+    "*/pyamg/amg_core/bindthem.py",
+    "*/pyamg/gallery/demo.py",
+]
+
+[tool.coverage.paths]
+# use repo paths
+source = [
+    "pyamg/",
+    "*/site-packages/pyamg/",
 ]
 
 [tool.pytest.ini_options]
