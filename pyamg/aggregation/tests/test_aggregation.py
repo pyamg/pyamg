@@ -40,7 +40,7 @@ class TestParameters(TestCase):
             self.run_cases({'strength': strength})
 
     def test_aggregation_method(self):
-        for aggregate in ['standard', 'lloyd']:
+        for aggregate in ['standard', 'lloyd', 'balanced lloyd']:
             self.run_cases({'aggregate': aggregate})
 
     def test_prolongation_smoother(self):
@@ -118,7 +118,7 @@ class TestComplexParameters(TestCase):
             self.run_cases({'strength': strength})
 
     def test_aggregation_method(self):
-        for aggregate in ['standard', 'lloyd']:
+        for aggregate in ['standard', 'lloyd', 'balanced lloyd']:
             self.run_cases({'aggregate': aggregate})
 
     def test_prolongation_smoother(self):
