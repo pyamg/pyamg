@@ -2,8 +2,11 @@ name: Build wheels
 
 on:
   workflow_dispatch:
-    branches:
-      - main
+    inputs:
+      ref:
+        description: 'Branch, tag, or commit to build (blank: the branch the workflow runs on)'
+        required: false
+        default: ''
   release:
     types:
       - published
@@ -22,13 +25,12 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v6
         with:
-          # uncomment to force a wheel build
-          # ref: v5.3.0
-          # fetch-depth: 0
+          fetch-depth: 0  # versioningit needs tags
+          ref: ${{ inputs.ref }}  # empty on release -> the release tag
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.3.0
         env:
-          CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-*, cp314-*"
+          CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-* cp314-*"
           CIBW_ARCHS_MACOS: "auto"
           CIBW_ARCHS_WINDOWS: "AMD64 x86"
           CIBW_ARCHS_LINUX: "x86_64"
@@ -47,9 +49,8 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v6
         with:
-          # uncomment to force a wheel build
-          # ref: v5.3.0
-          # fetch-depth: 0
+          fetch-depth: 0  # versioningit needs tags
+          ref: ${{ inputs.ref }}  # empty at release
 
       - name: Install pypa/build
         run: pip install 'build[virtualenv]'
@@ -66,6 +67,7 @@ jobs:
   upload_all:
     name: upload to PyPI
     needs: [build_wheels, build_sdist]
+    if: github.event_name == 'release'  # manual runs only build artifacts
     environment: publish_pypi
     permissions:
           id-token: write
@@ -80,5 +82,4 @@ jobs:
     - name: publish to pypi
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        # switch to true to overwrite upload
         skip-existing: false
