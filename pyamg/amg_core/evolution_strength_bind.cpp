@@ -186,6 +186,10 @@ PYBIND11_MODULE(evolution_strength, m) {
     m.def("apply_absolute_distance_filter", &_apply_absolute_distance_filter<int, float>,
         py::arg("n_row"), py::arg("epsilon"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
     m.def("apply_absolute_distance_filter", &_apply_absolute_distance_filter<int, double>,
+        py::arg("n_row"), py::arg("epsilon"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+    m.def("apply_absolute_distance_filter", &_apply_absolute_distance_filter<int64_t, float>,
+        py::arg("n_row"), py::arg("epsilon"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+    m.def("apply_absolute_distance_filter", &_apply_absolute_distance_filter<int64_t, double>,
         py::arg("n_row"), py::arg("epsilon"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(),
 R"pbdoc(
 Return a filtered strength-of-connection matrix by applying a drop tolerance.
@@ -240,6 +244,10 @@ Examples
     m.def("apply_distance_filter", &_apply_distance_filter<int, float>,
         py::arg("n_row"), py::arg("epsilon"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
     m.def("apply_distance_filter", &_apply_distance_filter<int, double>,
+        py::arg("n_row"), py::arg("epsilon"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+    m.def("apply_distance_filter", &_apply_distance_filter<int64_t, float>,
+        py::arg("n_row"), py::arg("epsilon"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+    m.def("apply_distance_filter", &_apply_distance_filter<int64_t, double>,
         py::arg("n_row"), py::arg("epsilon"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(),
 R"pbdoc(
 Return a filtered strength-of-connection matrix by applying a drop tolerance.
@@ -295,6 +303,10 @@ Examples
     m.def("min_blocks", &_min_blocks<int, float>,
         py::arg("n_blocks"), py::arg("blocksize"), py::arg("Sx").noconvert(), py::arg("Tx").noconvert());
     m.def("min_blocks", &_min_blocks<int, double>,
+        py::arg("n_blocks"), py::arg("blocksize"), py::arg("Sx").noconvert(), py::arg("Tx").noconvert());
+    m.def("min_blocks", &_min_blocks<int64_t, float>,
+        py::arg("n_blocks"), py::arg("blocksize"), py::arg("Sx").noconvert(), py::arg("Tx").noconvert());
+    m.def("min_blocks", &_min_blocks<int64_t, double>,
         py::arg("n_blocks"), py::arg("blocksize"), py::arg("Sx").noconvert(), py::arg("Tx").noconvert(),
 R"pbdoc(
 Find the size of the smallest entry in each block.
@@ -348,6 +360,14 @@ Examples
     m.def("evolution_strength_helper", &_evolution_strength_helper<int, std::complex<float>, float>,
         py::arg("Sx").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("nrows"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("b").noconvert(), py::arg("BDBCols"), py::arg("NullDim"), py::arg("tol"));
     m.def("evolution_strength_helper", &_evolution_strength_helper<int, std::complex<double>, double>,
+        py::arg("Sx").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("nrows"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("b").noconvert(), py::arg("BDBCols"), py::arg("NullDim"), py::arg("tol"));
+    m.def("evolution_strength_helper", &_evolution_strength_helper<int64_t, float, float>,
+        py::arg("Sx").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("nrows"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("b").noconvert(), py::arg("BDBCols"), py::arg("NullDim"), py::arg("tol"));
+    m.def("evolution_strength_helper", &_evolution_strength_helper<int64_t, double, double>,
+        py::arg("Sx").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("nrows"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("b").noconvert(), py::arg("BDBCols"), py::arg("NullDim"), py::arg("tol"));
+    m.def("evolution_strength_helper", &_evolution_strength_helper<int64_t, std::complex<float>, float>,
+        py::arg("Sx").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("nrows"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("b").noconvert(), py::arg("BDBCols"), py::arg("NullDim"), py::arg("tol"));
+    m.def("evolution_strength_helper", &_evolution_strength_helper<int64_t, std::complex<double>, double>,
         py::arg("Sx").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("nrows"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("b").noconvert(), py::arg("BDBCols"), py::arg("NullDim"), py::arg("tol"),
 R"pbdoc(
 Create strength-of-connection matrix based on constrained min problem.
@@ -436,6 +456,14 @@ of multiple near-nullspace modes.)pbdoc");
     m.def("incomplete_mat_mult_csr", &_incomplete_mat_mult_csr<int, std::complex<float>, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("num_rows"));
     m.def("incomplete_mat_mult_csr", &_incomplete_mat_mult_csr<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("num_rows"));
+    m.def("incomplete_mat_mult_csr", &_incomplete_mat_mult_csr<int64_t, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("num_rows"));
+    m.def("incomplete_mat_mult_csr", &_incomplete_mat_mult_csr<int64_t, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("num_rows"));
+    m.def("incomplete_mat_mult_csr", &_incomplete_mat_mult_csr<int64_t, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("num_rows"));
+    m.def("incomplete_mat_mult_csr", &_incomplete_mat_mult_csr<int64_t, std::complex<double>, double>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("num_rows"),
 R"pbdoc(
 Calculate A*B = S, but only at a pre-existing sparsity.

@@ -104,6 +104,14 @@ PYBIND11_MODULE(krylov, m) {
     m.def("apply_householders", &_apply_householders<int, std::complex<float>, float>,
         py::arg("z").noconvert(), py::arg("B").noconvert(), py::arg("n"), py::arg("start"), py::arg("stop"), py::arg("step"));
     m.def("apply_householders", &_apply_householders<int, std::complex<double>, double>,
+        py::arg("z").noconvert(), py::arg("B").noconvert(), py::arg("n"), py::arg("start"), py::arg("stop"), py::arg("step"));
+    m.def("apply_householders", &_apply_householders<int64_t, float, float>,
+        py::arg("z").noconvert(), py::arg("B").noconvert(), py::arg("n"), py::arg("start"), py::arg("stop"), py::arg("step"));
+    m.def("apply_householders", &_apply_householders<int64_t, double, double>,
+        py::arg("z").noconvert(), py::arg("B").noconvert(), py::arg("n"), py::arg("start"), py::arg("stop"), py::arg("step"));
+    m.def("apply_householders", &_apply_householders<int64_t, std::complex<float>, float>,
+        py::arg("z").noconvert(), py::arg("B").noconvert(), py::arg("n"), py::arg("start"), py::arg("stop"), py::arg("step"));
+    m.def("apply_householders", &_apply_householders<int64_t, std::complex<double>, double>,
         py::arg("z").noconvert(), py::arg("B").noconvert(), py::arg("n"), py::arg("start"), py::arg("stop"), py::arg("step"),
 R"pbdoc(
 Apply Householder reflectors in B to z.
@@ -143,6 +151,14 @@ Principle calling routines are gmres and fgmres.)pbdoc");
     m.def("householder_hornerscheme", &_householder_hornerscheme<int, std::complex<float>, float>,
         py::arg("z").noconvert(), py::arg("B").noconvert(), py::arg("y").noconvert(), py::arg("n"), py::arg("start"), py::arg("stop"), py::arg("step"));
     m.def("householder_hornerscheme", &_householder_hornerscheme<int, std::complex<double>, double>,
+        py::arg("z").noconvert(), py::arg("B").noconvert(), py::arg("y").noconvert(), py::arg("n"), py::arg("start"), py::arg("stop"), py::arg("step"));
+    m.def("householder_hornerscheme", &_householder_hornerscheme<int64_t, float, float>,
+        py::arg("z").noconvert(), py::arg("B").noconvert(), py::arg("y").noconvert(), py::arg("n"), py::arg("start"), py::arg("stop"), py::arg("step"));
+    m.def("householder_hornerscheme", &_householder_hornerscheme<int64_t, double, double>,
+        py::arg("z").noconvert(), py::arg("B").noconvert(), py::arg("y").noconvert(), py::arg("n"), py::arg("start"), py::arg("stop"), py::arg("step"));
+    m.def("householder_hornerscheme", &_householder_hornerscheme<int64_t, std::complex<float>, float>,
+        py::arg("z").noconvert(), py::arg("B").noconvert(), py::arg("y").noconvert(), py::arg("n"), py::arg("start"), py::arg("stop"), py::arg("step"));
+    m.def("householder_hornerscheme", &_householder_hornerscheme<int64_t, std::complex<double>, double>,
         py::arg("z").noconvert(), py::arg("B").noconvert(), py::arg("y").noconvert(), py::arg("n"), py::arg("start"), py::arg("stop"), py::arg("step"),
 R"pbdoc(
 Householder Horner Scheme.
@@ -198,6 +214,14 @@ See pages 164-167 in Saad, "Iterative Methods for Sparse Linear Systems".)pbdoc"
     m.def("apply_givens", &_apply_givens<int, std::complex<float>, float>,
         py::arg("B").noconvert(), py::arg("x").noconvert(), py::arg("n"), py::arg("nrot"));
     m.def("apply_givens", &_apply_givens<int, std::complex<double>, double>,
+        py::arg("B").noconvert(), py::arg("x").noconvert(), py::arg("n"), py::arg("nrot"));
+    m.def("apply_givens", &_apply_givens<int64_t, float, float>,
+        py::arg("B").noconvert(), py::arg("x").noconvert(), py::arg("n"), py::arg("nrot"));
+    m.def("apply_givens", &_apply_givens<int64_t, double, double>,
+        py::arg("B").noconvert(), py::arg("x").noconvert(), py::arg("n"), py::arg("nrot"));
+    m.def("apply_givens", &_apply_givens<int64_t, std::complex<float>, float>,
+        py::arg("B").noconvert(), py::arg("x").noconvert(), py::arg("n"), py::arg("nrot"));
+    m.def("apply_givens", &_apply_givens<int64_t, std::complex<double>, double>,
         py::arg("B").noconvert(), py::arg("x").noconvert(), py::arg("n"), py::arg("nrot"),
 R"pbdoc(
 Apply the first nrot Givens rotations in B to x.

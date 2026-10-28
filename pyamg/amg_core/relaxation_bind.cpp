@@ -712,6 +712,14 @@ PYBIND11_MODULE(relaxation, m) {
     m.def("gauss_seidel", &_gauss_seidel<int, std::complex<float>, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
     m.def("gauss_seidel", &_gauss_seidel<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
+    m.def("gauss_seidel", &_gauss_seidel<int64_t, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
+    m.def("gauss_seidel", &_gauss_seidel<int64_t, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
+    m.def("gauss_seidel", &_gauss_seidel<int64_t, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
+    m.def("gauss_seidel", &_gauss_seidel<int64_t, std::complex<double>, double>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"),
 R"pbdoc(
 Gauss-Seidel iteration.
@@ -761,6 +769,14 @@ implemented with ``gauss_seidel(Ap, Aj, Ax, x, b, N, -1, -1)``.)pbdoc");
     m.def("sor_gauss_seidel", &_sor_gauss_seidel<int, std::complex<float>, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega"));
     m.def("sor_gauss_seidel", &_sor_gauss_seidel<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega"));
+    m.def("sor_gauss_seidel", &_sor_gauss_seidel<int64_t, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega"));
+    m.def("sor_gauss_seidel", &_sor_gauss_seidel<int64_t, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega"));
+    m.def("sor_gauss_seidel", &_sor_gauss_seidel<int64_t, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega"));
+    m.def("sor_gauss_seidel", &_sor_gauss_seidel<int64_t, std::complex<double>, double>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega"),
 R"pbdoc(
 SOR iteration.
@@ -806,6 +822,14 @@ Nearly identical to ``gauss_seidel`` with a relaxation parameter ``omega``.)pbdo
     m.def("bsr_gauss_seidel", &_bsr_gauss_seidel<int, std::complex<float>, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"));
     m.def("bsr_gauss_seidel", &_bsr_gauss_seidel<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"));
+    m.def("bsr_gauss_seidel", &_bsr_gauss_seidel<int64_t, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"));
+    m.def("bsr_gauss_seidel", &_bsr_gauss_seidel<int64_t, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"));
+    m.def("bsr_gauss_seidel", &_bsr_gauss_seidel<int64_t, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"));
+    m.def("bsr_gauss_seidel", &_bsr_gauss_seidel<int64_t, std::complex<double>, double>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"),
 R"pbdoc(
 Gauss-Seidel iteration with BSR arrays.
@@ -851,6 +875,14 @@ None
     m.def("jacobi", &_jacobi<int, std::complex<float>, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert());
     m.def("jacobi", &_jacobi<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert());
+    m.def("jacobi", &_jacobi<int64_t, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert());
+    m.def("jacobi", &_jacobi<int64_t, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert());
+    m.def("jacobi", &_jacobi<int64_t, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert());
+    m.def("jacobi", &_jacobi<int64_t, std::complex<double>, double>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert(),
 R"pbdoc(
 Weighted Jacobi iteration.
@@ -898,6 +930,14 @@ None
     m.def("jacobi_indexed", &_jacobi_indexed<int, std::complex<float>, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("indices").noconvert(), py::arg("omega").noconvert());
     m.def("jacobi_indexed", &_jacobi_indexed<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("indices").noconvert(), py::arg("omega").noconvert());
+    m.def("jacobi_indexed", &_jacobi_indexed<int64_t, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("indices").noconvert(), py::arg("omega").noconvert());
+    m.def("jacobi_indexed", &_jacobi_indexed<int64_t, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("indices").noconvert(), py::arg("omega").noconvert());
+    m.def("jacobi_indexed", &_jacobi_indexed<int64_t, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("indices").noconvert(), py::arg("omega").noconvert());
+    m.def("jacobi_indexed", &_jacobi_indexed<int64_t, std::complex<double>, double>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("indices").noconvert(), py::arg("omega").noconvert(),
 R"pbdoc(
 Indexed weighted Jacobi iteration.
@@ -938,6 +978,14 @@ None
     m.def("bsr_jacobi", &_bsr_jacobi<int, std::complex<float>, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"), py::arg("omega").noconvert());
     m.def("bsr_jacobi", &_bsr_jacobi<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"), py::arg("omega").noconvert());
+    m.def("bsr_jacobi", &_bsr_jacobi<int64_t, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"), py::arg("omega").noconvert());
+    m.def("bsr_jacobi", &_bsr_jacobi<int64_t, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"), py::arg("omega").noconvert());
+    m.def("bsr_jacobi", &_bsr_jacobi<int64_t, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"), py::arg("omega").noconvert());
+    m.def("bsr_jacobi", &_bsr_jacobi<int64_t, std::complex<double>, double>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"), py::arg("omega").noconvert(),
 R"pbdoc(
 Weighted Jacobi iteration on BSR arrays.
@@ -987,6 +1035,14 @@ None
     m.def("bsr_jacobi_indexed", &_bsr_jacobi_indexed<int, std::complex<float>, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("indices").noconvert(), py::arg("blocksize"), py::arg("omega").noconvert());
     m.def("bsr_jacobi_indexed", &_bsr_jacobi_indexed<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("indices").noconvert(), py::arg("blocksize"), py::arg("omega").noconvert());
+    m.def("bsr_jacobi_indexed", &_bsr_jacobi_indexed<int64_t, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("indices").noconvert(), py::arg("blocksize"), py::arg("omega").noconvert());
+    m.def("bsr_jacobi_indexed", &_bsr_jacobi_indexed<int64_t, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("indices").noconvert(), py::arg("blocksize"), py::arg("omega").noconvert());
+    m.def("bsr_jacobi_indexed", &_bsr_jacobi_indexed<int64_t, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("indices").noconvert(), py::arg("blocksize"), py::arg("omega").noconvert());
+    m.def("bsr_jacobi_indexed", &_bsr_jacobi_indexed<int64_t, std::complex<double>, double>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("indices").noconvert(), py::arg("blocksize"), py::arg("omega").noconvert(),
 R"pbdoc(
 Indexed weighted Jacobi on BSR arrays.
@@ -1030,6 +1086,14 @@ None
     m.def("gauss_seidel_indexed", &_gauss_seidel_indexed<int, std::complex<float>, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Id").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
     m.def("gauss_seidel_indexed", &_gauss_seidel_indexed<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Id").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
+    m.def("gauss_seidel_indexed", &_gauss_seidel_indexed<int64_t, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Id").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
+    m.def("gauss_seidel_indexed", &_gauss_seidel_indexed<int64_t, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Id").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
+    m.def("gauss_seidel_indexed", &_gauss_seidel_indexed<int64_t, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Id").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
+    m.def("gauss_seidel_indexed", &_gauss_seidel_indexed<int64_t, std::complex<double>, double>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Id").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"),
 R"pbdoc(
 Indexed Gauss-Seidel iteration.
@@ -1083,6 +1147,14 @@ of the index array Id which is to be considered.)pbdoc");
     m.def("jacobi_ne", &_jacobi_ne<int, std::complex<float>, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert());
     m.def("jacobi_ne", &_jacobi_ne<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert());
+    m.def("jacobi_ne", &_jacobi_ne<int64_t, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert());
+    m.def("jacobi_ne", &_jacobi_ne<int64_t, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert());
+    m.def("jacobi_ne", &_jacobi_ne<int64_t, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert());
+    m.def("jacobi_ne", &_jacobi_ne<int64_t, std::complex<double>, double>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert(),
 R"pbdoc(
 Jacobi NE iteration.
@@ -1130,6 +1202,14 @@ None
     m.def("gauss_seidel_ne", &_gauss_seidel_ne<int, std::complex<float>, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("Tx").noconvert(), py::arg("omega"));
     m.def("gauss_seidel_ne", &_gauss_seidel_ne<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("Tx").noconvert(), py::arg("omega"));
+    m.def("gauss_seidel_ne", &_gauss_seidel_ne<int64_t, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("Tx").noconvert(), py::arg("omega"));
+    m.def("gauss_seidel_ne", &_gauss_seidel_ne<int64_t, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("Tx").noconvert(), py::arg("omega"));
+    m.def("gauss_seidel_ne", &_gauss_seidel_ne<int64_t, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("Tx").noconvert(), py::arg("omega"));
+    m.def("gauss_seidel_ne", &_gauss_seidel_ne<int64_t, std::complex<double>, double>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("Tx").noconvert(), py::arg("omega"),
 R"pbdoc(
 Gauss-Seidel NE iteration.
@@ -1169,6 +1249,14 @@ None
     m.def("gauss_seidel_nr", &_gauss_seidel_nr<int, std::complex<float>, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("z").noconvert(), py::arg("col_start"), py::arg("col_stop"), py::arg("col_step"), py::arg("Tx").noconvert(), py::arg("omega"));
     m.def("gauss_seidel_nr", &_gauss_seidel_nr<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("z").noconvert(), py::arg("col_start"), py::arg("col_stop"), py::arg("col_step"), py::arg("Tx").noconvert(), py::arg("omega"));
+    m.def("gauss_seidel_nr", &_gauss_seidel_nr<int64_t, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("z").noconvert(), py::arg("col_start"), py::arg("col_stop"), py::arg("col_step"), py::arg("Tx").noconvert(), py::arg("omega"));
+    m.def("gauss_seidel_nr", &_gauss_seidel_nr<int64_t, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("z").noconvert(), py::arg("col_start"), py::arg("col_stop"), py::arg("col_step"), py::arg("Tx").noconvert(), py::arg("omega"));
+    m.def("gauss_seidel_nr", &_gauss_seidel_nr<int64_t, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("z").noconvert(), py::arg("col_start"), py::arg("col_stop"), py::arg("col_step"), py::arg("Tx").noconvert(), py::arg("omega"));
+    m.def("gauss_seidel_nr", &_gauss_seidel_nr<int64_t, std::complex<double>, double>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("z").noconvert(), py::arg("col_start"), py::arg("col_stop"), py::arg("col_step"), py::arg("Tx").noconvert(), py::arg("omega"),
 R"pbdoc(
 Gauss-Seidel NR iteration.
@@ -1207,6 +1295,14 @@ None
     m.def("block_jacobi", &_block_jacobi<int, std::complex<float>, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert(), py::arg("blocksize"));
     m.def("block_jacobi", &_block_jacobi<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert(), py::arg("blocksize"));
+    m.def("block_jacobi", &_block_jacobi<int64_t, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert(), py::arg("blocksize"));
+    m.def("block_jacobi", &_block_jacobi<int64_t, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert(), py::arg("blocksize"));
+    m.def("block_jacobi", &_block_jacobi<int64_t, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert(), py::arg("blocksize"));
+    m.def("block_jacobi", &_block_jacobi<int64_t, std::complex<double>, double>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("omega").noconvert(), py::arg("blocksize"),
 R"pbdoc(
 Block Jacobi iteration.
@@ -1259,6 +1355,14 @@ None
     m.def("block_jacobi_indexed", &_block_jacobi_indexed<int, std::complex<float>, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("indices").noconvert(), py::arg("omega").noconvert(), py::arg("blocksize"));
     m.def("block_jacobi_indexed", &_block_jacobi_indexed<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("indices").noconvert(), py::arg("omega").noconvert(), py::arg("blocksize"));
+    m.def("block_jacobi_indexed", &_block_jacobi_indexed<int64_t, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("indices").noconvert(), py::arg("omega").noconvert(), py::arg("blocksize"));
+    m.def("block_jacobi_indexed", &_block_jacobi_indexed<int64_t, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("indices").noconvert(), py::arg("omega").noconvert(), py::arg("blocksize"));
+    m.def("block_jacobi_indexed", &_block_jacobi_indexed<int64_t, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("indices").noconvert(), py::arg("omega").noconvert(), py::arg("blocksize"));
+    m.def("block_jacobi_indexed", &_block_jacobi_indexed<int64_t, std::complex<double>, double>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("indices").noconvert(), py::arg("omega").noconvert(), py::arg("blocksize"),
 R"pbdoc(
 Indexed Block Jacobi iteration.
@@ -1302,6 +1406,14 @@ None
     m.def("block_gauss_seidel", &_block_gauss_seidel<int, std::complex<float>, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"));
     m.def("block_gauss_seidel", &_block_gauss_seidel<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"));
+    m.def("block_gauss_seidel", &_block_gauss_seidel<int64_t, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"));
+    m.def("block_gauss_seidel", &_block_gauss_seidel<int64_t, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"));
+    m.def("block_gauss_seidel", &_block_gauss_seidel<int64_t, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"));
+    m.def("block_gauss_seidel", &_block_gauss_seidel<int64_t, std::complex<double>, double>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"),
 R"pbdoc(
 Block Gauss-Seidel iteration.
@@ -1349,6 +1461,14 @@ None
     m.def("extract_subblocks", &_extract_subblocks<int, std::complex<float>, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"));
     m.def("extract_subblocks", &_extract_subblocks<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"));
+    m.def("extract_subblocks", &_extract_subblocks<int64_t, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"));
+    m.def("extract_subblocks", &_extract_subblocks<int64_t, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"));
+    m.def("extract_subblocks", &_extract_subblocks<int64_t, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"));
+    m.def("extract_subblocks", &_extract_subblocks<int64_t, std::complex<double>, double>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"),
 R"pbdoc(
 Extract diagonal blocks from A and insert into a linear array.
@@ -1388,6 +1508,14 @@ None
     m.def("overlapping_schwarz_csr", &_overlapping_schwarz_csr<int, std::complex<float>, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
     m.def("overlapping_schwarz_csr", &_overlapping_schwarz_csr<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
+    m.def("overlapping_schwarz_csr", &_overlapping_schwarz_csr<int64_t, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
+    m.def("overlapping_schwarz_csr", &_overlapping_schwarz_csr<int64_t, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
+    m.def("overlapping_schwarz_csr", &_overlapping_schwarz_csr<int64_t, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"));
+    m.def("overlapping_schwarz_csr", &_overlapping_schwarz_csr<int64_t, std::complex<double>, double>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("Tx").noconvert(), py::arg("Tp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sp").noconvert(), py::arg("nsdomains"), py::arg("nrows"), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"),
 R"pbdoc(
 Overlapping Schwarz iteration.

@@ -390,6 +390,14 @@ PYBIND11_MODULE(smoothed_aggregation, m) {
     m.def("symmetric_strength_of_connection", &_symmetric_strength_of_connection<int, std::complex<float>, float>,
         py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
     m.def("symmetric_strength_of_connection", &_symmetric_strength_of_connection<int, std::complex<double>, double>,
+        py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+    m.def("symmetric_strength_of_connection", &_symmetric_strength_of_connection<int64_t, float, float>,
+        py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+    m.def("symmetric_strength_of_connection", &_symmetric_strength_of_connection<int64_t, double, double>,
+        py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+    m.def("symmetric_strength_of_connection", &_symmetric_strength_of_connection<int64_t, std::complex<float>, float>,
+        py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+    m.def("symmetric_strength_of_connection", &_symmetric_strength_of_connection<int64_t, std::complex<double>, double>,
         py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(),
 R"pbdoc(
 Compute symmetric strength of connection.
@@ -430,6 +438,8 @@ of A's nonzero values, a conservative bound is to allocate the same
 storage for S as is used by A.)pbdoc");
 
     m.def("standard_aggregation", &_standard_aggregation<int>,
+        py::arg("n_row"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert());
+    m.def("standard_aggregation", &_standard_aggregation<int64_t>,
         py::arg("n_row"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert(),
 R"pbdoc(
 Compute aggregates for a matrix A stored in CSR format.
@@ -459,6 +469,8 @@ Notes
 - Unaggregated nodes are marked with a -1)pbdoc");
 
     m.def("naive_aggregation", &_naive_aggregation<int>,
+        py::arg("n_row"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert());
+    m.def("naive_aggregation", &_naive_aggregation<int64_t>,
         py::arg("n_row"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert(),
 R"pbdoc(
 Compute aggregates for a matrix A stored in CSR format.
@@ -495,6 +507,12 @@ in possibly much higher complexities.)pbdoc");
     m.def("pairwise_aggregation", &_pairwise_aggregation<int, float>,
         py::arg("n_row"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert());
     m.def("pairwise_aggregation", &_pairwise_aggregation<int, double>,
+        py::arg("n_row"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert());
+    m.def("pairwise_aggregation", &_pairwise_aggregation<int64_t, int64_t>,
+        py::arg("n_row"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert());
+    m.def("pairwise_aggregation", &_pairwise_aggregation<int64_t, float>,
+        py::arg("n_row"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert());
+    m.def("pairwise_aggregation", &_pairwise_aggregation<int64_t, double>,
         py::arg("n_row"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert(),
 R"pbdoc(
 Compute aggregates for a matrix S stored in CSR format.
@@ -527,6 +545,10 @@ classic strength with min norm.)pbdoc");
     m.def("fit_candidates", &_fit_candidates_real<int, float>,
         py::arg("n_row"), py::arg("n_col"), py::arg("K1"), py::arg("K2"), py::arg("Ap").noconvert(), py::arg("Ai").noconvert(), py::arg("Ax").noconvert(), py::arg("B").noconvert(), py::arg("R").noconvert(), py::arg("tol"));
     m.def("fit_candidates", &_fit_candidates_real<int, double>,
+        py::arg("n_row"), py::arg("n_col"), py::arg("K1"), py::arg("K2"), py::arg("Ap").noconvert(), py::arg("Ai").noconvert(), py::arg("Ax").noconvert(), py::arg("B").noconvert(), py::arg("R").noconvert(), py::arg("tol"));
+    m.def("fit_candidates", &_fit_candidates_real<int64_t, float>,
+        py::arg("n_row"), py::arg("n_col"), py::arg("K1"), py::arg("K2"), py::arg("Ap").noconvert(), py::arg("Ai").noconvert(), py::arg("Ax").noconvert(), py::arg("B").noconvert(), py::arg("R").noconvert(), py::arg("tol"));
+    m.def("fit_candidates", &_fit_candidates_real<int64_t, double>,
         py::arg("n_row"), py::arg("n_col"), py::arg("K1"), py::arg("K2"), py::arg("Ap").noconvert(), py::arg("Ai").noconvert(), py::arg("Ax").noconvert(), py::arg("B").noconvert(), py::arg("R").noconvert(), py::arg("tol"),
 R"pbdoc(
 )pbdoc");
@@ -534,6 +556,10 @@ R"pbdoc(
     m.def("fit_candidates", &_fit_candidates_complex<int, float, std::complex<float>>,
         py::arg("n_row"), py::arg("n_col"), py::arg("K1"), py::arg("K2"), py::arg("Ap").noconvert(), py::arg("Ai").noconvert(), py::arg("Ax").noconvert(), py::arg("B").noconvert(), py::arg("R").noconvert(), py::arg("tol"));
     m.def("fit_candidates", &_fit_candidates_complex<int, double, std::complex<double>>,
+        py::arg("n_row"), py::arg("n_col"), py::arg("K1"), py::arg("K2"), py::arg("Ap").noconvert(), py::arg("Ai").noconvert(), py::arg("Ax").noconvert(), py::arg("B").noconvert(), py::arg("R").noconvert(), py::arg("tol"));
+    m.def("fit_candidates", &_fit_candidates_complex<int64_t, float, std::complex<float>>,
+        py::arg("n_row"), py::arg("n_col"), py::arg("K1"), py::arg("K2"), py::arg("Ap").noconvert(), py::arg("Ai").noconvert(), py::arg("Ax").noconvert(), py::arg("B").noconvert(), py::arg("R").noconvert(), py::arg("tol"));
+    m.def("fit_candidates", &_fit_candidates_complex<int64_t, double, std::complex<double>>,
         py::arg("n_row"), py::arg("n_col"), py::arg("K1"), py::arg("K2"), py::arg("Ap").noconvert(), py::arg("Ai").noconvert(), py::arg("Ax").noconvert(), py::arg("B").noconvert(), py::arg("R").noconvert(), py::arg("tol"),
 R"pbdoc(
 )pbdoc");
@@ -545,6 +571,14 @@ R"pbdoc(
     m.def("satisfy_constraints_helper", &_satisfy_constraints_helper<int, std::complex<float>, float>,
         py::arg("rows_per_block"), py::arg("cols_per_block"), py::arg("num_block_rows"), py::arg("NullDim"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("z").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
     m.def("satisfy_constraints_helper", &_satisfy_constraints_helper<int, std::complex<double>, double>,
+        py::arg("rows_per_block"), py::arg("cols_per_block"), py::arg("num_block_rows"), py::arg("NullDim"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("z").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+    m.def("satisfy_constraints_helper", &_satisfy_constraints_helper<int64_t, float, float>,
+        py::arg("rows_per_block"), py::arg("cols_per_block"), py::arg("num_block_rows"), py::arg("NullDim"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("z").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+    m.def("satisfy_constraints_helper", &_satisfy_constraints_helper<int64_t, double, double>,
+        py::arg("rows_per_block"), py::arg("cols_per_block"), py::arg("num_block_rows"), py::arg("NullDim"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("z").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+    m.def("satisfy_constraints_helper", &_satisfy_constraints_helper<int64_t, std::complex<float>, float>,
+        py::arg("rows_per_block"), py::arg("cols_per_block"), py::arg("num_block_rows"), py::arg("NullDim"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("z").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+    m.def("satisfy_constraints_helper", &_satisfy_constraints_helper<int64_t, std::complex<double>, double>,
         py::arg("rows_per_block"), py::arg("cols_per_block"), py::arg("num_block_rows"), py::arg("NullDim"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("z").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(),
 R"pbdoc(
 Helper routine for satisfy_constraints routine.
@@ -611,6 +645,14 @@ This implements the python code:
     m.def("calc_BtB", &_calc_BtB<int, std::complex<float>, float>,
         py::arg("NullDim"), py::arg("Nnodes"), py::arg("cols_per_block"), py::arg("b").noconvert(), py::arg("BsqCols"), py::arg("x").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert());
     m.def("calc_BtB", &_calc_BtB<int, std::complex<double>, double>,
+        py::arg("NullDim"), py::arg("Nnodes"), py::arg("cols_per_block"), py::arg("b").noconvert(), py::arg("BsqCols"), py::arg("x").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert());
+    m.def("calc_BtB", &_calc_BtB<int64_t, float, float>,
+        py::arg("NullDim"), py::arg("Nnodes"), py::arg("cols_per_block"), py::arg("b").noconvert(), py::arg("BsqCols"), py::arg("x").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert());
+    m.def("calc_BtB", &_calc_BtB<int64_t, double, double>,
+        py::arg("NullDim"), py::arg("Nnodes"), py::arg("cols_per_block"), py::arg("b").noconvert(), py::arg("BsqCols"), py::arg("x").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert());
+    m.def("calc_BtB", &_calc_BtB<int64_t, std::complex<float>, float>,
+        py::arg("NullDim"), py::arg("Nnodes"), py::arg("cols_per_block"), py::arg("b").noconvert(), py::arg("BsqCols"), py::arg("x").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert());
+    m.def("calc_BtB", &_calc_BtB<int64_t, std::complex<double>, double>,
         py::arg("NullDim"), py::arg("Nnodes"), py::arg("cols_per_block"), py::arg("b").noconvert(), py::arg("BsqCols"), py::arg("x").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(),
 R"pbdoc(
 Helper routine for energy_prolongation_smoother.
@@ -672,6 +714,14 @@ Calculates the following python code:
     m.def("incomplete_mat_mult_bsr", &_incomplete_mat_mult_bsr<int, std::complex<float>, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("n_brow"), py::arg("n_bcol"), py::arg("brow_A"), py::arg("bcol_A"), py::arg("bcol_B"));
     m.def("incomplete_mat_mult_bsr", &_incomplete_mat_mult_bsr<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("n_brow"), py::arg("n_bcol"), py::arg("brow_A"), py::arg("bcol_A"), py::arg("bcol_B"));
+    m.def("incomplete_mat_mult_bsr", &_incomplete_mat_mult_bsr<int64_t, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("n_brow"), py::arg("n_bcol"), py::arg("brow_A"), py::arg("bcol_A"), py::arg("bcol_B"));
+    m.def("incomplete_mat_mult_bsr", &_incomplete_mat_mult_bsr<int64_t, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("n_brow"), py::arg("n_bcol"), py::arg("brow_A"), py::arg("bcol_A"), py::arg("bcol_B"));
+    m.def("incomplete_mat_mult_bsr", &_incomplete_mat_mult_bsr<int64_t, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("n_brow"), py::arg("n_bcol"), py::arg("brow_A"), py::arg("bcol_A"), py::arg("bcol_B"));
+    m.def("incomplete_mat_mult_bsr", &_incomplete_mat_mult_bsr<int64_t, std::complex<double>, double>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Bp").noconvert(), py::arg("Bj").noconvert(), py::arg("Bx").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("n_brow"), py::arg("n_bcol"), py::arg("brow_A"), py::arg("bcol_A"), py::arg("bcol_B"),
 R"pbdoc(
 Mat-mul over a sparsity pattern.
@@ -740,6 +790,14 @@ routine below, except when S has far few nonzeros than A or B.)pbdoc");
     m.def("truncate_rows_csr", &_truncate_rows_csr<int, std::complex<float>, float>,
         py::arg("n_row"), py::arg("k"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
     m.def("truncate_rows_csr", &_truncate_rows_csr<int, std::complex<double>, double>,
+        py::arg("n_row"), py::arg("k"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+    m.def("truncate_rows_csr", &_truncate_rows_csr<int64_t, float, float>,
+        py::arg("n_row"), py::arg("k"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+    m.def("truncate_rows_csr", &_truncate_rows_csr<int64_t, double, double>,
+        py::arg("n_row"), py::arg("k"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+    m.def("truncate_rows_csr", &_truncate_rows_csr<int64_t, std::complex<float>, float>,
+        py::arg("n_row"), py::arg("k"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+    m.def("truncate_rows_csr", &_truncate_rows_csr<int64_t, std::complex<double>, double>,
         py::arg("n_row"), py::arg("k"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(),
 R"pbdoc(
 Truncate the entries in A.
