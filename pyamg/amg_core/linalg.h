@@ -581,7 +581,7 @@ I svd_jacobi(const T Ax[], T Tx[], T Bx[], F Sx[], const I m, const I n)
     I sweep = 0;
 
     // Always do at least  30 sweeps
-    I sweepmax = std::max(15*n, 30);
+    I sweepmax = std::max<I>(15*n, 30);
 
     F tolerance = sqrt((F)m)*std::numeric_limits<F>::epsilon();
 
@@ -860,7 +860,7 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
 
     // A^{-1} b = V*Sinv*U.H*b, in 3 steps
     // Step 1, U.H*b
-    gemm(&(U[0]), n, m, trans, &(b[0]), m, 1, trans,
+    gemm<I, T>(&(U[0]), n, m, trans, &(b[0]), m, 1, trans,
          &(x[0]), n, 1, trans, 'T');
 
     // Step 2, scale x by Sinv
@@ -875,7 +875,7 @@ void svd_solve( T Ax[], I m, I n, T b[], F sing_vals[], T work[], I work_size)
     // Step 3, multiply by V
     // transpose V so that it is in row major for gemm
     transpose(&(V[0]), &(U[0]), n, n);
-    gemm(&(U[0]), n, n, trans, &(x[0]), n, 1, trans,
+    gemm<I, T>(&(U[0]), n, n, trans, &(x[0]), n, 1, trans,
          &(b[0]), n, 1, trans, 'T');
 
     return;

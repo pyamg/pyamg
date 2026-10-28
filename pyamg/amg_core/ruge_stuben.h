@@ -587,7 +587,7 @@ void cljp_naive_splitting(const I n,
   int ncolors;
   I unassigned = n;
   I nD;
-  int nnz = Sp[n];
+  I nnz = Sp[n];
 
   // initialize vectors
   // complexity = 5n
@@ -598,7 +598,7 @@ void cljp_naive_splitting(const I n,
   std::vector<I> D(n,0);      // marked nodes  in the ind set
   std::vector<I> Dlist(n,0);      // marked nodes  in the ind set
   std::fill(splitting, splitting + n, U_NODE);
-  int * c_dep_cache = new int[n];
+  I * c_dep_cache = new I[n];
   std::fill_n(c_dep_cache, n, -1);
 
   // INITIALIZE WEIGHTS

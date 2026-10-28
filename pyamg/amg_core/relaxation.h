@@ -232,7 +232,7 @@ void bsr_gauss_seidel(const I Ap[], const int Ap_size,
                 diag_ptr = jj*B2; }
             else {
                 // do a dense multiply of this block times x and accumulate in rsum
-                gemm(&(Ax[jj*B2]),  blocksize, blocksize, 'F',
+                gemm<I, T>(&(Ax[jj*B2]),  blocksize, blocksize, 'F',
                      &(x[col]),     blocksize,   1,       'F',
                      &(Axloc[0]),   blocksize,   1,       'F',
                      'T');
@@ -528,7 +528,7 @@ void bsr_jacobi(const I Ap[], const int Ap_size,
                 diag_ptr = jj*B2; }
             else {
                 // do a dense multiply of this block times x and accumulate in rsum
-                gemm(&(Ax[jj*B2]),  blocksize, blocksize, 'F',
+                gemm<I, T>(&(Ax[jj*B2]),  blocksize, blocksize, 'F',
                      &(temp[col]),  blocksize,   1,       'F',
                      &(Axloc[0]),   blocksize,   1,       'F',
                      'T');
@@ -645,7 +645,7 @@ void bsr_jacobi_indexed(const I Ap[], const int Ap_size,
             }
             else {
                 // do a dense multiply of this block times x and accumulate in rsum
-                gemm(&(Ax[jj*B2]),  blocksize, blocksize, 'F',
+                gemm<I, T>(&(Ax[jj*B2]),  blocksize, blocksize, 'F',
                      &(temp[col]),  blocksize,   1,       'F',
                      &(Axloc[0]),   blocksize,   1,       'F',
                      'T');
@@ -1061,7 +1061,7 @@ void block_jacobi(const I Ap[], const int Ap_size,
                 continue;
             }
             else {
-                gemm(&(Ax[jj*blocksize_sq]), blocksize, blocksize, 'F',
+                gemm<I, T>(&(Ax[jj*blocksize_sq]), blocksize, blocksize, 'F',
                      &(temp[j*blocksize]),   blocksize, 1,         'F',
                      &(v[0]),                blocksize, 1,         'F',
                      'T');
@@ -1076,7 +1076,7 @@ void block_jacobi(const I Ap[], const int Ap_size,
         for(I k = 0; k < blocksize; k++) {
             rsum[k] = b[iblocksize + k] - rsum[k]; }
 
-        gemm(&(Dinv[i*blocksize_sq]), blocksize, blocksize, 'F',
+        gemm<I, T>(&(Dinv[i*blocksize_sq]), blocksize, blocksize, 'F',
              &(rsum[0]),              blocksize, 1,         'F',
              &(v[0]),                 blocksize, 1,         'F',
              'T');
@@ -1167,7 +1167,7 @@ void block_jacobi_indexed(const I Ap[], const int Ap_size,
                 continue;
             }
             else {
-                gemm(&(Ax[jj*blocksize_sq]), blocksize, blocksize, 'F',
+                gemm<I, T>(&(Ax[jj*blocksize_sq]), blocksize, blocksize, 'F',
                      &(temp[j*blocksize]),   blocksize, 1,         'F',
                      &(v[0]),                blocksize, 1,         'F',
                      'T');
@@ -1183,7 +1183,7 @@ void block_jacobi_indexed(const I Ap[], const int Ap_size,
         }
 
         // Apply D^{-1} for this block row to b - Ax
-        gemm(&(Dinv[row*blocksize_sq]), blocksize, blocksize, 'F',
+        gemm<I, T>(&(Dinv[row*blocksize_sq]), blocksize, blocksize, 'F',
              &(rsum[0]),              blocksize, 1,         'F',
              &(v[0]),                 blocksize, 1,         'F',
              'T');
@@ -1273,7 +1273,7 @@ void block_gauss_seidel(const I Ap[], const int Ap_size,
                 continue;
             }
             else {
-                gemm(&(Ax[jj*blocksize_sq]), blocksize, blocksize, 'F',
+                gemm<I, T>(&(Ax[jj*blocksize_sq]), blocksize, blocksize, 'F',
                      &(x[j*blocksize]),      blocksize, 1,         'F',
                      &(v[0]),                blocksize, 1,         'F',
                      'T');
@@ -1287,7 +1287,7 @@ void block_gauss_seidel(const I Ap[], const int Ap_size,
         for(I k = 0; k < blocksize; k++) {
             rsum[k] = b[iblocksize + k] - rsum[k]; }
 
-        gemm(&(Dinv[i*blocksize_sq]), blocksize, blocksize, 'F',
+        gemm<I, T>(&(Dinv[i*blocksize_sq]), blocksize, blocksize, 'F',
              &(rsum[0]),              blocksize, 1,         'F',
              &(x[iblocksize]),        blocksize, 1,         'F',
              'T');
@@ -1491,7 +1491,7 @@ void overlapping_schwarz_csr(const I Ap[], const int Ap_size,
         }
 
         // Multiply block residual with block inverse of A
-        gemm(&(Tx[Tp[domptr]]), size_domain, size_domain, 'F',
+        gemm<I, T>(&(Tx[Tp[domptr]]), size_domain, size_domain, 'F',
              &(rsum[0]),      size_domain,   1,         'F',
              &(Dinv_rsum[0]), size_domain,   1,         'F',
              'F');
