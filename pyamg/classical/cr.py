@@ -165,12 +165,12 @@ def CR(A, method='habituated', B=None, nu=3, thetacr=0.7,
     target = B[:, 0]
 
     # 3.1a - Initialize all nodes as F points
-    splitting = np.zeros((n,), dtype='intc')
-    indices = np.zeros((n+1,), dtype='intc')
+    splitting = np.zeros((n,), dtype=A.indptr.dtype)
+    indices = np.zeros((n+1,), dtype=A.indptr.dtype)
     indices[0] = n
-    indices[1:] = np.arange(0, n, dtype='intc')
+    indices[1:] = np.arange(0, n, dtype=A.indptr.dtype)
     Findex = indices[1:]
-    Cindex = np.empty((0,), dtype='intc')
+    Cindex = np.empty((0,), dtype=A.indptr.dtype)
     gamma = np.zeros((n,))
 
     # 3.1b - Run initial smoothing sweep
