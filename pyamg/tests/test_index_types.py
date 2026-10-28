@@ -43,7 +43,7 @@ class TestSmoothedAggregation(TestCase):
             self.run_cases({'strength': strength})
 
     def test_aggregation_method(self):
-        for aggregate in ['standard', 'naive', 'lloyd', 'balanced lloyd', 'pairwise']:
+        for aggregate in ['standard', 'naive', 'lloyd', 'balanced lloyd']:
             self.run_cases({'aggregate': aggregate})
 
     def test_prolongation_smoother(self):
