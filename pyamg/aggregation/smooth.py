@@ -162,8 +162,8 @@ def jacobi_prolongation_smoother(S, T, C, B, omega=4.0/3.0, degree=1,
     elif weighting == 'block':
         # Use block diagonal of S
         D_inv = get_block_diag(S, blocksize=S.blocksize[0], inv_flag=True)
-        D_inv = sparse.bsr_array((D_inv, np.arange(D_inv.shape[0], dtype=np.int32),
-                                   np.arange(D_inv.shape[0] + 1, dtype=np.int32)),
+        D_inv = sparse.bsr_array((D_inv, np.arange(D_inv.shape[0], dtype=S.indptr.dtype),
+                                   np.arange(D_inv.shape[0] + 1, dtype=S.indptr.dtype)),
                                   shape=S.shape)
         D_inv_S = D_inv@S
         D_inv_S = (omega/approximate_spectral_radius(D_inv_S))*D_inv_S
@@ -333,8 +333,8 @@ def cg_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter, tol,
         Dinv = get_diagonal(A, norm_eq=False, inv=True)
     elif weighting == 'block':
         Dinv = get_block_diag(A, blocksize=A.blocksize[0], inv_flag=True)
-        Dinv = sparse.bsr_array((Dinv, np.arange(Dinv.shape[0], dtype=np.int32),
-                                 np.arange(Dinv.shape[0] + 1, dtype=np.int32)),
+        Dinv = sparse.bsr_array((Dinv, np.arange(Dinv.shape[0], dtype=A.indptr.dtype),
+                                 np.arange(Dinv.shape[0] + 1, dtype=A.indptr.dtype)),
                                 shape=A.shape)
     elif weighting == 'local':
         # Based on Gershgorin estimate
@@ -718,8 +718,8 @@ def gmres_prolongation_smoothing(A, T, B, BtBinv, pattern, maxiter,
         Dinv = get_diagonal(A, norm_eq=False, inv=True)
     elif weighting == 'block':
         Dinv = get_block_diag(A, blocksize=A.blocksize[0], inv_flag=True)
-        Dinv = sparse.bsr_array((Dinv, np.arange(Dinv.shape[0], dtype=np.int32),
-                                 np.arange(Dinv.shape[0] + 1, dtype=np.int32)),
+        Dinv = sparse.bsr_array((Dinv, np.arange(Dinv.shape[0], dtype=A.indptr.dtype),
+                                 np.arange(Dinv.shape[0] + 1, dtype=A.indptr.dtype)),
                                  shape=A.shape)
     elif weighting == 'local':
         # Based on Gershgorin estimate

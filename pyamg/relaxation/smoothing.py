@@ -434,8 +434,8 @@ def rho_block_D_inv_A(A, Dinv):
             raise ValueError('Dinv and A have incompatible dimensions')
 
         Dinv = sparse.bsr_array((Dinv,
-                                 np.arange(Dinv.shape[0], dtype=np.int32),
-                                 np.arange(Dinv.shape[0] + 1, dtype=np.int32)),
+                                 np.arange(Dinv.shape[0], dtype=A.indptr.dtype),
+                                 np.arange(Dinv.shape[0] + 1, dtype=A.indptr.dtype)),
                                 shape=A.shape)
 
         # Don't explicitly form Dinv @ A
