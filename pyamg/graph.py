@@ -515,29 +515,39 @@ def _rebalance(G, c, m, d, dist_all, num_clusters):
     return newc, rebalance_change
 
 
+def _cluster_nodes(m, num_clusters):
+    """Group nodes by cluster.
+
+    Nodes of cluster a are order[ptr[a]:ptr[a+1]], in ascending order.
+
+    Note: this matches the local ordering of dist_all from center_nodes().
+    """
+    order = np.argsort(m, kind='stable')
+    ptr = np.zeros(num_clusters + 1, dtype=np.intp)
+    ptr[1:] = np.cumsum(np.bincount(m, minlength=num_clusters))
+    return order, ptr
+
+
 def _elimination_penalty(A, m, d, dist_all, num_clusters):
     """Calculate elimination penalty.
 
     see _rebalance()
     """
-    Acol = A.tocsc()
+    # b[j] = min over edges (k, j) leaving the cluster of j of d[k] + A[k, j]
+    A = A.tocoo()
+    k, j = A.row, A.col
+    mask = m[k] != m[j]
+    b = np.full(len(m), np.inf)
+    np.minimum.at(b, j[mask], d[k[mask]] + A.data[mask])
 
-    # pylint: disable=too-many-nested-blocks
-    E = np.inf * np.ones(num_clusters)
+    order, ptr = _cluster_nodes(m, num_clusters)
+    E = np.empty(num_clusters)
     for a in range(num_clusters):
-        E[a] = 0
-        Va = np.int32(np.where(m == a)[0])
+        Va = order[ptr[a]:ptr[a+1]]
         N = len(Va)
-
-        for iloc, _ in enumerate(Va):
-            dmin = np.inf
-            for jloc, j in enumerate(Va):
-                for k in Acol[:, [j]].indices:
-                    if m[k] != m[j]:
-                        jiloc = jloc * N + iloc
-                        dmin = min(d[k] + A[k, j] + dist_all[a, jiloc], dmin)
-            E[a] += dmin**2
-        E[a] -= np.sum(d[Va]**2)
+        D = dist_all[a, :N*N].reshape(N, N)  # D[jloc, iloc]
+        dmin = (b[Va][:, None] + D).min(axis=0)
+        E[a] = np.sum(dmin**2) - np.sum(d[Va]**2)
     return E
 
 
@@ -546,29 +556,23 @@ def _split_improvement(m, d, dist_all, num_clusters):
 
     see _rebalance()
     """
-    S = np.inf * np.ones(num_clusters)
-    I = -1 * np.ones(num_clusters, dtype=np.int32)  # better cluster centers if split
-    J = -1 * np.ones(num_clusters, dtype=np.int32)  # better cluster centers if split
+    order, ptr = _cluster_nodes(m, num_clusters)
+    S = np.empty(num_clusters)
+    I = np.empty(num_clusters, dtype=np.int32)  # better cluster centers if split
+    J = np.empty(num_clusters, dtype=np.int32)  # better cluster centers if split
     for a in range(num_clusters):
-        S[a] = np.inf
-        Va = np.int32(np.where(m == a)[0])
+        Va = order[ptr[a]:ptr[a+1]]
         N = len(Va)
+        D = dist_all[a, :N*N].reshape(N, N)  # D[iloc, kloc]
 
-        for iloc, i in enumerate(Va):
-            for jloc, j in enumerate(Va):
-                Snew = 0
-                for kloc, _ in enumerate(Va):
-                    ikloc = iloc * N + kloc
-                    jkloc = jloc * N + kloc
-                    if dist_all[a, ikloc] < dist_all[a, jkloc]:
-                        Snew = Snew + dist_all[a, ikloc]**2
-                    else:
-                        Snew = Snew + dist_all[a, jkloc]**2
-                if Snew < S[a]:
-                    S[a] = Snew
-                    I[a] = i
-                    J[a] = j
-        S[a] = np.sum(d[Va]**2) - S[a]
+        # Snew[iloc, jloc] = sum_k min(D[iloc, k], D[jloc, k])**2
+        Snew = np.empty((N, N))
+        for iloc in range(N):
+            Snew[iloc] = (np.minimum(D[iloc], D)**2).sum(axis=1)
+
+        iloc, jloc = np.unravel_index(np.argmin(Snew), Snew.shape)
+        S[a] = np.sum(d[Va]**2) - Snew[iloc, jloc]
+        I[a], J[a] = Va[iloc], Va[jloc]
     return S, I, J
 
 
