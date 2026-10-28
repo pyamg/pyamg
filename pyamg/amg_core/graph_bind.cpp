@@ -599,6 +599,8 @@ PYBIND11_MODULE(graph, m) {
     options.disable_function_signatures();
 
     m.def("maximal_independent_set_serial", &_maximal_independent_set_serial<int, int>,
+        py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("active"), py::arg("C"), py::arg("F"), py::arg("x").noconvert());
+    m.def("maximal_independent_set_serial", &_maximal_independent_set_serial<int64_t, int64_t>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("active"), py::arg("C"), py::arg("F"), py::arg("x").noconvert(),
 R"pbdoc(
 Serial maximal independent set.
@@ -636,6 +638,8 @@ be assigned the value C or F depending on whether they are in the
 MIS or not.)pbdoc");
 
     m.def("maximal_independent_set_parallel", &_maximal_independent_set_parallel<int, int, double>,
+        py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("active"), py::arg("C"), py::arg("F"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("max_iters"));
+    m.def("maximal_independent_set_parallel", &_maximal_independent_set_parallel<int64_t, int64_t, double>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("active"), py::arg("C"), py::arg("F"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("max_iters"),
 R"pbdoc(
 Parallel maximal independent set.
@@ -677,6 +681,8 @@ be assigned the value C or F depending on whether they are in the
 MIS or not.)pbdoc");
 
     m.def("vertex_coloring_mis", &_vertex_coloring_mis<int, int>,
+        py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("x").noconvert());
+    m.def("vertex_coloring_mis", &_vertex_coloring_mis<int64_t, int64_t>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("x").noconvert(),
 R"pbdoc(
 Compute a vertex coloring for a graph stored in CSR format.
@@ -691,6 +697,8 @@ Compute a vertex coloring for a graph stored in CSR format.
  of the i-th vertex.)pbdoc");
 
     m.def("vertex_coloring_jones_plassmann", &_vertex_coloring_jones_plassmann<int, int, double>,
+        py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("x").noconvert(), py::arg("z").noconvert());
+    m.def("vertex_coloring_jones_plassmann", &_vertex_coloring_jones_plassmann<int64_t, int64_t, double>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("x").noconvert(), py::arg("z").noconvert(),
 R"pbdoc(
 Compute a vertex coloring of a graph using the Jones-Plassmann algorithm.
@@ -720,6 +728,8 @@ References
    http://citeseer.ist.psu.edu/jones92parallel.html)pbdoc");
 
     m.def("vertex_coloring_LDF", &_vertex_coloring_LDF<int, int, double>,
+        py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert());
+    m.def("vertex_coloring_LDF", &_vertex_coloring_LDF<int64_t, int64_t, double>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("x").noconvert(), py::arg("y").noconvert(),
 R"pbdoc(
 Compute a vertex coloring of a graph using parallel Largest-Degree-First (LDF).
@@ -749,6 +759,12 @@ References
     m.def("floyd_warshall", &_floyd_warshall<int, float>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("m").noconvert(), py::arg("a"), py::arg("N"));
     m.def("floyd_warshall", &_floyd_warshall<int, double>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("m").noconvert(), py::arg("a"), py::arg("N"));
+    m.def("floyd_warshall", &_floyd_warshall<int64_t, int64_t>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("m").noconvert(), py::arg("a"), py::arg("N"));
+    m.def("floyd_warshall", &_floyd_warshall<int64_t, float>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("m").noconvert(), py::arg("a"), py::arg("N"));
+    m.def("floyd_warshall", &_floyd_warshall<int64_t, double>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("m").noconvert(), py::arg("a"), py::arg("N"),
 R"pbdoc(
 Floyd-Warshall on a subgraph or cluster of nodes in A.
@@ -800,6 +816,12 @@ References
     m.def("center_nodes", &_center_nodes<int, float>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert());
     m.def("center_nodes", &_center_nodes<int, double>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert());
+    m.def("center_nodes", &_center_nodes<int64_t, int64_t>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert());
+    m.def("center_nodes", &_center_nodes<int64_t, float>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert());
+    m.def("center_nodes", &_center_nodes<int64_t, double>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cptr").noconvert(), py::arg("D").noconvert(), py::arg("P").noconvert(), py::arg("C").noconvert(), py::arg("L").noconvert(), py::arg("q").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(),
 R"pbdoc(
 Update center nodes for a cluster
@@ -853,6 +875,12 @@ Notes
     m.def("elimination_penalty", &_elimination_penalty<int, float>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("m").noconvert(), py::arg("d").noconvert(), py::arg("D").noconvert(), py::arg("C").noconvert(), py::arg("Cptr").noconvert(), py::arg("Dptr").noconvert(), py::arg("b").noconvert(), py::arg("E").noconvert());
     m.def("elimination_penalty", &_elimination_penalty<int, double>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("m").noconvert(), py::arg("d").noconvert(), py::arg("D").noconvert(), py::arg("C").noconvert(), py::arg("Cptr").noconvert(), py::arg("Dptr").noconvert(), py::arg("b").noconvert(), py::arg("E").noconvert());
+    m.def("elimination_penalty", &_elimination_penalty<int64_t, int64_t>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("m").noconvert(), py::arg("d").noconvert(), py::arg("D").noconvert(), py::arg("C").noconvert(), py::arg("Cptr").noconvert(), py::arg("Dptr").noconvert(), py::arg("b").noconvert(), py::arg("E").noconvert());
+    m.def("elimination_penalty", &_elimination_penalty<int64_t, float>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("m").noconvert(), py::arg("d").noconvert(), py::arg("D").noconvert(), py::arg("C").noconvert(), py::arg("Cptr").noconvert(), py::arg("Dptr").noconvert(), py::arg("b").noconvert(), py::arg("E").noconvert());
+    m.def("elimination_penalty", &_elimination_penalty<int64_t, double>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("m").noconvert(), py::arg("d").noconvert(), py::arg("D").noconvert(), py::arg("C").noconvert(), py::arg("Cptr").noconvert(), py::arg("Dptr").noconvert(), py::arg("b").noconvert(), py::arg("E").noconvert(),
 R"pbdoc(
 Elimination penalty of each cluster (for balanced Lloyd rebalancing).
@@ -899,6 +927,12 @@ pyamg.graph._rebalance)pbdoc");
     m.def("split_improvement", &_split_improvement<int, float>,
         py::arg("d").noconvert(), py::arg("D").noconvert(), py::arg("C").noconvert(), py::arg("Cptr").noconvert(), py::arg("Dptr").noconvert(), py::arg("S").noconvert(), py::arg("c1").noconvert(), py::arg("c2").noconvert());
     m.def("split_improvement", &_split_improvement<int, double>,
+        py::arg("d").noconvert(), py::arg("D").noconvert(), py::arg("C").noconvert(), py::arg("Cptr").noconvert(), py::arg("Dptr").noconvert(), py::arg("S").noconvert(), py::arg("c1").noconvert(), py::arg("c2").noconvert());
+    m.def("split_improvement", &_split_improvement<int64_t, int64_t>,
+        py::arg("d").noconvert(), py::arg("D").noconvert(), py::arg("C").noconvert(), py::arg("Cptr").noconvert(), py::arg("Dptr").noconvert(), py::arg("S").noconvert(), py::arg("c1").noconvert(), py::arg("c2").noconvert());
+    m.def("split_improvement", &_split_improvement<int64_t, float>,
+        py::arg("d").noconvert(), py::arg("D").noconvert(), py::arg("C").noconvert(), py::arg("Cptr").noconvert(), py::arg("Dptr").noconvert(), py::arg("S").noconvert(), py::arg("c1").noconvert(), py::arg("c2").noconvert());
+    m.def("split_improvement", &_split_improvement<int64_t, double>,
         py::arg("d").noconvert(), py::arg("D").noconvert(), py::arg("C").noconvert(), py::arg("Cptr").noconvert(), py::arg("Dptr").noconvert(), py::arg("S").noconvert(), py::arg("c1").noconvert(), py::arg("c2").noconvert(),
 R"pbdoc(
 Split improvement of each cluster (for balanced Lloyd rebalancing).
@@ -938,6 +972,12 @@ pyamg.graph._rebalance)pbdoc");
     m.def("bellman_ford", &_bellman_ford<int, float>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert());
     m.def("bellman_ford", &_bellman_ford<int, double>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert());
+    m.def("bellman_ford", &_bellman_ford<int64_t, int64_t>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert());
+    m.def("bellman_ford", &_bellman_ford<int64_t, float>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert());
+    m.def("bellman_ford", &_bellman_ford<int64_t, double>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(),
 R"pbdoc(
 Apply one iteration of Bellman-Ford iteration on a distance graph stored in CSR format.
@@ -985,6 +1025,12 @@ References
     m.def("bellman_ford_balanced", &_bellman_ford_balanced<int, float>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("tiebreaking"));
     m.def("bellman_ford_balanced", &_bellman_ford_balanced<int, double>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("tiebreaking"));
+    m.def("bellman_ford_balanced", &_bellman_ford_balanced<int64_t, int64_t>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("tiebreaking"));
+    m.def("bellman_ford_balanced", &_bellman_ford_balanced<int64_t, float>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("tiebreaking"));
+    m.def("bellman_ford_balanced", &_bellman_ford_balanced<int64_t, double>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(), py::arg("pc").noconvert(), py::arg("s").noconvert(), py::arg("tiebreaking"),
 R"pbdoc(
 Bellman-Ford with a heuristic to balance cluster sizes
@@ -1028,6 +1074,12 @@ Bellman-Ford with a heuristic to balance cluster sizes
     m.def("most_interior_nodes", &_most_interior_nodes<int, float>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert());
     m.def("most_interior_nodes", &_most_interior_nodes<int, double>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert());
+    m.def("most_interior_nodes", &_most_interior_nodes<int64_t, int64_t>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert());
+    m.def("most_interior_nodes", &_most_interior_nodes<int64_t, float>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert());
+    m.def("most_interior_nodes", &_most_interior_nodes<int64_t, double>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert(),
 R"pbdoc(
 Find the most interior nodes.
@@ -1062,6 +1114,8 @@ References
    PhD thesis (UIUC), August 2008.)pbdoc");
 
     m.def("maximal_independent_set_k_parallel", &_maximal_independent_set_k_parallel<int, int, double>,
+        py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("k"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("max_iters"));
+    m.def("maximal_independent_set_k_parallel", &_maximal_independent_set_k_parallel<int64_t, int64_t, double>,
         py::arg("num_rows"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("k"), py::arg("x").noconvert(), py::arg("y").noconvert(), py::arg("max_iters"),
 R"pbdoc(
 Compute MIS-k.
@@ -1098,6 +1152,8 @@ to the set without destroying this property.  A standard MIS
 is therefore a MIS-1.)pbdoc");
 
     m.def("breadth_first_search", &_breadth_first_search<int>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("seed"), py::arg("order").noconvert(), py::arg("level").noconvert());
+    m.def("breadth_first_search", &_breadth_first_search<int64_t>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("seed"), py::arg("order").noconvert(), py::arg("level").noconvert(),
 R"pbdoc(
 Breadth first search.
@@ -1128,6 +1184,8 @@ Notes
 The values of the level must be initialized to -1.)pbdoc");
 
     m.def("connected_components", &_connected_components<int>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("components").noconvert());
+    m.def("connected_components", &_connected_components<int64_t>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("components").noconvert(),
 R"pbdoc(
 Compute the connected components of a graph stored in CSR format.

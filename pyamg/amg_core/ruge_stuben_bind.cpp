@@ -454,6 +454,14 @@ PYBIND11_MODULE(ruge_stuben, m) {
     m.def("classical_strength_of_connection_abs", &_classical_strength_of_connection_abs<int, std::complex<float>, float>,
         py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
     m.def("classical_strength_of_connection_abs", &_classical_strength_of_connection_abs<int, std::complex<double>, double>,
+        py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+    m.def("classical_strength_of_connection_abs", &_classical_strength_of_connection_abs<int64_t, float, float>,
+        py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+    m.def("classical_strength_of_connection_abs", &_classical_strength_of_connection_abs<int64_t, double, double>,
+        py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+    m.def("classical_strength_of_connection_abs", &_classical_strength_of_connection_abs<int64_t, std::complex<float>, float>,
+        py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+    m.def("classical_strength_of_connection_abs", &_classical_strength_of_connection_abs<int64_t, std::complex<double>, double>,
         py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(),
 R"pbdoc(
 Classical strength of connection.
@@ -500,6 +508,10 @@ storage for S as is used by A.)pbdoc");
     m.def("classical_strength_of_connection_min", &_classical_strength_of_connection_min<int, float>,
         py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
     m.def("classical_strength_of_connection_min", &_classical_strength_of_connection_min<int, double>,
+        py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+    m.def("classical_strength_of_connection_min", &_classical_strength_of_connection_min<int64_t, float>,
+        py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert());
+    m.def("classical_strength_of_connection_min", &_classical_strength_of_connection_min<int64_t, double>,
         py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(),
 R"pbdoc(
 Classical strength of connection.
@@ -550,6 +562,14 @@ storage for S as is used by A.)pbdoc");
     m.def("maximum_row_value", &_maximum_row_value<int, std::complex<float>, float>,
         py::arg("n_row"), py::arg("x").noconvert(), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert());
     m.def("maximum_row_value", &_maximum_row_value<int, std::complex<double>, double>,
+        py::arg("n_row"), py::arg("x").noconvert(), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert());
+    m.def("maximum_row_value", &_maximum_row_value<int64_t, float, float>,
+        py::arg("n_row"), py::arg("x").noconvert(), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert());
+    m.def("maximum_row_value", &_maximum_row_value<int64_t, double, double>,
+        py::arg("n_row"), py::arg("x").noconvert(), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert());
+    m.def("maximum_row_value", &_maximum_row_value<int64_t, std::complex<float>, float>,
+        py::arg("n_row"), py::arg("x").noconvert(), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert());
+    m.def("maximum_row_value", &_maximum_row_value<int64_t, std::complex<double>, double>,
         py::arg("n_row"), py::arg("x").noconvert(), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(),
 R"pbdoc(
 Compute the maximum in magnitude row value for a CSR matrix.
@@ -574,6 +594,8 @@ None
     and is modified in place.)pbdoc");
 
     m.def("rs_cf_splitting", &_rs_cf_splitting<int>,
+        py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("influence").noconvert(), py::arg("splitting").noconvert());
+    m.def("rs_cf_splitting", &_rs_cf_splitting<int64_t>,
         py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("influence").noconvert(), py::arg("splitting").noconvert(),
 R"pbdoc(
 Ruge-Stuben splitting.
@@ -607,6 +629,8 @@ Notes
 The splitting array must be preallocated.)pbdoc");
 
     m.def("rs_cf_splitting_pass2", &_rs_cf_splitting_pass2<int>,
+        py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("splitting").noconvert());
+    m.def("rs_cf_splitting_pass2", &_rs_cf_splitting_pass2<int64_t>,
         py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("splitting").noconvert(),
 R"pbdoc(
 Ruge-Stuben splitting pass 2.
@@ -627,6 +651,8 @@ Notes
 The splitting array must be preallocated.)pbdoc");
 
     m.def("cljp_naive_splitting", &_cljp_naive_splitting<int>,
+        py::arg("n"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("splitting").noconvert(), py::arg("colorflag"));
+    m.def("cljp_naive_splitting", &_cljp_naive_splitting<int64_t>,
         py::arg("n"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Tp").noconvert(), py::arg("Tj").noconvert(), py::arg("splitting").noconvert(), py::arg("colorflag"),
 R"pbdoc(
 Compute a CLJP splitting.
@@ -659,6 +685,8 @@ The splitting array must be preallocated.
 CLJP naive since it requires the transpose.)pbdoc");
 
     m.def("rs_direct_interpolation_pass1", &_rs_direct_interpolation_pass1<int>,
+        py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("splitting").noconvert(), py::arg("Pp").noconvert());
+    m.def("rs_direct_interpolation_pass1", &_rs_direct_interpolation_pass1<int64_t>,
         py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("splitting").noconvert(), py::arg("Pp").noconvert(),
 R"pbdoc(
 Produce the Ruge-Stuben prolongator using "Direct Interpolation".
@@ -694,6 +722,10 @@ See page 479 of Multigrid.)pbdoc");
     m.def("rs_direct_interpolation_pass2", &_rs_direct_interpolation_pass2<int, float>,
         py::arg("n_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("splitting").noconvert(), py::arg("Pp").noconvert(), py::arg("Pj").noconvert(), py::arg("Px").noconvert());
     m.def("rs_direct_interpolation_pass2", &_rs_direct_interpolation_pass2<int, double>,
+        py::arg("n_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("splitting").noconvert(), py::arg("Pp").noconvert(), py::arg("Pj").noconvert(), py::arg("Px").noconvert());
+    m.def("rs_direct_interpolation_pass2", &_rs_direct_interpolation_pass2<int64_t, float>,
+        py::arg("n_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("splitting").noconvert(), py::arg("Pp").noconvert(), py::arg("Pj").noconvert(), py::arg("Px").noconvert());
+    m.def("rs_direct_interpolation_pass2", &_rs_direct_interpolation_pass2<int64_t, double>,
         py::arg("n_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("splitting").noconvert(), py::arg("Pp").noconvert(), py::arg("Pj").noconvert(), py::arg("Px").noconvert(),
 R"pbdoc(
 RS direct interpolation pass 2.
@@ -729,6 +761,10 @@ None
     m.def("cr_helper", &_cr_helper<int, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("B").noconvert(), py::arg("e").noconvert(), py::arg("indices").noconvert(), py::arg("splitting").noconvert(), py::arg("gamma").noconvert(), py::arg("thetacs"));
     m.def("cr_helper", &_cr_helper<int, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("B").noconvert(), py::arg("e").noconvert(), py::arg("indices").noconvert(), py::arg("splitting").noconvert(), py::arg("gamma").noconvert(), py::arg("thetacs"));
+    m.def("cr_helper", &_cr_helper<int64_t, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("B").noconvert(), py::arg("e").noconvert(), py::arg("indices").noconvert(), py::arg("splitting").noconvert(), py::arg("gamma").noconvert(), py::arg("thetacs"));
+    m.def("cr_helper", &_cr_helper<int64_t, double>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("B").noconvert(), py::arg("e").noconvert(), py::arg("indices").noconvert(), py::arg("splitting").noconvert(), py::arg("gamma").noconvert(), py::arg("thetacs"),
 R"pbdoc(
 Helper function for compatible relaxation.
@@ -762,6 +798,8 @@ None
     Updated C/F-splitting and corresponding indices modified in place.)pbdoc");
 
     m.def("rs_classical_interpolation_pass1", &_rs_classical_interpolation_pass1<int>,
+        py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("splitting").noconvert(), py::arg("Pp").noconvert());
+    m.def("rs_classical_interpolation_pass1", &_rs_classical_interpolation_pass1<int64_t>,
         py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("splitting").noconvert(), py::arg("Pp").noconvert(),
 R"pbdoc(
 First pass of classical AMG interpolation.
@@ -789,6 +827,10 @@ None
     m.def("remove_strong_FF_connections", &_remove_strong_FF_connections<int, float>,
         py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("splitting").noconvert());
     m.def("remove_strong_FF_connections", &_remove_strong_FF_connections<int, double>,
+        py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("splitting").noconvert());
+    m.def("remove_strong_FF_connections", &_remove_strong_FF_connections<int64_t, float>,
+        py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("splitting").noconvert());
+    m.def("remove_strong_FF_connections", &_remove_strong_FF_connections<int64_t, double>,
         py::arg("n_nodes"), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("splitting").noconvert(),
 R"pbdoc(
 Remove strong F-to-F connections.
@@ -819,6 +861,10 @@ None
     m.def("rs_classical_interpolation_pass2", &_rs_classical_interpolation_pass2<int, float>,
         py::arg("n_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("splitting").noconvert(), py::arg("Pp").noconvert(), py::arg("Pj").noconvert(), py::arg("Px").noconvert(), py::arg("modified"));
     m.def("rs_classical_interpolation_pass2", &_rs_classical_interpolation_pass2<int, double>,
+        py::arg("n_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("splitting").noconvert(), py::arg("Pp").noconvert(), py::arg("Pj").noconvert(), py::arg("Px").noconvert(), py::arg("modified"));
+    m.def("rs_classical_interpolation_pass2", &_rs_classical_interpolation_pass2<int64_t, float>,
+        py::arg("n_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("splitting").noconvert(), py::arg("Pp").noconvert(), py::arg("Pj").noconvert(), py::arg("Px").noconvert(), py::arg("modified"));
+    m.def("rs_classical_interpolation_pass2", &_rs_classical_interpolation_pass2<int64_t, double>,
         py::arg("n_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Sp").noconvert(), py::arg("Sj").noconvert(), py::arg("Sx").noconvert(), py::arg("splitting").noconvert(), py::arg("Pp").noconvert(), py::arg("Pj").noconvert(), py::arg("Px").noconvert(), py::arg("modified"),
 R"pbdoc(
 RS classical interpolation pass 2.

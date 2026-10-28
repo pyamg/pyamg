@@ -218,6 +218,10 @@ PYBIND11_MODULE(air, m) {
     m.def("one_point_interpolation", &_one_point_interpolation<int, float>,
         py::arg("Pp").noconvert(), py::arg("Pj").noconvert(), py::arg("Px").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("splitting").noconvert());
     m.def("one_point_interpolation", &_one_point_interpolation<int, double>,
+        py::arg("Pp").noconvert(), py::arg("Pj").noconvert(), py::arg("Px").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("splitting").noconvert());
+    m.def("one_point_interpolation", &_one_point_interpolation<int64_t, float>,
+        py::arg("Pp").noconvert(), py::arg("Pj").noconvert(), py::arg("Px").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("splitting").noconvert());
+    m.def("one_point_interpolation", &_one_point_interpolation<int64_t, double>,
         py::arg("Pp").noconvert(), py::arg("Pj").noconvert(), py::arg("Px").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("splitting").noconvert(),
 R"pbdoc(
 Interpolate C-points and each F-point from its strongest connected C-neighbor.
@@ -243,6 +247,8 @@ None
     Nothing, Rj[] modified in place.)pbdoc");
 
     m.def("approx_ideal_restriction_pass1", &_approx_ideal_restriction_pass1<int>,
+        py::arg("Rp").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("distance"));
+    m.def("approx_ideal_restriction_pass1", &_approx_ideal_restriction_pass1<int64_t>,
         py::arg("Rp").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("distance"),
 R"pbdoc(
 Build row_pointer for approximate ideal restriction in CSR or BSR form.
@@ -270,6 +276,10 @@ None
     m.def("approx_ideal_restriction_pass2", &_approx_ideal_restriction_pass2<int, float>,
         py::arg("Rp").noconvert(), py::arg("Rj").noconvert(), py::arg("Rx").noconvert(), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"));
     m.def("approx_ideal_restriction_pass2", &_approx_ideal_restriction_pass2<int, double>,
+        py::arg("Rp").noconvert(), py::arg("Rj").noconvert(), py::arg("Rx").noconvert(), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"));
+    m.def("approx_ideal_restriction_pass2", &_approx_ideal_restriction_pass2<int64_t, float>,
+        py::arg("Rp").noconvert(), py::arg("Rj").noconvert(), py::arg("Rx").noconvert(), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"));
+    m.def("approx_ideal_restriction_pass2", &_approx_ideal_restriction_pass2<int64_t, double>,
         py::arg("Rp").noconvert(), py::arg("Rj").noconvert(), py::arg("Rx").noconvert(), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"),
 R"pbdoc(
 Build column indices and data array for approximate ideal restriction in CSR format.
@@ -319,6 +329,10 @@ Rx[] must be passed in initialized to zero.)pbdoc");
     m.def("block_approx_ideal_restriction_pass2", &_block_approx_ideal_restriction_pass2<int, float>,
         py::arg("Rp").noconvert(), py::arg("Rj").noconvert(), py::arg("Rx").noconvert(), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("blocksize"), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"));
     m.def("block_approx_ideal_restriction_pass2", &_block_approx_ideal_restriction_pass2<int, double>,
+        py::arg("Rp").noconvert(), py::arg("Rj").noconvert(), py::arg("Rx").noconvert(), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("blocksize"), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"));
+    m.def("block_approx_ideal_restriction_pass2", &_block_approx_ideal_restriction_pass2<int64_t, float>,
+        py::arg("Rp").noconvert(), py::arg("Rj").noconvert(), py::arg("Rx").noconvert(), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("blocksize"), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"));
+    m.def("block_approx_ideal_restriction_pass2", &_block_approx_ideal_restriction_pass2<int64_t, double>,
         py::arg("Rp").noconvert(), py::arg("Rj").noconvert(), py::arg("Rx").noconvert(), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Cp").noconvert(), py::arg("Cj").noconvert(), py::arg("Cx").noconvert(), py::arg("Cpts").noconvert(), py::arg("splitting").noconvert(), py::arg("blocksize"), py::arg("distance"), py::arg("use_gmres"), py::arg("maxiter"), py::arg("precondition"),
 R"pbdoc(
 Build column indices and data array for approximate ideal restriction in BSR format.

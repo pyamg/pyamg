@@ -165,6 +165,14 @@ PYBIND11_MODULE(linalg, m) {
     m.def("pinv_array", &_pinv_array<int, std::complex<float>, float>,
         py::arg("AA").noconvert(), py::arg("m"), py::arg("n"), py::arg("TransA"));
     m.def("pinv_array", &_pinv_array<int, std::complex<double>, double>,
+        py::arg("AA").noconvert(), py::arg("m"), py::arg("n"), py::arg("TransA"));
+    m.def("pinv_array", &_pinv_array<int64_t, float, float>,
+        py::arg("AA").noconvert(), py::arg("m"), py::arg("n"), py::arg("TransA"));
+    m.def("pinv_array", &_pinv_array<int64_t, double, double>,
+        py::arg("AA").noconvert(), py::arg("m"), py::arg("n"), py::arg("TransA"));
+    m.def("pinv_array", &_pinv_array<int64_t, std::complex<float>, float>,
+        py::arg("AA").noconvert(), py::arg("m"), py::arg("n"), py::arg("TransA"));
+    m.def("pinv_array", &_pinv_array<int64_t, std::complex<double>, double>,
         py::arg("AA").noconvert(), py::arg("m"), py::arg("n"), py::arg("TransA"),
 R"pbdoc(
 Replace each block of A with a Moore-Penrose pseudoinverse of that block.
@@ -217,6 +225,12 @@ Examples
     m.def("csc_scale_columns", &_csc_scale_columns<int, float>,
         py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert());
     m.def("csc_scale_columns", &_csc_scale_columns<int, double>,
+        py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert());
+    m.def("csc_scale_columns", &_csc_scale_columns<int64_t, int64_t>,
+        py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert());
+    m.def("csc_scale_columns", &_csc_scale_columns<int64_t, float>,
+        py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert());
+    m.def("csc_scale_columns", &_csc_scale_columns<int64_t, double>,
         py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert(),
 R"pbdoc(
 Scale the columns of a CSC matrix *in place*.
@@ -233,6 +247,12 @@ https://github.com/scipy/scipy/blob/master/scipy/sparse/sparsetools/csr.h)pbdoc"
     m.def("csc_scale_rows", &_csc_scale_rows<int, float>,
         py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert());
     m.def("csc_scale_rows", &_csc_scale_rows<int, double>,
+        py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert());
+    m.def("csc_scale_rows", &_csc_scale_rows<int64_t, int64_t>,
+        py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert());
+    m.def("csc_scale_rows", &_csc_scale_rows<int64_t, float>,
+        py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert());
+    m.def("csc_scale_rows", &_csc_scale_rows<int64_t, double>,
         py::arg("n_row"), py::arg("n_col"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("Xx").noconvert(),
 R"pbdoc(
 Scale the rows of a CSC matrix *in place*.
@@ -251,6 +271,14 @@ https://github.com/scipy/scipy/blob/master/scipy/sparse/sparsetools/csr.h)pbdoc"
     m.def("filter_matrix_rows", &_filter_matrix_rows<int, std::complex<float>, float>,
         py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("lump"));
     m.def("filter_matrix_rows", &_filter_matrix_rows<int, std::complex<double>, double>,
+        py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("lump"));
+    m.def("filter_matrix_rows", &_filter_matrix_rows<int64_t, float, float>,
+        py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("lump"));
+    m.def("filter_matrix_rows", &_filter_matrix_rows<int64_t, double, double>,
+        py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("lump"));
+    m.def("filter_matrix_rows", &_filter_matrix_rows<int64_t, std::complex<float>, float>,
+        py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("lump"));
+    m.def("filter_matrix_rows", &_filter_matrix_rows<int64_t, std::complex<double>, double>,
         py::arg("n_row"), py::arg("theta"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("lump"),
 R"pbdoc(
 Filter matrix rows by diagonal entry.
