@@ -18,8 +18,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # macos-13 is an intel runner, macos-14 is apple silicon
-        os: [ubuntu-latest, windows-latest, macos-15, macos-latest]
+        # macos-15-intel is an intel runner, macos-latest is apple silicon
+        os: [ubuntu-latest, windows-latest, macos-15-intel, macos-latest]
 
     steps:
       - name: Checkout repo
@@ -28,13 +28,16 @@ jobs:
           fetch-depth: 0  # versioningit needs tags
           ref: ${{ inputs.ref }}  # empty on release -> the release tag
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.3.0
+        uses: pypa/cibuildwheel@v4.3.5
         env:
           CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-* cp314-*"
           CIBW_ARCHS_MACOS: "auto"
           CIBW_ARCHS_WINDOWS: "AMD64 x86"
           CIBW_ARCHS_LINUX: "x86_64"
           CIBW_BUILD_VERBOSITY: 2
+          CIBW_TEST_REQUIRES: pytest
+          CIBW_TEST_COMMAND: "pytest --pyargs pyamg"
+          CIBW_TEST_SKIP: "*-win32"  # no 32-bit Windows wheels for scipy
 
       - name: Save wheels
         uses: actions/upload-artifact@v6
