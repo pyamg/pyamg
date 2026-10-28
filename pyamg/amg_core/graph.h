@@ -582,11 +582,11 @@ bool center_nodes(const I num_nodes,
     // P: (max_N, max_N)
     // C: (max_N,)
     // L: (num_nodes,)
-    // initialize
-    std::fill(D, D+D_size, std::numeric_limits<T>::infinity());
-    std::fill(P, P+P_size, -1);
-
+    // initialize (only the N x N block is used)
     I N = s[a];
+    std::fill(D, D+N*N, std::numeric_limits<T>::infinity());
+    std::fill(P, P+N*N, -1);
+
     floyd_warshall(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
                    D,  D_size, P,  P_size, C+Cptr[a], s[a], L,  L_size,
                    m,  m_size, a, N);

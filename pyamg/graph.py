@@ -430,7 +430,7 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5, tiebreaking
             Nloc = Cptr[a]+N
             if Nloc >= G.shape[0]:
                 Nloc = None
-            P.fill(-1)
+            P[:N*N] = -1
             amg_core.floyd_warshall(G.shape[0], G.indptr, G.indices, G.data,
                                     dist_all[a, :].ravel(), P, CC[Cptr[a]:Nloc], L,
                                     m, a, N)
