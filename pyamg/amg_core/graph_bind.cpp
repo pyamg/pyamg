@@ -713,7 +713,7 @@ Parameters
   Aj[]       : (IN) CSR column index for A                             (num_edges x 1)
   Ax[]       : (IN) CSR data array (edge weights)                      (num_edges x 1)
 Cptr[]       : (INOUT) ptr to start of indices in C for each cluster   (num_clusters x 1)
-   D[]       : (INOUT) FW distance array                               (max_size x max_size)
+   D[]       : (OUT) FW distances, N x N block per cluster, stacked     (sum(s**2) x 1)
    P[]       : (INOUT) FW predecessor array                            (max_size x max_size)
    C[]       : (INOUT) FW global index for current cluster             (num_nodes x 1)
    L[]       : (INOUT) FW local index for current cluster              (num_nodes x 1)
@@ -746,7 +746,9 @@ Notes
         |  |  |  |  |  |  |  |  |  |  |  ...
         0  1  2  3  4  5  6  7  8  9  10 ...
 - pass pointer to start of each C[start,...., start+N]
-- N is the cluster size)pbdoc");
+- N is the cluster size
+- D holds the N x N distances of each cluster, stored one after another
+  (cluster a starts at s[0]**2 + ... + s[a-1]**2))pbdoc");
 
     m.def("bellman_ford", &_bellman_ford<int, int>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert());
