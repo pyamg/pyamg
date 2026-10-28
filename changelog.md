@@ -2,6 +2,9 @@
 
 A summary of changes for PyAMG.
 
+## [5.4.0]
+- support int64 sparse indices
+
 ## [5.3.0]
 - add python 3.10-3.13
 - handle new/old scipy return args in make_system
