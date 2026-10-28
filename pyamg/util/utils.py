@@ -1487,7 +1487,7 @@ def get_Cpt_params(A, Cnodes, AggOp, T):
     else:
         blocksize = 1
         Cpts = Cnodes
-    Cpts = np.array(Cpts, dtype=np.int32)
+    Cpts = np.array(Cpts, dtype=T.indptr.dtype)
 
     # More input checking
     if Cpts.shape[0] != T.shape[1]:
