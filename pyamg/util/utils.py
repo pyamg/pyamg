@@ -1618,7 +1618,7 @@ def compute_BtBinv(B, C):
     amg_core.calc_BtB(NullDim, Nnodes, cols_per_block,
                       np.ravel(np.asarray(Bsq)),
                       BsqCols, np.ravel(np.asarray(BtBinv)),
-                      C.indptr.astype(np.int32), C.indices.astype(np.int32))
+                      C.indptr, C.indices)
 
     # Invert each block of BtBinv, noting that amg_core.calc_BtB(...) returns
     # values in column-major form, thus necessitating the deep transpose
