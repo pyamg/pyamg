@@ -704,7 +704,7 @@ def gauss_seidel_indexed(A, x, b, indices, iterations=1, sweep='forward'):
     """
     A, x, b = make_system(A, x, b, formats=['csr'])
 
-    indices = np.asarray(indices, dtype='intc')
+    indices = np.asarray(indices, dtype=A.indptr.dtype)
 
     # if indices.min() < 0:
     #     raise ValueError('row index (%d) is invalid' % indices.min())
@@ -1119,7 +1119,7 @@ def jacobi_indexed(A, x, b, indices, iterations=1, omega=1.0):
     """
     A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
 
-    indices = np.asarray(indices, dtype='intc')
+    indices = np.asarray(indices, dtype=A.indptr.dtype)
 
     # Create uniform type, convert possibly complex scalars to length 1 arrays
     [omega] = type_prep(A.dtype, [omega])
