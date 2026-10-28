@@ -137,8 +137,8 @@ def RS(S, second_pass=False):
     S = remove_diagonal(S)
 
     T = S.T.tocsr()  # transpose S for efficient column access
-    splitting = np.empty(S.shape[0], dtype='intc')
-    influence = np.zeros((S.shape[0],), dtype='intc')
+    splitting = np.empty(S.shape[0], dtype=S.indices.dtype)
+    influence = np.zeros((S.shape[0],), dtype=S.indices.dtype)
 
     amg_core.rs_cf_splitting(S.shape[0],
                              S.indptr, S.indices,
@@ -283,7 +283,7 @@ def CLJP(S, color=False):
         colorid = 1
 
     T = S.T.tocsr()  # transpose S for efficient column access
-    splitting = np.empty(S.shape[0], dtype='intc')
+    splitting = np.empty(S.shape[0], dtype=S.indices.dtype)
 
     amg_core.cljp_naive_splitting(S.shape[0],
                                   S.indptr, S.indices,
@@ -368,7 +368,7 @@ def MIS(G, weights, maxiter=None):
         raise TypeError('expected csr_array')
     G = remove_diagonal(G)
 
-    mis = np.empty(G.shape[0], dtype='intc')
+    mis = np.empty(G.shape[0], dtype=G.indices.dtype)
     mis[:] = -1
 
     fn = amg_core.maximal_independent_set_parallel
