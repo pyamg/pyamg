@@ -10,7 +10,8 @@ from .graph import (maximal_independent_set_serial, maximal_independent_set_para
                     vertex_coloring_mis, vertex_coloring_jones_plassmann,
                     vertex_coloring_LDF,
                     bellman_ford, bellman_ford_balanced,
-                    floyd_warshall, center_nodes, most_interior_nodes,
+                    floyd_warshall, center_nodes,
+                    elimination_penalty, split_improvement, most_interior_nodes,
                     maximal_independent_set_k_parallel,
                     breadth_first_search, connected_components)
 
@@ -66,6 +67,8 @@ __all__ = [
     'bellman_ford_balanced',
     'floyd_warshall',
     'center_nodes',
+    'elimination_penalty',
+    'split_improvement',
     'most_interior_nodes',
     'maximal_independent_set_k_parallel',
     'breadth_first_search',

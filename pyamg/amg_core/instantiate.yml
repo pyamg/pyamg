@@ -72,6 +72,8 @@ instantiate:
     - lloyd_cluster
     - floyd_warshall
     - center_nodes
+    - elimination_penalty
+    - split_improvement
     - most_interior_nodes
 
 - types:

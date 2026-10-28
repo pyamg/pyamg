@@ -268,6 +268,102 @@ bool _center_nodes(
 }
 
 template<class I, class T>
+void _elimination_penalty(
+        const I num_nodes,
+      py::array_t<I> & Ap,
+      py::array_t<I> & Aj,
+      py::array_t<T> & Ax,
+       py::array_t<I> & m,
+       py::array_t<T> & d,
+       py::array_t<T> & D,
+       py::array_t<I> & C,
+    py::array_t<I> & Cptr,
+    py::array_t<I> & Dptr,
+       py::array_t<T> & b,
+       py::array_t<T> & E
+                          )
+{
+    auto py_Ap = Ap.unchecked();
+    auto py_Aj = Aj.unchecked();
+    auto py_Ax = Ax.unchecked();
+    auto py_m = m.unchecked();
+    auto py_d = d.unchecked();
+    auto py_D = D.unchecked();
+    auto py_C = C.unchecked();
+    auto py_Cptr = Cptr.unchecked();
+    auto py_Dptr = Dptr.unchecked();
+    auto py_b = b.mutable_unchecked();
+    auto py_E = E.mutable_unchecked();
+    const I *_Ap = py_Ap.data();
+    const I *_Aj = py_Aj.data();
+    const T *_Ax = py_Ax.data();
+    const I *_m = py_m.data();
+    const T *_d = py_d.data();
+    const T *_D = py_D.data();
+    const I *_C = py_C.data();
+    const I *_Cptr = py_Cptr.data();
+    const I *_Dptr = py_Dptr.data();
+    T *_b = py_b.mutable_data();
+    T *_E = py_E.mutable_data();
+
+    return elimination_penalty<I, T>(
+                num_nodes,
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                       _m, m.shape(0),
+                       _d, d.shape(0),
+                       _D, D.shape(0),
+                       _C, C.shape(0),
+                    _Cptr, Cptr.shape(0),
+                    _Dptr, Dptr.shape(0),
+                       _b, b.shape(0),
+                       _E, E.shape(0)
+                                     );
+}
+
+template<class I, class T>
+void _split_improvement(
+       py::array_t<T> & d,
+       py::array_t<T> & D,
+       py::array_t<I> & C,
+    py::array_t<I> & Cptr,
+    py::array_t<I> & Dptr,
+       py::array_t<T> & S,
+      py::array_t<I> & c1,
+      py::array_t<I> & c2
+                        )
+{
+    auto py_d = d.unchecked();
+    auto py_D = D.unchecked();
+    auto py_C = C.unchecked();
+    auto py_Cptr = Cptr.unchecked();
+    auto py_Dptr = Dptr.unchecked();
+    auto py_S = S.mutable_unchecked();
+    auto py_c1 = c1.mutable_unchecked();
+    auto py_c2 = c2.mutable_unchecked();
+    const T *_d = py_d.data();
+    const T *_D = py_D.data();
+    const I *_C = py_C.data();
+    const I *_Cptr = py_Cptr.data();
+    const I *_Dptr = py_Dptr.data();
+    T *_S = py_S.mutable_data();
+    I *_c1 = py_c1.mutable_data();
+    I *_c2 = py_c2.mutable_data();
+
+    return split_improvement<I, T>(
+                       _d, d.shape(0),
+                       _D, D.shape(0),
+                       _C, C.shape(0),
+                    _Cptr, Cptr.shape(0),
+                    _Dptr, Dptr.shape(0),
+                       _S, S.shape(0),
+                      _c1, c1.shape(0),
+                      _c2, c2.shape(0)
+                                   );
+}
+
+template<class I, class T>
 void _bellman_ford(
         const I num_nodes,
       py::array_t<I> & Ap,
@@ -489,6 +585,8 @@ PYBIND11_MODULE(graph, m) {
     vertex_coloring_LDF
     floyd_warshall
     center_nodes
+    elimination_penalty
+    split_improvement
     bellman_ford
     bellman_ford_balanced
     most_interior_nodes
@@ -749,6 +847,91 @@ Notes
 - N is the cluster size
 - D holds the N x N distances of each cluster, stored one after another
   (cluster a starts at s[0]**2 + ... + s[a-1]**2))pbdoc");
+
+    m.def("elimination_penalty", &_elimination_penalty<int, int>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("m").noconvert(), py::arg("d").noconvert(), py::arg("D").noconvert(), py::arg("C").noconvert(), py::arg("Cptr").noconvert(), py::arg("Dptr").noconvert(), py::arg("b").noconvert(), py::arg("E").noconvert());
+    m.def("elimination_penalty", &_elimination_penalty<int, float>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("m").noconvert(), py::arg("d").noconvert(), py::arg("D").noconvert(), py::arg("C").noconvert(), py::arg("Cptr").noconvert(), py::arg("Dptr").noconvert(), py::arg("b").noconvert(), py::arg("E").noconvert());
+    m.def("elimination_penalty", &_elimination_penalty<int, double>,
+        py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("m").noconvert(), py::arg("d").noconvert(), py::arg("D").noconvert(), py::arg("C").noconvert(), py::arg("Cptr").noconvert(), py::arg("Dptr").noconvert(), py::arg("b").noconvert(), py::arg("E").noconvert(),
+R"pbdoc(
+Elimination penalty of each cluster (for balanced Lloyd rebalancing).
+
+Parameters
+----------
+num_nodes : int
+    Number of nodes (number of rows in A).
+Ap : array
+    CSR row pointer for A, (num_nodes, 1).
+Aj : array
+    CSR column index for A, (num_edges, 1).
+Ax : array
+    CSR data array (edge weights), (num_edges, 1).
+m : array
+    Cluster index, (num_nodes, 1).
+d : array
+    Distance to cluster center, (num_nodes, 1).
+D : array
+    FW distances, N x N block per cluster, stacked, (sum(s**2), 1).
+C : array
+    Nodes of each cluster, in ascending order, (num_nodes, 1).
+Cptr : array
+    Cluster a is C[Cptr[a]:Cptr[a+1]], (num_clusters+1, 1).
+Dptr : array
+    Cluster a has distances D[Dptr[a]:Dptr[a+1]], (num_clusters+1, 1).
+b : array
+    Work array, (num_nodes, 1).
+E : array, inplace
+    Elimination penalty, (num_clusters, 1).
+
+Notes
+-----
+    - There are no checks within this kernel
+    - b[j] = min over edges (k, j) leaving the cluster of j of d[k] + A[k, j]
+    - E[a] = sum_i (min_j b[j] + D[j, i])**2 - sum_i d[i]**2, i, j in cluster a
+
+See Also
+--------
+pyamg.graph._rebalance)pbdoc");
+
+    m.def("split_improvement", &_split_improvement<int, int>,
+        py::arg("d").noconvert(), py::arg("D").noconvert(), py::arg("C").noconvert(), py::arg("Cptr").noconvert(), py::arg("Dptr").noconvert(), py::arg("S").noconvert(), py::arg("c1").noconvert(), py::arg("c2").noconvert());
+    m.def("split_improvement", &_split_improvement<int, float>,
+        py::arg("d").noconvert(), py::arg("D").noconvert(), py::arg("C").noconvert(), py::arg("Cptr").noconvert(), py::arg("Dptr").noconvert(), py::arg("S").noconvert(), py::arg("c1").noconvert(), py::arg("c2").noconvert());
+    m.def("split_improvement", &_split_improvement<int, double>,
+        py::arg("d").noconvert(), py::arg("D").noconvert(), py::arg("C").noconvert(), py::arg("Cptr").noconvert(), py::arg("Dptr").noconvert(), py::arg("S").noconvert(), py::arg("c1").noconvert(), py::arg("c2").noconvert(),
+R"pbdoc(
+Split improvement of each cluster (for balanced Lloyd rebalancing).
+
+Parameters
+----------
+d : array
+    Distance to cluster center, (num_nodes, 1).
+D : array
+    FW distances, N x N block per cluster, stacked, (sum(s**2), 1).
+C : array
+    Nodes of each cluster, in ascending order, (num_nodes, 1).
+Cptr : array
+    Cluster a is C[Cptr[a]:Cptr[a+1]], (num_clusters+1, 1).
+Dptr : array
+    Cluster a has distances D[Dptr[a]:Dptr[a+1]], (num_clusters+1, 1).
+S : array, inplace
+    Split improvement, (num_clusters, 1).
+c1 : array, inplace
+    First center if cluster a is split, (num_clusters, 1).
+c2 : array, inplace
+    Second center if cluster a is split, (num_clusters, 1).
+
+Notes
+-----
+    - There are no checks within this kernel
+    - Snew(i, j) = sum_k min(D[i, k], D[j, k])**2, i, j, k in cluster a
+    - (c1[a], c2[a]) is the first (i, j) minimizing Snew, in row-major order
+    - S[a] = sum_i d[i]**2 - Snew(c1[a], c2[a])
+
+See Also
+--------
+pyamg.graph._rebalance)pbdoc");
 
     m.def("bellman_ford", &_bellman_ford<int, int>,
         py::arg("num_nodes"), py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("c").noconvert(), py::arg("d").noconvert(), py::arg("m").noconvert(), py::arg("p").noconvert());

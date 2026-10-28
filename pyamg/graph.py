@@ -511,11 +511,11 @@ def _cluster_nodes(m, num_clusters):
 
     Note: this matches the local ordering of dist_all from center_nodes().
     """
-    order = np.argsort(m, kind='stable')
-    sizes = np.bincount(m, minlength=num_clusters).astype(np.intp)
-    ptr = np.zeros(num_clusters + 1, dtype=np.intp)
+    order = np.argsort(m, kind='stable').astype(np.int32)
+    sizes = np.bincount(m, minlength=num_clusters).astype(np.int32)
+    ptr = np.zeros(num_clusters + 1, dtype=np.int32)
     ptr[1:] = np.cumsum(sizes)
-    dptr = np.zeros(num_clusters + 1, dtype=np.intp)
+    dptr = np.zeros(num_clusters + 1, dtype=np.int32)
     dptr[1:] = np.cumsum(sizes**2)
     return order, ptr, dptr
 
@@ -523,48 +523,27 @@ def _cluster_nodes(m, num_clusters):
 def _elimination_penalty(A, m, d, dist_all, num_clusters):
     """Calculate elimination penalty.
 
-    see _rebalance()
+    see _rebalance() and amg_core.elimination_penalty()
     """
-    # b[j] = min over edges (k, j) leaving the cluster of j of d[k] + A[k, j]
-    A = A.tocoo()
-    k, j = A.row, A.col
-    mask = m[k] != m[j]
-    b = np.full(len(m), np.inf)
-    np.minimum.at(b, j[mask], d[k[mask]] + A.data[mask])
-
+    A = A.tocsr()
     order, ptr, dptr = _cluster_nodes(m, num_clusters)
-    E = np.empty(num_clusters)
-    for a in range(num_clusters):
-        Va = order[ptr[a]:ptr[a+1]]
-        N = len(Va)
-        D = dist_all[dptr[a]:dptr[a+1]].reshape(N, N)  # D[jloc, iloc]
-        dmin = (b[Va][:, None] + D).min(axis=0)
-        E[a] = np.sum(dmin**2) - np.sum(d[Va]**2)
+    b = np.empty(len(m), dtype=d.dtype)  # work array
+    E = np.empty(num_clusters, dtype=d.dtype)
+    amg_core.elimination_penalty(len(m), A.indptr, A.indices, A.data, m, d,
+                                 dist_all, order, ptr, dptr, b, E)
     return E
 
 
 def _split_improvement(m, d, dist_all, num_clusters):
     """Calculate split improvement.
 
-    see _rebalance()
+    see _rebalance() and amg_core.split_improvement()
     """
     order, ptr, dptr = _cluster_nodes(m, num_clusters)
-    S = np.empty(num_clusters)
+    S = np.empty(num_clusters, dtype=d.dtype)
     I = np.empty(num_clusters, dtype=np.int32)  # better cluster centers if split
     J = np.empty(num_clusters, dtype=np.int32)  # better cluster centers if split
-    for a in range(num_clusters):
-        Va = order[ptr[a]:ptr[a+1]]
-        N = len(Va)
-        D = dist_all[dptr[a]:dptr[a+1]].reshape(N, N)  # D[iloc, kloc]
-
-        # Snew[iloc, jloc] = sum_k min(D[iloc, k], D[jloc, k])**2
-        Snew = np.empty((N, N))
-        for iloc in range(N):
-            Snew[iloc] = (np.minimum(D[iloc], D)**2).sum(axis=1)
-
-        iloc, jloc = np.unravel_index(np.argmin(Snew), Snew.shape)
-        S[a] = np.sum(d[Va]**2) - Snew[iloc, jloc]
-        I[a], J[a] = Va[iloc], Va[jloc]
+    amg_core.split_improvement(d, dist_all, order, ptr, dptr, S, I, J)
     return S, I, J
 
 

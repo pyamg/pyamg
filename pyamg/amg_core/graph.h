@@ -631,6 +631,166 @@ bool center_nodes(const I num_nodes,
 }
 
 /*
+ * Elimination penalty of each cluster (for balanced Lloyd rebalancing).
+ *
+ * Parameters
+ * ----------
+ * num_nodes : int
+ *     Number of nodes (number of rows in A).
+ * Ap : array
+ *     CSR row pointer for A, (num_nodes, 1).
+ * Aj : array
+ *     CSR column index for A, (num_edges, 1).
+ * Ax : array
+ *     CSR data array (edge weights), (num_edges, 1).
+ * m : array
+ *     Cluster index, (num_nodes, 1).
+ * d : array
+ *     Distance to cluster center, (num_nodes, 1).
+ * D : array
+ *     FW distances, N x N block per cluster, stacked, (sum(s**2), 1).
+ * C : array
+ *     Nodes of each cluster, in ascending order, (num_nodes, 1).
+ * Cptr : array
+ *     Cluster a is C[Cptr[a]:Cptr[a+1]], (num_clusters+1, 1).
+ * Dptr : array
+ *     Cluster a has distances D[Dptr[a]:Dptr[a+1]], (num_clusters+1, 1).
+ * b : array
+ *     Work array, (num_nodes, 1).
+ * E : array, inplace
+ *     Elimination penalty, (num_clusters, 1).
+ *
+ * Notes
+ * -----
+ *     - There are no checks within this kernel
+ *     - b[j] = min over edges (k, j) leaving the cluster of j of d[k] + A[k, j]
+ *     - E[a] = sum_i (min_j b[j] + D[j, i])**2 - sum_i d[i]**2, i, j in cluster a
+ *
+ * See Also
+ * --------
+ * pyamg.graph._rebalance
+ */
+template<class I, class T>
+void elimination_penalty(const I num_nodes,
+                         const I Ap[],   const int Ap_size,
+                         const I Aj[],   const int Aj_size,
+                         const T Ax[],   const int Ax_size,
+                         const I m[],    const int m_size,
+                         const T d[],    const int d_size,
+                         const T D[],    const int D_size,
+                         const I C[],    const int C_size,
+                         const I Cptr[], const int Cptr_size,
+                         const I Dptr[], const int Dptr_size,
+                               T b[],    const int b_size,
+                               T E[],    const int E_size)
+{
+  I num_clusters = E_size;
+
+  // b[j] = min over edges (k, j) leaving the cluster of j of d[k] + A[k, j]
+  std::fill(b, b+num_nodes, std::numeric_limits<T>::infinity());
+  for(I k=0; k<num_nodes; k++){
+    for(I jj=Ap[k]; jj<Ap[k+1]; jj++){
+      I j = Aj[jj];
+      if(m[k] != m[j]){
+        b[j] = std::min(b[j], d[k] + Ax[jj]);
+      }
+    }
+  }
+
+  for(I a=0; a<num_clusters; a++){
+    const I *Va = C + Cptr[a];          // nodes in cluster a
+    const T *Da = D + Dptr[a];          // Da[jloc, iloc]
+    I N = Cptr[a+1] - Cptr[a];          // cluster size
+
+    E[a] = 0;
+    for(I iloc=0; iloc<N; iloc++){
+      T dmin = std::numeric_limits<T>::infinity();
+      for(I jloc=0; jloc<N; jloc++){
+        dmin = std::min(dmin, b[Va[jloc]] + Da[jloc * N + iloc]);
+      }
+      E[a] += dmin * dmin;
+    }
+    for(I iloc=0; iloc<N; iloc++){
+      E[a] -= d[Va[iloc]] * d[Va[iloc]];
+    }
+  }
+}
+
+/*
+ * Split improvement of each cluster (for balanced Lloyd rebalancing).
+ *
+ * Parameters
+ * ----------
+ * d : array
+ *     Distance to cluster center, (num_nodes, 1).
+ * D : array
+ *     FW distances, N x N block per cluster, stacked, (sum(s**2), 1).
+ * C : array
+ *     Nodes of each cluster, in ascending order, (num_nodes, 1).
+ * Cptr : array
+ *     Cluster a is C[Cptr[a]:Cptr[a+1]], (num_clusters+1, 1).
+ * Dptr : array
+ *     Cluster a has distances D[Dptr[a]:Dptr[a+1]], (num_clusters+1, 1).
+ * S : array, inplace
+ *     Split improvement, (num_clusters, 1).
+ * c1 : array, inplace
+ *     First center if cluster a is split, (num_clusters, 1).
+ * c2 : array, inplace
+ *     Second center if cluster a is split, (num_clusters, 1).
+ *
+ * Notes
+ * -----
+ *     - There are no checks within this kernel
+ *     - Snew(i, j) = sum_k min(D[i, k], D[j, k])**2, i, j, k in cluster a
+ *     - (c1[a], c2[a]) is the first (i, j) minimizing Snew, in row-major order
+ *     - S[a] = sum_i d[i]**2 - Snew(c1[a], c2[a])
+ *
+ * See Also
+ * --------
+ * pyamg.graph._rebalance
+ */
+template<class I, class T>
+void split_improvement(const T d[],    const int d_size,
+                       const T D[],    const int D_size,
+                       const I C[],    const int C_size,
+                       const I Cptr[], const int Cptr_size,
+                       const I Dptr[], const int Dptr_size,
+                             T S[],    const int S_size,
+                             I c1[],   const int c1_size,
+                             I c2[],   const int c2_size)
+{
+  I num_clusters = S_size;
+
+  for(I a=0; a<num_clusters; a++){
+    const I *Va = C + Cptr[a];          // nodes in cluster a
+    const T *Da = D + Dptr[a];          // Da[iloc, kloc]
+    I N = Cptr[a+1] - Cptr[a];          // cluster size
+
+    T Smin = std::numeric_limits<T>::infinity();
+    for(I iloc=0; iloc<N; iloc++){
+      for(I jloc=0; jloc<N; jloc++){
+        T Snew = 0;
+        for(I kloc=0; kloc<N; kloc++){
+          T dk = std::min(Da[iloc * N + kloc], Da[jloc * N + kloc]);
+          Snew += dk * dk;
+        }
+        if(Snew < Smin){
+          Smin = Snew;
+          c1[a] = Va[iloc];
+          c2[a] = Va[jloc];
+        }
+      }
+    }
+
+    S[a] = 0;
+    for(I iloc=0; iloc<N; iloc++){
+      S[a] += d[Va[iloc]] * d[Va[iloc]];
+    }
+    S[a] -= Smin;
+  }
+}
+
+/*
  * Apply one iteration of Bellman-Ford iteration on a distance graph stored in CSR format.
  *
  * Parameters
