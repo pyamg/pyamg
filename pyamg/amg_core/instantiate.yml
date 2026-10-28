@@ -4,6 +4,10 @@ instantiate:
     - [int, double, double]
     - [int, "std::complex<float>", float]
     - [int, "std::complex<double>", double]
+    - [int64_t, float, float]
+    - [int64_t, double, double]
+    - [int64_t, "std::complex<float>", float]
+    - [int64_t, "std::complex<double>", double]
   functions:
     - apply_householders
     - householder_hornerscheme
@@ -40,6 +44,8 @@ instantiate:
 - types:
     - [int,float]
     - [int,double]
+    - [int64_t,float]
+    - [int64_t,double]
   functions:
     - fit_candidates_real
     - rs_direct_interpolation_pass2
@@ -57,6 +63,8 @@ instantiate:
 - types:
     - [int,float,"std::complex<float>"]
     - [int,double,"std::complex<double>"]
+    - [int64_t,float,"std::complex<float>"]
+    - [int64_t,double,"std::complex<double>"]
   functions:
     - fit_candidates_complex
 
@@ -64,6 +72,9 @@ instantiate:
     - [int, int]
     - [int, float]
     - [int, double]
+    - [int64_t, int64_t]
+    - [int64_t, float]
+    - [int64_t, double]
   functions:
     - csc_scale_rows
     - csc_scale_columns
@@ -78,12 +89,14 @@ instantiate:
 
 - types:
     - [int, int]
+    - [int64_t, int64_t]
   functions:
     - maximal_independent_set_serial
     - vertex_coloring_mis
 
 - types:
     - [int, int, double]
+    - [int64_t, int64_t, double]
   functions:
     - maximal_independent_set_parallel
     - maximal_independent_set_k_parallel
@@ -92,6 +105,7 @@ instantiate:
 
 - types:
     - [int]
+    - [int64_t]
   functions:
     - breadth_first_search
     - connected_components
@@ -111,6 +125,10 @@ instantiate:
     - [int, double]
     - [int, "std::complex<float>"]
     - [int, "std::complex<double>"]
+    - [int64_t, float]
+    - [int64_t, double]
+    - [int64_t, "std::complex<float>"]
+    - [int64_t, "std::complex<double>"]
   functions:
     - csr_matvec
 
@@ -119,6 +137,9 @@ instantiate:
     - [int, long]
     - [int, float]
     - [int, double]
+    - [int64_t, int64_t]
+    - [int64_t, float]
+    - [int64_t, double]
   functions:
     - pairwise_aggregation
 

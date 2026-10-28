@@ -457,7 +457,7 @@ void evolution_strength_helper(      T Sx[], const int Sx_size,
 
         //Write first NullDim Entries of RHS
         //  Bi^H*D_A*z ==> RHS
-        gemm( DBi, NullDim, length, 'F',
+        gemm<I, T>( DBi, NullDim, length, 'F',
                 z, length,       1, 'F',
               RHS, NullDim,      1, 'F',
               'T');
@@ -471,7 +471,7 @@ void evolution_strength_helper(      T Sx[], const int Sx_size,
         svd_solve(&(LHS[0]), NullDimPone, NullDimPone, &(RHS[0]), &(sing_vals[0]), &(work[0]), work_size);
 
         //Find best approximation to z in span(Bi), Bi*RHS[0:NullDim] ==> zhat
-        gemm(  Bi,   length, NullDim, 'F',
+        gemm<I, T>(  Bi,   length, NullDim, 'F',
               RHS,  NullDim,       1, 'F',
              zhat,   length,       1, 'F',
               'T');

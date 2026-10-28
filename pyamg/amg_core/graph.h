@@ -311,7 +311,7 @@ T vertex_coloring_jones_plassmann(const I num_rows,
     T K = 0; //iteration number
 
     while(N < num_rows){
-        N += maximal_independent_set_parallel(num_rows,Ap,Ap_size,Aj,Aj_size,-1,K,-2,x,x_size,z,z_size,1);
+        N += maximal_independent_set_parallel<I, T, R>(num_rows,Ap,Ap_size,Aj,Aj_size,-1,K,-2,x,x_size,z,z_size,1);
         for(I i = 0; i < num_rows; i++){
             if(x[i] == -2)
                 x[i] = -1;
@@ -375,7 +375,7 @@ T vertex_coloring_LDF(const I num_rows,
             weights[i] = y[i] + num_neighbors;
         }
 
-        N += maximal_independent_set_parallel(num_rows,Ap,Ap_size,Aj,Aj_size,-1,K,-2,x,x_size,&weights[0],num_rows,1);
+        N += maximal_independent_set_parallel<I, T, R>(num_rows,Ap,Ap_size,Aj,Aj_size,-1,K,-2,x,x_size,&weights[0],num_rows,1);
         for(I i = 0; i < num_rows; i++){
             if(x[i] == -2)
                 x[i] = -1;
