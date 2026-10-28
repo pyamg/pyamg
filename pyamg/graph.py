@@ -369,13 +369,9 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5, tiebreaking
     Cptr = np.empty(num_clusters, dtype=np.int32)    # ptr to start in C for each cluster
     CC = np.empty(n, dtype=np.int32)                 # FW global index for current cluster
 
-    D = np.empty(maxsize*maxsize, dtype=G.dtype)     # FW distance array
     P = np.empty(maxsize*maxsize, dtype=np.int32)    # FW predecessor array
     L = np.empty(n, dtype=np.int32)                  # FW local index for current cluster
     q = np.empty(maxsize, dtype=G.dtype)             # FW work array for d**2
-
-    # global work array for distances
-    dist_all = np.empty((num_clusters, maxsize*maxsize), dtype=G.dtype, order='C')
 
     for riter in range(rebalance_iters+1):
 
@@ -404,8 +400,10 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5, tiebreaking
                 raise ValueError('Encountered a disconnected nodes from m or d:  '
                                  f'{m.min()=} {d.min()=})')
 
+            # FW distances, one N x N block per cluster (see _cluster_nodes)
+            dist_all = np.empty(np.sum(s.astype(np.int64)**2), dtype=G.dtype)
             changed2 = amg_core.center_nodes(n, G.indptr, G.indices, G.data,
-                                             Cptr, D, P, CC, L, q,
+                                             Cptr, dist_all, P, CC, L, q,
                                              centers, d, m, p, pc, s)
 
             it += 1
@@ -423,18 +421,7 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5, tiebreaking
         if num_clusters < 2:
             break
 
-        # calculate distances
-        dist_all.fill(np.inf)
-        for a in range(num_clusters):
-            N = s[a]  # cluster size
-            Nloc = Cptr[a]+N
-            if Nloc >= G.shape[0]:
-                Nloc = None
-            P[:N*N] = -1
-            amg_core.floyd_warshall(G.shape[0], G.indptr, G.indices, G.data,
-                                    dist_all[a, :].ravel(), P, CC[Cptr[a]:Nloc], L,
-                                    m, a, N)
-        # rebalance
+        # rebalance (dist_all is from the last center_nodes call; m is unchanged since)
         centers, rebalance_change = _rebalance(G, centers, m, d, dist_all, num_clusters)
 
         # rebalance did nothing
@@ -458,7 +445,8 @@ def _rebalance(G, c, m, d, dist_all, num_clusters):
     d : array
         Distance to cluster center.
     dist_all : array
-        Node-to-node distance for every node in each cluster.
+        Node-to-node distance for every node in each cluster, stored as
+        one N x N block per cluster (see _cluster_nodes).
     num_clusters : int
         Number of clusters (= number centers).
 
@@ -518,14 +506,18 @@ def _rebalance(G, c, m, d, dist_all, num_clusters):
 def _cluster_nodes(m, num_clusters):
     """Group nodes by cluster.
 
-    Nodes of cluster a are order[ptr[a]:ptr[a+1]], in ascending order.
+    Nodes of cluster a are order[ptr[a]:ptr[a+1]], in ascending order, and
+    their N x N distances are dist_all[dptr[a]:dptr[a+1]].
 
     Note: this matches the local ordering of dist_all from center_nodes().
     """
     order = np.argsort(m, kind='stable')
+    sizes = np.bincount(m, minlength=num_clusters).astype(np.intp)
     ptr = np.zeros(num_clusters + 1, dtype=np.intp)
-    ptr[1:] = np.cumsum(np.bincount(m, minlength=num_clusters))
-    return order, ptr
+    ptr[1:] = np.cumsum(sizes)
+    dptr = np.zeros(num_clusters + 1, dtype=np.intp)
+    dptr[1:] = np.cumsum(sizes**2)
+    return order, ptr, dptr
 
 
 def _elimination_penalty(A, m, d, dist_all, num_clusters):
@@ -540,12 +532,12 @@ def _elimination_penalty(A, m, d, dist_all, num_clusters):
     b = np.full(len(m), np.inf)
     np.minimum.at(b, j[mask], d[k[mask]] + A.data[mask])
 
-    order, ptr = _cluster_nodes(m, num_clusters)
+    order, ptr, dptr = _cluster_nodes(m, num_clusters)
     E = np.empty(num_clusters)
     for a in range(num_clusters):
         Va = order[ptr[a]:ptr[a+1]]
         N = len(Va)
-        D = dist_all[a, :N*N].reshape(N, N)  # D[jloc, iloc]
+        D = dist_all[dptr[a]:dptr[a+1]].reshape(N, N)  # D[jloc, iloc]
         dmin = (b[Va][:, None] + D).min(axis=0)
         E[a] = np.sum(dmin**2) - np.sum(d[Va]**2)
     return E
@@ -556,14 +548,14 @@ def _split_improvement(m, d, dist_all, num_clusters):
 
     see _rebalance()
     """
-    order, ptr = _cluster_nodes(m, num_clusters)
+    order, ptr, dptr = _cluster_nodes(m, num_clusters)
     S = np.empty(num_clusters)
     I = np.empty(num_clusters, dtype=np.int32)  # better cluster centers if split
     J = np.empty(num_clusters, dtype=np.int32)  # better cluster centers if split
     for a in range(num_clusters):
         Va = order[ptr[a]:ptr[a+1]]
         N = len(Va)
-        D = dist_all[a, :N*N].reshape(N, N)  # D[iloc, kloc]
+        D = dist_all[dptr[a]:dptr[a+1]].reshape(N, N)  # D[iloc, kloc]
 
         # Snew[iloc, jloc] = sum_k min(D[iloc, k], D[jloc, k])**2
         Snew = np.empty((N, N))

@@ -493,7 +493,7 @@ void floyd_warshall(const I num_nodes,
 //   Aj[]       : (IN) CSR column index for A                             (num_edges x 1)
 //   Ax[]       : (IN) CSR data array (edge weights)                      (num_edges x 1)
 // Cptr[]       : (INOUT) ptr to start of indices in C for each cluster   (num_clusters x 1)
-//    D[]       : (INOUT) FW distance array                               (max_size x max_size)
+//    D[]       : (OUT) FW distances, N x N block per cluster, stacked     (sum(s**2) x 1)
 //    P[]       : (INOUT) FW predecessor array                            (max_size x max_size)
 //    C[]       : (INOUT) FW global index for current cluster             (num_nodes x 1)
 //    L[]       : (INOUT) FW local index for current cluster              (num_nodes x 1)
@@ -527,6 +527,8 @@ void floyd_warshall(const I num_nodes,
 //         0  1  2  3  4  5  6  7  8  9  10 ...
 // - pass pointer to start of each C[start,...., start+N]
 // - N is the cluster size
+// - D holds the N x N distances of each cluster, stored one after another
+//   (cluster a starts at s[0]**2 + ... + s[a-1]**2)
 template<class I, class T>
 bool center_nodes(const I num_nodes,
                   const I Ap[], const int Ap_size,
@@ -576,19 +578,20 @@ bool center_nodes(const I num_nodes,
   }
 
   // for each cluster a
+  T *Da = D;                         // start of the distances for cluster a
   for(I a=0; a<num_clusters; a++){
     // call Floyd–Warshall for cluster a
-    // D: (max_N, max_N)
+    // Da: (N, N)
     // P: (max_N, max_N)
     // C: (max_N,)
     // L: (num_nodes,)
     // initialize (only the N x N block is used)
     I N = s[a];
-    std::fill(D, D+N*N, std::numeric_limits<T>::infinity());
+    std::fill(Da, Da+N*N, std::numeric_limits<T>::infinity());
     std::fill(P, P+N*N, -1);
 
     floyd_warshall(num_nodes, Ap, Ap_size, Aj, Aj_size, Ax, Ax_size,
-                   D,  D_size, P,  P_size, C+Cptr[a], s[a], L,  L_size,
+                   Da, N*N, P,  P_size, C+Cptr[a], s[a], L,  L_size,
                    m,  m_size, a, N);
 
     // sum of square distances to the other nodes
@@ -596,7 +599,7 @@ bool center_nodes(const I num_nodes,
       q[_i] = 0;
       for(I _j=0; _j<N; _j++){
         I _ij = _i * N + _j;
-        q[_i] += D[_ij]*D[_ij];
+        q[_i] += Da[_ij]*Da[_ij];
       }
     }
 
@@ -613,7 +616,7 @@ bool center_nodes(const I num_nodes,
         I j = C[Cptr[a] + _j];    // global index of every node in the cluster
         I _ij = _i * N + _j;
 
-        d[j] = D[_ij];            // new distance from i->j
+        d[j] = Da[_ij];           // new distance from i->j
 
         pc[p[j]]--;               // update predecessor count (old j)
         p[j] = P[_ij];            // set predecessor
@@ -622,6 +625,7 @@ bool center_nodes(const I num_nodes,
         changed = true;
       }
     }
+    Da += N*N;                    // next cluster
   }
   return changed;
 }

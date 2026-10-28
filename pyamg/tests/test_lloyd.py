@@ -229,16 +229,15 @@ def test_rebalance():
     c = np.array([3, 6], dtype=np.int32)
     m = np.array([0, 0, 0, 0, 0, 0, 1], dtype=np.int32)
     d = np.array([3, 2, 1, 0, 1, 2, 0], dtype=np.float64)
-    dist_all = np.empty((2, 40), dtype=np.float64)
-    dist_all.fill(np.inf)
-    dist_all[0, :36] = np.array([
+    # one N x N block per cluster: 6 x 6 for cluster 0, then 1 x 1 for cluster 1
+    dist_all = np.array([
         0, 1, 2, 3, 4, 5,
         1, 0, 1, 2, 3, 4,
         2, 1, 0, 1, 2, 3,
         3, 2, 1, 0, 1, 2,
         4, 3, 2, 1, 0, 1,
-        5, 4, 3, 2, 1, 0], dtype=np.float64)
-    dist_all[1, [0]] = np.array([0])
+        5, 4, 3, 2, 1, 0,
+        0], dtype=np.float64)
 
     # elimination penalty
     # cluster 0:
