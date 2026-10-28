@@ -1243,6 +1243,8 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
     C.data[:] = 1
     A = A.multiply(C)
     # add explicit zeros to A wherever C is nonzero
+    # bsr tocoo() can downcast the indices, so hang onto the index dtype of C
+    index_type = C.indptr.dtype
     A = A.tocoo()
     C = C.tocoo()
     A.data = np.hstack((np.zeros(C.data.shape, dtype=A.dtype), A.data))
@@ -1254,6 +1256,8 @@ def filter_operator(A, C, B, Bf, BtBinv=None):
         A = A.tocsr()
     # eliminate redundant zeros created by the above
     A.sum_duplicates()
+    A.indptr = A.indptr.astype(index_type, copy=False)
+    A.indices = A.indices.astype(index_type, copy=False)
 
     # Calculate difference between A @ B and Bf
     diff = A @ B - Bf
