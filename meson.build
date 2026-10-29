@@ -1,5 +1,9 @@
 project('pyamg', 'cpp',
-  version: run_command(find_program('python3'), '-m', 'versioningit', check: true).stdout().strip(),
+  # 'python' matches the build Python that meson-python
+  # 'python3' is found on PATH, which can be a different Python (on say Windows)
+  # see: https://github.com/mesonbuild/meson-python/pull/845
+  version: run_command(find_program('python3', 'python'), '-m', 'versioningit',
+                       check: true).stdout().strip(),
   license: 'MIT',
   default_options: ['cpp_std=c++11'],
 )
