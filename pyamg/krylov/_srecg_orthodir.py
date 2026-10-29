@@ -87,7 +87,7 @@ def srecg_orthodir(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
     if M is None:
         raise ValueError('Left preconditioning for ECG not supported.')
 
-    A, M, x, b, postprocess = make_system(A, M, x0, b)
+    A, M, x, b = make_system(A, M, x0, b)
 
     # Ensure that warnings are always reissued from this function
     warnings.filterwarnings('always', module='pyamg.krylov._srecg')
@@ -120,7 +120,7 @@ def srecg_orthodir(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
     if normb == 0.0:
         normb = 1.0
     if res_norm < tol*normb:
-        return (postprocess(x), 0)
+        return (x, 0)
 
     # Scale tol by ||r_0||_M
     if res_norm != 0.0:
@@ -170,10 +170,10 @@ def srecg_orthodir(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
 
         # Check for convergence
         if res_norm < tol:
-            return (postprocess(x), 0)
+            return (x, 0)
 
         if k == maxiter:
-            return (postprocess(x), k)
+            return (x, k)
 
         # Update search directions
         AW1 = A * W_list[1]
