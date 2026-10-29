@@ -27,7 +27,7 @@ def load_example(name):
     Notes
     -----
     Each example is stored in a dictionary with the following keys:
-        - ``A``        : sparse matrix
+        - ``A``        : sparse array (``csc_array``)
         - ``B``        : near-nullspace candidates
         - ``vertices`` : dense array of nodal coordinates
         - ``elements`` : dense array of element indices
@@ -51,4 +51,5 @@ def load_example(name):
     if name not in example_names:
         raise ValueError(f'No example with name {name}')
 
-    return loadmat(os.path.join(example_dir, name + '.mat'), struct_as_record=True)
+    return loadmat(os.path.join(example_dir, name + '.mat'), struct_as_record=True,
+                   spmatrix=False)
