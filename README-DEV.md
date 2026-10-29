@@ -1,15 +1,18 @@
 Release Steps:
 - suppose the current tag is 4.2.2 and the next is 4.2.3
 - with no staged commits and a clean status...
-- meld a summary of `git log $(git tag --sort version:refname | tail -n 1)..HEAD --oneline` (all commits since last tag) with whatever hash with `[4.2.3]` in changelog
+- meld a summary of `git log $(git describe --tags --abbrev=0)..HEAD --oneline` (all commits since last tag) with whatever hash with `[4.2.3]` in changelog
 - commit, push
+- wait for CI to pass on `main`: `ci.yml` (including `Test-min-deps`), `lint.yml`, `docstrings.yml`
+  (`gh run list --branch main`)
 - make a virtual environment and activate
 - check that `pip install .` and `python -c "import pyamg; pyamg.test()"` pass (outside source directory)
-- remove untracked files `git clean -xdf`
+- remove untracked files: preview with `git clean -xdn`, then `git clean -xdf`
 - build the wheels *before* tagging (see "Building wheels" below):
   `gh workflow run wheels.yml --ref main`, then check the run and fix until it is clean
 - the following can be done with a pre-release, `v4.2.3-alpha.6`, for testing.  It will not become the default on pypi and `gh release create` can be marked with `--prerelease` (below)
-- commit, push
+  - a pre-release still uploads to the real pypi (as `4.2.3a6`)
+- if the wheel build needed fixes: commit, push (and wait for CI again)
 - `git tag -a v4.2.3 -m "version 4.2.3"`
 - `git push`
 - `git push --tags`

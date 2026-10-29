@@ -24,6 +24,7 @@ maintainers = [
 ]
 description = "PyAMG: Algebraic Multigrid Solvers in Python"
 readme = "README.md"
+requires-python = ">=3.10"
 license = {text = "MIT License"}
 keywords = ["algebraic multigrid", "AMG", "sparse matrix", "preconditioning"]
 classifiers = [
