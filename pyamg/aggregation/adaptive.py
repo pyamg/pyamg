@@ -304,7 +304,6 @@ def adaptive_sa_solver(A, initial_candidates=None, symmetry='hermitian',
                 # using candidate j as the initial guess
                 x0 = B[:, 0]
                 B = B[:, 1:]
-                x0 = x0.reshape((x.shape[0], -1))
                 sa_temp =\
                     smoothed_aggregation_solver(A, B=B, symmetry=symmetry,
                                                 presmoother=prepostsmoother,
