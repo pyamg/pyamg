@@ -62,6 +62,23 @@ jobs:
       - name: Build sdist
         run: python -m build --sdist
 
+      - name: Check sdist metadata
+        run: pipx run twine check --strict dist/*.tar.gz
+
+      # isolated build and test of sdist
+      - name: Test sdist
+        run: |
+          sdist=$(ls "$PWD"/dist/*.tar.gz)
+          expected=$(basename "$sdist" .tar.gz)
+          expected=${expected#pyamg-}
+          python -m venv /tmp/sdist-venv
+          /tmp/sdist-venv/bin/pip install "$sdist" pytest
+          cd /tmp
+          version=$(/tmp/sdist-venv/bin/python -c 'import pyamg; print(pyamg.__version__)')
+          echo "sdist: $expected  installed: $version"
+          test "$version" = "$expected"
+          /tmp/sdist-venv/bin/pytest --pyargs pyamg
+
       - name: Save sdist
         uses: actions/upload-artifact@v6
         with:
