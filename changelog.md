@@ -4,6 +4,8 @@ A summary of changes for PyAMG.
 
 ## [5.4.0]
 - support int64 sparse indices
+- add python 3.14 wheels
+- drop 32-bit Windows wheels (no scipy)
 
 ## [5.3.0]
 - add python 3.10-3.13

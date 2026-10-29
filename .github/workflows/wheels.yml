@@ -32,12 +32,13 @@ jobs:
         env:
           CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-* cp314-*"
           CIBW_ARCHS_MACOS: "auto"
-          CIBW_ARCHS_WINDOWS: "AMD64 x86"
+          CIBW_ARCHS_WINDOWS: "AMD64"  # avoid x86: scipy no longer provides 32-bit Windows wheels
           CIBW_ARCHS_LINUX: "x86_64"
+          # force MSVC; the runners have MinGW on PATH, which meson would pick
+          CIBW_CONFIG_SETTINGS_WINDOWS: "setup-args=--vsenv"
           CIBW_BUILD_VERBOSITY: 2
           CIBW_TEST_REQUIRES: pytest
           CIBW_TEST_COMMAND: "pytest --pyargs pyamg"
-          CIBW_TEST_SKIP: "*-win32"  # no 32-bit Windows wheels for scipy
 
       - name: Save wheels
         uses: actions/upload-artifact@v6
