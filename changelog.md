@@ -5,9 +5,11 @@ A summary of changes for PyAMG.
 ## [5.4.0]
 - support int64 sparse indices
 - add python 3.14 wheels
+- improve Lloyd performance
 - drop 32-bit Windows wheels (no scipy)
 - `gallery.load_example` returns sparse arrays (`csc_array`) instead of sparse matrices
 - require python>=3.10, scipy>=1.15, and numpy>=1.23.5
+- drop python 3.9
 
 ## [5.3.0]
 - add python 3.10-3.13
