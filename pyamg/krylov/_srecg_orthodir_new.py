@@ -83,7 +83,7 @@ def srecg_orthodir_new(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
        pp. 744-773, 2016.
 
     """
-    if M is None:
+    if M is not None:
         raise ValueError('Left preconditioning for ECG not supported.')
 
     A, M, x, b = make_system(A, M, x0, b)
