@@ -94,7 +94,7 @@ class TestMultilevel(TestCase):
     def test_multiple_rhs(self):
 
         # Poisson with 4 right-hand sides
-        s = 1
+        s = 4
         A = poisson((50, 50), format='csr')
         b = np.random.rand(A.shape[0], s)
 
@@ -109,7 +109,7 @@ class TestMultilevel(TestCase):
         x0 = np.random.rand(A.shape[0], s)
 
         # block solve
-        x = ml.solve(b, x0=x0, maxiter=30, tol=1e-8, residuals=residuals)
+        x = ml.solve(b, x0=x0, maxiter=50, tol=1e-8, residuals=residuals)
         print(residuals)
 
         # check each
