@@ -83,8 +83,11 @@ dirty = "{base_version}+d{build_date:%Y%m%d}"
 distance-dirty = "{next_version}.dev{distance}+{vcs}{rev}.d{build_date:%Y%m%d}"
 
 [tool.meson-python.args]
-# Windows: force MSVC, even when MinGW is on PATH (issue #476); no-op elsewhere
-setup = ['--vsenv']
+# Windows (no-op elsewhere):
+#   --vsenv: force MSVC, even when MinGW is on PATH (issue #476)
+#   b_vscrt=mt: static MSVC runtime; must be set here since meson-python
+#               passes -Db_vscrt=md, which overrides meson.build default_options
+setup = ['--vsenv', '-Db_vscrt=mt']
 
 [tool.ruff]
 line-length = 92
