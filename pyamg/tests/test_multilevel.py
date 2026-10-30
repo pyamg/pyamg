@@ -137,7 +137,8 @@ class TestMultilevel(TestCase):
                                          presmoother='gauss_seidel',
                                          postsmoother='gauss_seidel')
         M = ml.aspreconditioner()
-        with pytest.raises(ValueError, match='x has invalid dimensions'):
+        match = 'gauss_seidel does not support multiple right-hand sides'
+        with pytest.raises(ValueError, match=match):
             M @ B
 
     def test_cycle_complexity(self):
