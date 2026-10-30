@@ -617,6 +617,119 @@ void bsr_jacobi(const I Ap[], const int Ap_size,
 }// end function
 
 
+/*
+ * Weighted Jacobi iteration with BSR arrays and block right-hand sides.
+ *
+ * Perform one iteration of Jacobi relaxation on the linear
+ * system AX = B, where A is stored in BSR format and X and B
+ * are blocks of s column vectors stored in C (row-major) order.
+ * This method applies point-wise relaxation to the BSR matrix.
+ *
+ * Parameters
+ * ----------
+ * Ap : array
+ *     BSR row pointer.
+ * Aj : array
+ *     BSR index array.
+ * Ax : array
+ *     BSR data array.
+ * x : array
+ *     Solution of size (n, s).
+ * b : array
+ *     Right-hand side of size (n, s).
+ * temp : array
+ *     Temporary array the same size as x.
+ * row_start : int
+ *     Beginning of the sweep (block row index).
+ * row_stop : int
+ *     End of the sweep (i.e. one past the last unknown).
+ * row_step : int
+ *     Stride used during the sweep (may be negative).
+ * blocksize : int
+ *     BSR blocksize (blocks must be square).
+ * omega : float
+ *     Damping parameter.
+ *
+ * Returns
+ * -------
+ * None
+ *     Array x will be modified in place.
+ *
+ */
+template<class I, class T, class F>
+void bsr_jacobi_m(const I Ap[], const int Ap_size,
+                  const I Aj[], const int Aj_size,
+                  const T Ax[], const int Ax_size,
+                        T  x[], const int  x_size0, const int x_size1,
+                  const T  b[], const int  b_size0, const int b_size1,
+                        T temp[], const int temp_size0, const int temp_size1,
+                  const I row_start,
+                  const I row_stop,
+                  const I row_step,
+                  const I blocksize,
+                  const T omega[], const int omega_size)
+{
+    const I B2 = blocksize*blocksize;
+    const I s = x_size1;
+    const T one = 1.0;
+    const T omega2 = omega[0];
+    std::vector<T> rsum(blocksize*s);
+
+    // copy x to temp; rows outside the sweep are as neighbors
+    std::copy(x, x + x_size0*x_size1, temp);
+
+    for(I i = row_start; i != row_stop; i += row_step) {
+        I diag_ptr = -1;
+
+        // initialize rsum to b
+        for(I m = 0; m < blocksize*s; m++) {
+            rsum[m] = b[i*blocksize*s + m];
+        }
+
+        for(I jj = Ap[i]; jj < Ap[i+1]; jj++) {
+            const I j = Aj[jj];
+            if (i == j) {
+                diag_ptr = jj*B2;
+                continue;
+            }
+            for(I k = 0; k < blocksize; k++) {
+                for(I kk = 0; kk < blocksize; kk++) {
+                    const T a = Ax[jj*B2 + k*blocksize + kk];
+                    const T *t = &temp[(j*blocksize + kk)*s];
+                    for(I c = 0; c < s; c++) {
+                        // subtract the off-diagonal blocks times temp
+                        rsum[k*s + c] -= a * t[c];
+                    }
+                }
+            }
+        }
+
+        // point-wise Jacobi on the diagonal block
+        if (diag_ptr != -1) {
+            for(I k = 0; k < blocksize; k++) {
+                T diag = 0.0;
+                for(I kk = 0; kk < blocksize; kk++) {
+                    const T a = Ax[diag_ptr + k*blocksize + kk];
+                    if (k == kk) {
+                        diag = a;
+                        continue;
+                    }
+                    const T *t = &temp[(i*blocksize + kk)*s];
+                    for(I c = 0; c < s; c++) {
+                        rsum[k*s + c] -= a * t[c];
+                    }
+                }
+                if (diag != (F) 0.0) {
+                    const I row = (i*blocksize + k)*s;
+                    for(I c = 0; c < s; c++) {
+                        x[row + c] = (one - omega2) * temp[row + c] + omega2 * rsum[k*s + c] / diag;
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 /*
  * Indexed weighted Jacobi on BSR arrays.

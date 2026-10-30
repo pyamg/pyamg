@@ -286,6 +286,51 @@ void _bsr_jacobi(
 }
 
 template<class I, class T, class F>
+void _bsr_jacobi_m(
+      py::array_t<I> & Ap,
+      py::array_t<I> & Aj,
+      py::array_t<T> & Ax,
+       py::array_t<T> & x,
+       py::array_t<T> & b,
+    py::array_t<T> & temp,
+        const I row_start,
+         const I row_stop,
+         const I row_step,
+        const I blocksize,
+   py::array_t<T> & omega
+                   )
+{
+    auto py_Ap = Ap.unchecked();
+    auto py_Aj = Aj.unchecked();
+    auto py_Ax = Ax.unchecked();
+    auto py_x = x.mutable_unchecked();
+    auto py_b = b.unchecked();
+    auto py_temp = temp.mutable_unchecked();
+    auto py_omega = omega.unchecked();
+    const I *_Ap = py_Ap.data();
+    const I *_Aj = py_Aj.data();
+    const T *_Ax = py_Ax.data();
+    T *_x = py_x.mutable_data();
+    const T *_b = py_b.data();
+    T *_temp = py_temp.mutable_data();
+    const T *_omega = py_omega.data();
+
+    return bsr_jacobi_m<I, T, F>(
+                      _Ap, Ap.shape(0),
+                      _Aj, Aj.shape(0),
+                      _Ax, Ax.shape(0),
+                       _x, x.shape(0), x.shape(1),
+                       _b, b.shape(0), b.shape(1),
+                    _temp, temp.shape(0), temp.shape(1),
+                row_start,
+                 row_stop,
+                 row_step,
+                blocksize,
+                   _omega, omega.shape(0)
+                                 );
+}
+
+template<class I, class T, class F>
 void _bsr_jacobi_indexed(
       py::array_t<I> & Ap,
       py::array_t<I> & Aj,
@@ -734,6 +779,7 @@ PYBIND11_MODULE(relaxation, m) {
     jacobi_indexed
     jacobi_m
     bsr_jacobi
+    bsr_jacobi_m
     bsr_jacobi_indexed
     gauss_seidel_indexed
     jacobi_ne
@@ -1094,6 +1140,61 @@ Returns
 -------
 None
     Array x will be modified inplace.)pbdoc");
+
+    m.def("bsr_jacobi_m", &_bsr_jacobi_m<int, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"), py::arg("omega").noconvert());
+    m.def("bsr_jacobi_m", &_bsr_jacobi_m<int, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"), py::arg("omega").noconvert());
+    m.def("bsr_jacobi_m", &_bsr_jacobi_m<int, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"), py::arg("omega").noconvert());
+    m.def("bsr_jacobi_m", &_bsr_jacobi_m<int, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"), py::arg("omega").noconvert());
+    m.def("bsr_jacobi_m", &_bsr_jacobi_m<int64_t, float, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"), py::arg("omega").noconvert());
+    m.def("bsr_jacobi_m", &_bsr_jacobi_m<int64_t, double, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"), py::arg("omega").noconvert());
+    m.def("bsr_jacobi_m", &_bsr_jacobi_m<int64_t, std::complex<float>, float>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"), py::arg("omega").noconvert());
+    m.def("bsr_jacobi_m", &_bsr_jacobi_m<int64_t, std::complex<double>, double>,
+        py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("temp").noconvert(), py::arg("row_start"), py::arg("row_stop"), py::arg("row_step"), py::arg("blocksize"), py::arg("omega").noconvert(),
+R"pbdoc(
+Weighted Jacobi iteration on BSR arrays with multiple right-hand sides.
+
+Perform one iteration of Jacobi relaxation on the linear
+system AX = B, where A is stored in Block CSR format and X and B
+are blocks of s column vectors stored in C (row-major) order.
+This method applies point-wise relaxation to the BSR matrix,
+as in bsr_jacobi.
+
+Parameters
+----------
+Ap : array
+    BSR row pointer.
+Aj : array
+    BSR index array.
+Ax : array
+    BSR data array.
+x : array
+    Approximate solution of size (n, s).
+b : array
+    Right hand side of size (n, s).
+temp : array
+    Temporary array the same size as x.
+row_start : int
+    Beginning of the sweep (block row index).
+row_stop : int
+    End of the sweep (i.e. one past the last unknown).
+row_step : int
+    Stride used during the sweep (may be negative).
+blocksize : int
+    BSR blocksize (blocks must be square).
+omega : float
+    Damping parameter.
+
+Returns
+-------
+None
+    Array x will be modified in place.)pbdoc");
 
     m.def("bsr_jacobi_indexed", &_bsr_jacobi_indexed<int, float, float>,
         py::arg("Ap").noconvert(), py::arg("Aj").noconvert(), py::arg("Ax").noconvert(), py::arg("x").noconvert(), py::arg("b").noconvert(), py::arg("indices").noconvert(), py::arg("blocksize"), py::arg("omega").noconvert());
