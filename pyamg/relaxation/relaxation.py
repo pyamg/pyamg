@@ -421,9 +421,9 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
         row_start = int(row_start / R)
         row_stop = int(row_stop / R)
         for _iter in range(iterations):
-            amg_core.bsr_jacobi(A.indptr, A.indices, np.ravel(A.data),
-                                x, b, temp, row_start, row_stop,
-                                row_step, R, omega)
+            amg_core.bsr_jacobi_m(A.indptr, A.indices, np.ravel(A.data),
+                                  x, b, temp, row_start, row_stop,
+                                  row_step, R, omega)
 
 
 def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):

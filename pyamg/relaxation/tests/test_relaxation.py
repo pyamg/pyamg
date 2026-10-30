@@ -2035,3 +2035,16 @@ class TestMultiVectorJacobi(TestCase):
                 expected[rows] += omega[0] * (B - A @ X0)[rows] / diag[rows]
                 assert_allclose(X, expected, rtol=1e-12,
                                 err_msg=f'sweep {(row_start, row_stop, row_step)}')
+
+    def test_jacobi_bsr(self):
+        """Check Jacobi BSR against Jacobi CSR for block input."""
+        for A in self.cases:
+            n = A.shape[0]
+            X0, B = self.rand(A), self.rand(A)
+            X_csr = X0.copy()
+            jacobi(A, X_csr, B, iterations=2, omega=2.0 / 3.0)
+
+            for D in [D for D in range(1, n + 1) if n % D == 0]:
+                X = X0.copy()
+                jacobi(A.tobsr(blocksize=(D, D)), X, B, iterations=2, omega=2.0 / 3.0)
+                assert_allclose(X, X_csr, rtol=1e-12, err_msg=f'blocksize {D}')
