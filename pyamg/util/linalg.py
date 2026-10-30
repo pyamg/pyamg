@@ -639,33 +639,15 @@ def bcgs(A, P_list, P):
     Communication", SIAM Journal on Matrix Analysis and Applications 37(2),
     pp. 744-773, 2016.
     """
-    t = P.shape[1]
+    Q = np.concatenate(P_list, axis=1)
 
-    ptype = P.dtype
-    W = np.zeros(P.shape, dtype=ptype)
-
-    if len(P_list) > 1:
-        Q1 = P_list[0]
-        Q2 = P_list[1]
-        # Form Q here
-        Q = np.concatenate((Q1, Q2), axis=1)
-    else:
-        Q = P_list[0]
-
-    # W = A @ P
+    # P = P - Q (Q^H A P)
     W = A @ P
+    P = P - Q @ (Q.conjugate().T @ W)
 
-    # P = P - Q * (Q^T * W)
-    P = P - Q.dot(Q.conjugate().T.dot(W))
-
-    # W = A @ P
+    # P[:,i] = P[:,i] / ||P[:,i]||_A
     W = A @ P
-
-    for i in range(t):
-        # P[:,i] = P[:,i] / ||P[:,i]||_A
-        inner_prod = np.inner(P[:, i].conjugate(), W[:, i])
-        pnorm = np.sqrt(inner_prod)
-        P[:, i] = P[:, i] / pnorm
+    P = P / np.sqrt(np.sum(P.conjugate() * W, axis=0))
 
     return P
 
