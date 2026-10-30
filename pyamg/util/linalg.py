@@ -676,17 +676,19 @@ def cgs(P, A):
     """
     t = P.shape[1]
 
+    # AP[:, i] = A @ P[:, i] as P when P updates
     AP = A @ P
 
     for i in range(t):
-        APi = AP[:, i]
-
-        for j in range(i):
-            P[:, i] = P[:, i] - np.inner(P[:, j].conjugate(), APi) * P[:, j]
+        # P[:,i] = P[:,i] - sum_j <P[:,j], A P[:,i]> P[:,j],  j < i
+        c = P[:, :i].conjugate().T @ AP[:, i]
+        P[:, i] -= P[:, :i] @ c
+        AP[:, i] -= AP[:, :i] @ c
 
         # P[:,i] = P[:,i] / ||P[:,i]||_A
-        PAP_inner = np.inner(P[:, i].conjugate(), A @ P[:, i])
-        P[:, i] /= np.sqrt(PAP_inner)
+        pnorm = np.sqrt(np.inner(P[:, i].conjugate(), AP[:, i]))
+        P[:, i] /= pnorm
+        AP[:, i] /= pnorm
 
 
 def split_residual(v, t):
