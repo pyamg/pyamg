@@ -130,11 +130,7 @@ def ekcg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
         res_callback(R)
 
     # Precondition residual
-    Z = np.zeros_like(R)
-    for i in range(R.shape[1]):
-        r = np.copy(R[:, i])
-        Z[:, i] = M @ r
-    # Z = M @ R
+    Z = M @ R
 
     # Initialize P and P_{k-1}
     P = np.zeros_like(Z, A.dtype)
@@ -198,11 +194,7 @@ def ekcg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
         k += 1
 
         # Precondition AP
-        MAP = np.zeros_like(AP)
-        for i in range(AP.shape[1]):
-            ap = np.copy(AP[:, i])
-            MAP[:, i] = M @ ap
-        # MAP = M @ AP
+        MAP = M @ AP
 
         # Orthodir A-orthonormalization
         # gamma = (A P_k)^T * (M A P_k)

@@ -1,8 +1,6 @@
 """Short Recurrence Enlarged Conjugate Gradient algorithm."""
 import warnings
 
-import numpy as np
-
 from ..util import make_system
 from ..util.linalg import norm, bcgs, cgs, split_residual
 
@@ -135,12 +133,7 @@ def srecg_bcgs(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
             # W_k = A @ W_{k-1}
             W = A @ W
             # preconditioning step
-            # W = M @ W
-            for i in range(t):
-                W_temp = np.copy(W[:, i])
-                np.ascontiguousarray(W_temp, dtype=W.dtype)
-                W_temp = M @ W_temp
-                W[:, i] = W_temp
+            W = M @ W
             W = bcgs(A, W_list, W)
             cgs(W, A)
 
