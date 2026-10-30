@@ -83,7 +83,7 @@ jobs:
           name: cibw-sdist
           path: dist/*.tar.gz
 
-  # build and test the sdist on Windows with plain pip (MinGW is on PATH; issue #476)
+  # build and test the sdist on Windows with pip
   test_sdist_windows:
     name: Test source distribution on Windows
     needs: build_sdist
