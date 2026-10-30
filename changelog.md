@@ -2,6 +2,9 @@
 
 A summary of changes for PyAMG.
 
+## [5.4.1]
+- fix Windows source distribution
+
 ## [5.4.0]
 - support int64 sparse indices
 - add python 3.14 wheels
