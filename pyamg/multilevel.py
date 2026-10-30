@@ -415,7 +415,8 @@ class MultilevelSolver:
         x0 : array
             Initial guess.
         tol : float
-            Stopping criteria: relative residual r[k]/||b|| tolerance.
+            Stopping criteria: relative residual ||r_k|| / ||b|| < tol, for
+            every column of b (the absolute residual for a column with b = 0).
             If `accel` is used, the stopping criteria is set by the Krylov method.
         maxiter : int
             Stopping criteria: maximum number of allowable iterations.
@@ -558,10 +559,9 @@ class MultilevelSolver:
         else:
             # Scale tol by normb
             # Don't scale tol earlier. The accel routine should also scale tol
-
-            normb = np.max(np.linalg.norm(b, axis=0))
-            if normb == 0.0:
-                normb = 1.0  # set so that we have an absolute tolerance
+            # one norm per column of b; use an absolute tolerance where b = 0
+            normb = np.linalg.norm(b, axis=0)
+            normb = np.where(normb == 0.0, 1.0, normb)
 
         # Start cycling (no acceleration)
         normr = np.linalg.norm(b - A @ x, axis=0)
@@ -591,7 +591,7 @@ class MultilevelSolver:
             if callback is not None:
                 callback(x)
 
-            if np.max(normr) < tol * normb:
+            if np.all(normr < tol * normb):
                 if return_info:
                     return x, 0
                 return x
