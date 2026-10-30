@@ -732,17 +732,16 @@ def split_residual(v, t):
     Communication", SIAM Journal on Matrix Analysis and Applications 37(2),
     pp. 744-773, 2016.
     """
+    v = np.ravel(v)
     n = v.shape[0]
-    partition = int(n/t)
-    start = 0
-    stop = partition
 
     # Make sure z is given the same type as v -- could be complex
     z = np.zeros((n, t), dtype=v.dtype)
+
+    # Contiguous row blocks whose sizes differ by at most one
+    bounds = np.linspace(0, n, t + 1).astype(int)
     for col in range(t):
-        z[start:stop, col] = v[start:stop]
-        start = stop
-        stop += partition
+        z[bounds[col]:bounds[col + 1], col] = v[bounds[col]:bounds[col + 1]]
 
     return z
 
