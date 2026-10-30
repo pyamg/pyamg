@@ -164,6 +164,22 @@ class TestMultilevel(TestCase):
                      ml.solve(np.ascontiguousarray(B[:, 0]), maxiter=2))
         assert_equal(ml.solve(np.asfortranarray(B), maxiter=2), ml.solve(B, maxiter=2))
 
+    def test_solve_tol_per_column(self):
+        A = poisson((20, 20), format='csr')
+        ml = smoothed_aggregation_solver(A, max_coarse=10,
+                                         presmoother='jacobi', postsmoother='jacobi')
+        np.random.seed(611372893)
+        B = np.random.rand(A.shape[0], 2)
+        B[:, 1] *= 1e-6
+        X0 = np.random.rand(A.shape[0], 2)
+
+        # check each column meets the relative tolerance
+        tol = 1e-8
+        X, info = ml.solve(B, x0=X0, tol=tol, maxiter=200, return_info=True)
+        assert_equal(info, 0)
+        relres = np.linalg.norm(B - A @ X, axis=0) / np.linalg.norm(B, axis=0)
+        assert np.all(relres < tol), relres
+
     def test_aspreconditioner_block(self):
         A = poisson((20, 20), format='csr')
         np.random.seed(2125791836)
