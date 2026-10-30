@@ -7,6 +7,8 @@ from pyamg import smoothed_aggregation_solver
 from pyamg.gallery import poisson
 from pyamg.multilevel import coarse_grid_solver, MultilevelSolver
 
+import pytest
+
 
 def precon_norm(v, ml):
     """Calculate preconditioner norm of v."""
@@ -116,6 +118,27 @@ class TestMultilevel(TestCase):
         r = b - A @ x
         for i in range(s):
             assert precon_norm(r[:, i], ml) < 1e-8 * precon_norm(b[:, i], ml)
+
+    def test_aspreconditioner_block(self):
+        A = poisson((20, 20), format='csr')
+        np.random.seed(2125791836)
+        B = np.random.rand(A.shape[0], 4)
+
+        # Jacobi supports a block solve
+        ml = smoothed_aggregation_solver(A, max_coarse=10,
+                                         presmoother='jacobi', postsmoother='jacobi')
+        M = ml.aspreconditioner()
+        X_cols = np.column_stack([M @ np.ascontiguousarray(B[:, i]) for i in range(4)])
+        assert_almost_equal(M @ B, X_cols)
+        assert_almost_equal(M @ np.asfortranarray(B), X_cols)
+
+        # Gauss-Seidel does not
+        ml = smoothed_aggregation_solver(A, max_coarse=10,
+                                         presmoother='gauss_seidel',
+                                         postsmoother='gauss_seidel')
+        M = ml.aspreconditioner()
+        with pytest.raises(ValueError, match='x has invalid dimensions'):
+            M @ B
 
     def test_cycle_complexity(self):
         # four levels
