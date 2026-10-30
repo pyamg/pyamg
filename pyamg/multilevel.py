@@ -758,7 +758,7 @@ def coarse_grid_solver(solver):
                 self.LU = sp.sparse.linalg.splu(Acsc, **kwargs)
                 self.LU_Map = Map
 
-            return self.LU_Map @ self.LU.solve(np.ravel(self.LU_Map.T @ b))
+            return self.LU_Map @ self.LU.solve(self.LU_Map.T @ b)
 
     elif solver in ['bicg', 'bicgstab', 'cg', 'cgs', 'gmres', 'qmr', 'minres']:
         if hasattr(krylov, solver):
