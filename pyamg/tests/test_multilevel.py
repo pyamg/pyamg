@@ -45,6 +45,20 @@ class TestMultilevel(TestCase):
                 x = s(A, b)
                 assert_almost_equal(A@x, b)
 
+    def test_coarse_grid_solver_block(self):
+        A = poisson((4, 4), format='csr')
+        B = np.arange(3 * A.shape[0], dtype=A.dtype).reshape(A.shape[0], 3)
+
+        # direct solvers support a block right-hand side
+        for solver in ['splu', 'pinv', 'lu', 'cholesky']:
+            X = coarse_grid_solver(solver)(A, B)
+            assert_equal(X.shape, B.shape)
+            assert_almost_equal(A @ X, B)
+
+        # Krylov coarse solvers do not support multiple rhs
+        with pytest.raises(ValueError, match='multiple right-hand sides'):
+            coarse_grid_solver('cg')(A, B)
+
     def test_aspreconditioner(self):
         from pyamg import smoothed_aggregation_solver
         from scipy.sparse.linalg import cg
