@@ -18,6 +18,8 @@ from pyamg.relaxation.relaxation import gauss_seidel, jacobi, \
     jacobi_indexed, cf_jacobi, fc_jacobi, cf_block_jacobi, fc_block_jacobi
 from pyamg.util.utils import get_block_diag
 
+import pytest
+
 # Ignore efficiency warnings
 warnings.simplefilter('ignore', SparseEfficiencyWarning)
 
@@ -2060,3 +2062,17 @@ class TestMultiVectorJacobi(TestCase):
         x = np.zeros(n)
         jacobi(A, x, np.ones((n, 1)))
         assert_allclose(x, np.ones(n) / A.diagonal())
+
+    def test_vector_only_relaxation(self):
+        A = self.cases[0]
+        n = A.shape[0]
+        X, B = np.zeros((n, self.s)), np.ones((n, self.s))
+        for method, kwargs in [(gauss_seidel, {}), (sor, {'omega': 1.0}),
+                               (gauss_seidel_ne, {}), (gauss_seidel_nr, {})]:
+            match = f'{method.__name__} does not support multiple right-hand sides'
+            with pytest.raises(ValueError, match=match):
+                method(A, X, B, **kwargs)
+
+        # a wrong number of rows is still a dimension error
+        with pytest.raises(ValueError, match='invalid dimensions'):
+            gauss_seidel(A, np.zeros(n + 1), np.ones(n + 1))

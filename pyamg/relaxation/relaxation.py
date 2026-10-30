@@ -1,5 +1,6 @@
 """Relaxation methods for linear systems."""
 
+from functools import wraps
 from warnings import warn
 
 import numpy as np
@@ -106,6 +107,30 @@ def make_system(A, x, b, formats=None, multivector=False):
     return A, x, b
 
 
+def single_vector(method):
+    """Mark a methods that support only a single right-hand side.
+
+    Parameters
+    ----------
+    method : function
+        Method with signature ``method(A, x, b, ...)``.
+
+    Returns
+    -------
+    function
+        The method, raising a ValueError if x or b has more than one column.
+
+    """
+    @wraps(method)
+    def wrapper(A, x, b, *args, **kwargs):
+        if any(np.ndim(v) == 2 and np.shape(v)[1] > 1 for v in (x, b)):
+            raise ValueError(f'{method.__name__} does not support multiple right-hand '
+                             f'sides: x is {np.shape(x)}, b is {np.shape(b)}')
+        return method(A, x, b, *args, **kwargs)
+    return wrapper
+
+
+@single_vector
 def sor(A, x, b, omega, iterations=1, sweep='forward'):
     """Perform SOR iteration on the linear system Ax=b.
 
@@ -163,6 +188,7 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
         gauss_seidel(A, x, b, iterations=1, sweep=sweep, omega=omega)
 
 
+@single_vector
 def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
             inv_subblock=None, inv_subblock_ptr=None, sweep='forward'):
     """Perform Overlapping multiplicative Schwarz on the linear system Ax=b.
@@ -271,6 +297,7 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
                                          row_start, row_stop, row_step)
 
 
+@single_vector
 def gauss_seidel(A, x, b, iterations=1, sweep='forward', omega=1.0):
     """Perform Gauss-Seidel iteration on the linear system Ax=b.
 
@@ -440,6 +467,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
                                   row_step, R, omega)
 
 
+@single_vector
 def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
     """Perform block Jacobi iteration on the linear system Ax=b.
 
@@ -519,6 +547,7 @@ def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
                               omega, blocksize)
 
 
+@single_vector
 def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
                        Dinv=None):
     """Perform block Gauss-Seidel iteration on the linear system Ax=b.
@@ -602,6 +631,7 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
                                     row_start, row_stop, row_step, blocksize)
 
 
+@single_vector
 def polynomial(A, x, b, coefficients, iterations=1):
     """Apply a polynomial smoother to the system Ax=b.
 
@@ -679,6 +709,7 @@ def polynomial(A, x, b, coefficients, iterations=1):
         x += h
 
 
+@single_vector
 def gauss_seidel_indexed(A, x, b, indices, iterations=1, sweep='forward'):
     """Perform indexed Gauss-Seidel iteration on the linear system Ax=b.
 
@@ -751,6 +782,7 @@ def gauss_seidel_indexed(A, x, b, indices, iterations=1, sweep='forward'):
                                       row_start, row_stop, row_step)
 
 
+@single_vector
 def jacobi_ne(A, x, b, iterations=1, omega=1.0):
     """Perform Jacobi iterations on the linear system A A.H x = A.H b.
 
@@ -832,6 +864,7 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
                            row_stop, row_step, omega)
 
 
+@single_vector
 def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
                     Dinv=None):
     """Perform Gauss-Seidel iterations on the linear system A A.H y = b, where x = A.H y.
@@ -921,6 +954,7 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
                                  row_stop, row_step, Dinv, omega)
 
 
+@single_vector
 def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
                     Dinv=None):
     """Perform Gauss-Seidel iterations on the linear system A.H A x = A.H b.
@@ -1098,6 +1132,7 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
     return A.schwarz_parameters
 
 
+@single_vector
 def jacobi_indexed(A, x, b, indices, iterations=1, omega=1.0):
     """Perform indexed Jacobi iteration on the linear system Ax=b.
 
@@ -1158,6 +1193,7 @@ def jacobi_indexed(A, x, b, indices, iterations=1, omega=1.0):
                                         indices, R, omega)
 
 
+@single_vector
 def cf_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
               c_iterations=1, omega=1.0):
     """Perform CF Jacobi iteration on the linear system Ax=b.
@@ -1223,6 +1259,7 @@ def cf_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
                                             x, b, Fpts, R, omega)
 
 
+@single_vector
 def fc_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
               c_iterations=1, omega=1.0):
     """Perform FC Jacobi iteration on the linear system Ax=b.
@@ -1288,6 +1325,7 @@ def fc_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
                                             x, b, Cpts, R, omega)
 
 
+@single_vector
 def cf_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
                     f_iterations=1, c_iterations=1, omega=1.0):
     """Perform CF block Jacobi iteration on the linear system Ax=b.
@@ -1359,6 +1397,7 @@ def cf_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
                                           blocksize)
 
 
+@single_vector
 def fc_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
                     f_iterations=1, c_iterations=1, omega=1.0):
     """Perform FC block Jacobi iteration on the linear system Ax=b.
