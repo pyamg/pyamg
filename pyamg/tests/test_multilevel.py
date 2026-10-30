@@ -11,7 +11,7 @@ from pyamg.multilevel import coarse_grid_solver, MultilevelSolver
 def precon_norm(v, ml):
     """Calculate preconditioner norm of v."""
     v = np.ravel(v)
-    w = ml.aspreconditioner()*v
+    w = ml.aspreconditioner() @ v
     return np.sqrt(np.dot(v.conjugate(), w))
 
 
@@ -113,7 +113,7 @@ class TestMultilevel(TestCase):
         print(residuals)
 
         # check each
-        r = b - A * x
+        r = b - A @ x
         for i in range(s):
             assert precon_norm(r[:, i], ml) < 1e-8 * precon_norm(b[:, i], ml)
 

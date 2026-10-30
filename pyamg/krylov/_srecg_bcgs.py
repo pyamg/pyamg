@@ -95,15 +95,15 @@ def srecg_bcgs(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
         raise ValueError('Number of iterations must be positive')
 
     # setup method
-    r = b - A * x
+    r = b - A @ x
 
     # precondition residual
-    z = M * r
+    z = M @ r
     res_norm = norm(r)
 
     # Append residual to list
     if residuals is not None:
-        # z = M * r
+        # z = M @ r
         # precond_norm = np.inner(r.conjugate(), z)
         # precond_norm = np.sqrt(precond_norm)
         # residuals.append(precond_norm)
@@ -139,14 +139,14 @@ def srecg_bcgs(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
             # W_0 = A_orth(W_0)
             cgs(W, A)
         else:
-            # W_k = A * W_{k-1}
-            W = A * W
+            # W_k = A @ W_{k-1}
+            W = A @ W
             # preconditioning step
-            # W = M * W
+            # W = M @ W
             for i in range(t):
                 W_temp = np.copy(W[:, i])
                 np.ascontiguousarray(W_temp, dtype=W.dtype)
-                W_temp = M * W_temp
+                W_temp = M @ W_temp
                 W[:, i] = W_temp
             W = bcgs(A, W_list, W)
             cgs(W, A)
@@ -164,15 +164,15 @@ def srecg_bcgs(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
         # x_k = X_k + W_k alpha_k
         x += W_alpha
 
-        # r = r - A * W_k * alpha_k
-        r -= A * W_alpha
+        # r = r - A @ W_k * alpha_k
+        r -= A @ W_alpha
 
         res_norm = norm(r)
         k += 1
 
         # Append residual to list
         if residuals is not None:
-            # z = M * r
+            # z = M @ r
             # precond_norm = np.inner(r.conjugate(), z)
             # precond_norm = np.sqrt(precond_norm)
             # residuals.append(precond_norm)
