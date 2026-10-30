@@ -360,12 +360,15 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
 
     Parameters
     ----------
-    A : csr_array
-        Sparse NxN matrix
+    A : csr_array, bsr_array
+        Sparse NxN matrix.  BSR blocks must be square; relaxation is
+        point-wise, not block-wise.
     x : ndarray
-        Approximate solution (length N)
+        Approximate solution of size (N,) or (N, s), C-contiguous.  For
+        s > 1, the s columns are relaxed together.
     b : ndarray
-        Right-hand side (length N)
+        Right-hand side of size (N,) or (N, s), with the same number of
+        columns as x.
     iterations : int
         Number of iterations to perform
     omega : scalar
@@ -388,6 +391,14 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     >>> jacobi(A, x0, b, iterations=10, omega=1.0)
     >>> print(f'{norm(b-A@x0):2.4}')
     5.835
+    >>> #
+    >>> # Relax two right-hand sides together
+    >>> X = np.zeros((A.shape[0], 2))
+    >>> B = np.ones((A.shape[0], 2))
+    >>> B[:, 1] = 2
+    >>> jacobi(A, X, B, iterations=10, omega=1.0)
+    >>> print(np.round(np.linalg.norm(B - A @ X, axis=0), 3))
+    [ 5.835 11.67 ]
     >>> #
     >>> # Use Jacobi as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
