@@ -88,6 +88,9 @@ def make_system(A, x, b, formats=None, multivector=False):
     if (not multivector and b.shape not in [(M,), (M, 1)]) \
             or (multivector and b.shape[0] != M):
         raise ValueError('b has invalid dimensions')
+    if multivector and x.size != b.size:
+        raise ValueError('x and b must should have the same dimension'
+                         f'x is {x.shape}, b is {b.shape}')
 
     if A.dtype != x.dtype or A.dtype != b.dtype:
         raise TypeError('arguments A, x, and b must have the same dtype')

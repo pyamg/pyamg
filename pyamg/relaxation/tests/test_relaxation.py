@@ -2048,3 +2048,15 @@ class TestMultiVectorJacobi(TestCase):
                 X = X0.copy()
                 jacobi(A.tobsr(blocksize=(D, D)), X, B, iterations=2, omega=2.0 / 3.0)
                 assert_allclose(X, X_csr, rtol=1e-12, err_msg=f'blocksize {D}')
+
+    def test_column_mismatch(self):
+        A = self.cases[0]
+        n = A.shape[0]
+        check_raises(ValueError, jacobi, A, np.zeros((n, self.s)), np.ones((n, 1)))
+        check_raises(ValueError, jacobi, A.tobsr(blocksize=(2, 2)),
+                     np.zeros((n, 1)), np.ones((n, self.s)))
+
+        # (n,) and (n,1) are the same single column
+        x = np.zeros(n)
+        jacobi(A, x, np.ones((n, 1)))
+        assert_allclose(x, np.ones(n) / A.diagonal())
