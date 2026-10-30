@@ -373,6 +373,12 @@ class MultilevelSolver:
         MultilevelSolver.solve
         scipy.sparse.linalg.LinearOperator
 
+        Notes
+        -----
+        For a block X of size (n, s), ``M @ X`` performs one block cycle
+        on all s columns.  If a component of the hierarchy does not support
+        this then a ValueError is raised.
+
         Examples
         --------
         >>> from pyamg.aggregation import smoothed_aggregation_solver
@@ -393,7 +399,10 @@ class MultilevelSolver:
         def matvec(b):
             return self.solve(b, maxiter=1, cycle=cycle, tol=1e-12)
 
-        return LinearOperator(shape, matvec, dtype=dtype)
+        def matmat(B):
+            return self.solve(np.ascontiguousarray(B), maxiter=1, cycle=cycle, tol=1e-12)
+
+        return LinearOperator(shape, matvec, matmat=matmat, dtype=dtype)
 
     def solve(self, b, x0=None, tol=1e-5, maxiter=100, cycle='V', accel=None,
               callback=None, residuals=None, cycles_per_level=1, return_info=False):
