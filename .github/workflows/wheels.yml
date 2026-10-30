@@ -83,9 +83,35 @@ jobs:
           name: cibw-sdist
           path: dist/*.tar.gz
 
+  # build and test the sdist on Windows with plain pip (MinGW is on PATH; issue #476)
+  test_sdist_windows:
+    name: Test source distribution on Windows
+    needs: build_sdist
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+
+      - name: Retrieve sdist
+        uses: actions/download-artifact@v7
+        with:
+          name: cibw-sdist
+          path: dist
+
+      - name: Test sdist
+        run: |
+          python -m pip install dist/*.tar.gz pytest
+          cd "$RUNNER_TEMP"
+          python -c 'import pyamg; print(pyamg.__version__)'
+          python -m pytest --pyargs pyamg
+
   upload_all:
     name: upload to PyPI
-    needs: [build_wheels, build_sdist]
+    needs: [build_wheels, build_sdist, test_sdist_windows]
     if: github.event_name == 'release'  # manual runs only build artifacts
     environment: publish_pypi
     permissions:
