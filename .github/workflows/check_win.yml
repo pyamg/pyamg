@@ -47,3 +47,47 @@ jobs:
       - name: Import pyamg
         working-directory: ${{ runner.temp }}
         run: python -c "import pyamg; print(pyamg.__version__)"
+
+  branch_sdist_install:
+    name: branch sdist / py${{ matrix.python }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.14', '3.15']
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # versioningit needs tags
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Build sdist
+        run: |
+          python -m pip install build
+          python -m build --sdist
+
+      - name: Build and install pyamg from the sdist (no extra flags)
+        run: |
+          python -m pip install -v --no-cache-dir dist/*.tar.gz pytest 2>&1 | tee build.log
+          echo "---- compiler/linker chosen by meson ----"
+          grep -iE "compiler for the host|linker for the host" build.log || true
+
+      - name: Show DLL dependencies of the extension modules
+        run: |
+          site=$(python -c 'import sysconfig; print(sysconfig.get_paths()["platlib"])')
+          ls -la "$site/pyamg/amg_core"/*.pyd
+          objdump -p "$site/pyamg/amg_core"/evolution_strength*.pyd | grep "DLL Name" || true
+
+      - name: Import and test pyamg
+        working-directory: ${{ runner.temp }}
+        run: |
+          python -c "import pyamg; print(pyamg.__version__)"
+          python -m pytest --pyargs pyamg -q

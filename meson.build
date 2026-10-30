@@ -5,10 +5,20 @@ project('pyamg', 'cpp',
   version: run_command(find_program('python3', 'python'), '-m', 'versioningit',
                        check: true).stdout().strip(),
   license: 'MIT',
-  default_options: ['cpp_std=c++11'],
+  # b_vscrt=mt: link the MSVC runtime statically (ignored by other compilers)
+  default_options: ['cpp_std=c++11', 'b_vscrt=mt'],
 )
 
 add_global_arguments('-ftemplate-depth=2048', language: 'cpp')
+
+# MSVC (as in matplotlib): static C++ library (no MSVCP140.dll), but the shared
+# UCRT and VCRUNTIME140.dll that ship with Python
+if meson.get_compiler('cpp').get_id() == 'msvc'
+  add_project_link_arguments(['ucrt.lib', 'vcruntime.lib',
+                              '/nodefaultlib:libucrt.lib',
+                              '/nodefaultlib:libvcruntime.lib'],
+                             language: 'cpp')
+endif
 
 amg_core_headers = ['air',
                     'evolution_strength',
