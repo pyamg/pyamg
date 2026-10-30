@@ -61,3 +61,14 @@ class TestEnlargedCG(TestCase):
             assert_equal(info, 0, err_msg=f'Problem in {method.__name__}.')
             assert len(res) - 1 <= A.shape[0] // t, \
                 f'{method.__name__} took {len(res) - 1} iterations'
+
+    def test_t_not_dividing_n(self):
+        """Residual split covers all rows when t does not divide n."""
+        A = poisson((10, 10), format='csr')
+        b = np.ones(A.shape[0])
+        t = 3
+        for method in self.methods:
+            x, info = method(A, b, t=t, tol=self.tol)
+            msg = f'Problem in {method.__name__}.'
+            assert_equal(info, 0, err_msg=msg)
+            assert np.linalg.norm(b - A @ x) <= 1.01 * self.tol * np.linalg.norm(b), msg
