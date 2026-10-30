@@ -133,6 +133,37 @@ class TestMultilevel(TestCase):
         for i in range(s):
             assert precon_norm(r[:, i], ml) < 1e-8 * precon_norm(b[:, i], ml)
 
+    def test_solve_shapes(self):
+        A = poisson((10, 10), format='csr')
+        n = A.shape[0]
+        ml = smoothed_aggregation_solver(A, max_coarse=10,
+                                         presmoother='jacobi', postsmoother='jacobi')
+        np.random.seed(1504262891)
+        B = np.random.rand(n, 3)
+
+        # x has the shape of b
+        for shape in [(n,), (n, 1), (n, 3)]:
+            b = np.ones(shape)
+            assert_equal(ml.solve(b, maxiter=2).shape, shape)
+            assert_equal(ml.solve(b, x0=np.zeros(shape), maxiter=2).shape, shape)
+
+        # x0 must have the shape of b
+        for b, x0 in [(np.ones(n), np.zeros((n, 1))),
+                      (np.ones((n, 1)), np.zeros(n)),
+                      (B, np.zeros((n, 1)))]:
+            with pytest.raises(ValueError, match='x0 and b must have the same shape'):
+                ml.solve(b, x0=x0)
+
+        # b must have n rows and at most two dimensions
+        for b in [np.ones(n + 1), np.ones((n, 2, 2))]:
+            with pytest.raises(ValueError, match='b must have shape'):
+                ml.solve(b)
+
+        # non-contiguous and F-ordered input
+        assert_equal(ml.solve(B[:, 0], maxiter=2),
+                     ml.solve(np.ascontiguousarray(B[:, 0]), maxiter=2))
+        assert_equal(ml.solve(np.asfortranarray(B), maxiter=2), ml.solve(B, maxiter=2))
+
     def test_aspreconditioner_block(self):
         A = poisson((20, 20), format='csr')
         np.random.seed(2125791836)

@@ -470,12 +470,24 @@ class MultilevelSolver:
         >>> x = ml.solve(b, tol=1e-12, residuals=residuals) # standalone solver
 
         """
+        A = self.levels[0].A
+
+        # b is (n,) or (n, s), and x0 has the same shape; x is returned in that shape
+        b = np.asarray(b)
+        n = A.shape[0]
+        if b.ndim not in (1, 2) or b.shape[0] != n:
+            raise ValueError(f'b must have shape ({n},) or ({n}, s): b is {b.shape}')
+        if x0 is not None and np.shape(x0) != b.shape:
+            raise ValueError('x0 and b must have the same shape: '
+                             f'x0 is {np.shape(x0)}, b is {b.shape}')
+
+        # C-ordered copies, as required by the relaxation methods
+        b = np.ascontiguousarray(b)
         if x0 is None:
             x = np.zeros_like(b)
         else:
-            x = np.array(x0)  # copy
-
-        A = self.levels[0].A
+            x0 = np.ascontiguousarray(x0)
+            x = x0.copy()
 
         cycle = str(cycle).upper()
 
