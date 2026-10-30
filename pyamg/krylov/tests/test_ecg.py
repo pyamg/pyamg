@@ -62,7 +62,7 @@ class TestEnlargedCG(TestCase):
             assert len(res) - 1 <= A.shape[0] // t, \
                 f'{method.__name__} took {len(res) - 1} iterations'
 
-    def test_t_not_dividing_n(self):
+    def test_unequal(self):
         """Residual split covers all rows when t does not divide n."""
         A = poisson((10, 10), format='csr')
         b = np.ones(A.shape[0])
