@@ -10,71 +10,51 @@ from ..util.linalg import norm, cgs, split_residual
 
 def srecg_orthodir(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
                    callback=None, residuals=None):
-    """Short Recurrence Enlarged Conjugate Gradient algorithm.
+    """SRE-CG with Orthodir A-orthonormalization.
 
-    Solves the linear system Ax = b. Left preconditioning is supported.
+    Solves the linear system Ax = b. Preconditioning is not supported.
 
     Parameters
     ----------
-    A : {array, matrix, sparse matrix, LinearOperator}
-        n x n, linear system to solve
-    b : {array, matrix}
-        right hand side, shape is (n,) or (n,1)
+    A : array, matrix, sparse matrix, LinearOperator
+        Linear system of size (n,n) to solve.
+    b : array, matrix
+        Right hand side of size (n,) or (n,1).
+    x0 : array, matrix
+        Initial guess, default is a vector of zeros.
     t : int
-        number of partitions in which to split x0
-    x0 : {array, matrix}
-        initial guess, default is a vector of zeros
+        Number of subdomains the residual is split into.
     tol : float
-        relative convergence tolerance, i.e. tol is scaled by the
-        preconditioner norm of r_0, or ||r_0||_M.
+        Relative tolerance.  The solve stops when ||r_k|| < tol ||r_0||
+        in the 2-norm.
     maxiter : int
-        maximum number of allowed iterations
-    xtype : type
-        dtype for the solution, default is automatic type detection
-    M : {array, matrix, sparse matrix, LinearOperator}
-        n x n, inverted preconditioner, i.e. solve M A x = M b.
+        Maximum number of iterations allowed.
+    M : None
+        Preconditioning is not supported; passing M raises ValueError.
     callback : function
         User-supplied function is called after each iteration as
-        callback(xk), where xk is the current solution vector
+        ``callback(xk)``, where xk is the current solution vector.
     residuals : list
-        residuals contains the residual norm history,
-        including the initial residual.  The preconditioner norm
-        is used, instead of the Euclidean norm.
+        Residual history in the 2-norm, including the initial residual.
 
     Returns
     -------
-    (xNew, info)
-    xNew : an updated guess to the solution of Ax = b
-    info : halting status of srecg
+    array
+        Updated guess after k iterations to the solution of Ax = b.
+    int
+        Return status
 
             ==  =======================================
             0   successful exit
             >0  convergence to tolerance not achieved,
                 return iteration count instead.
-            <0  numerical breakdown, or illegal input
             ==  =======================================
 
     Notes
     -----
-    The LinearOperator class is in scipy.sparse.linalg.interface.
-    Use this class if you prefer to define A or M as a mat-vec routine
-    as opposed to explicitly constructing the matrix.  A.psolve(..) is
-    still supported as a legacy.
-
-    The residual in the preconditioner norm is both used for halting and
-    returned in the residuals list.
-
-    Examples
-    --------
-    >>> from pyamg.krylov.srecg import srecg
-    >>> from pyamg.util.linalg import norm
-    >>> import numpy as np
-    >>> from pyamg.gallery import poisson
-    >>> A = poisson((10,10))
-    >>> b = np.ones((A.shape[0],))
-    >>> (x,flag) = srecg(A,b, maxiter=2, tol=1e-8)
-    >>> print norm(b - A*x)
-    10.9370700187
+    The LinearOperator class is in scipy.sparse.linalg.
+    Use this class if you prefer to define A as a mat-vec routine
+    as opposed to explicitly constructing the matrix.
 
     References
     ----------
@@ -82,6 +62,18 @@ def srecg_orthodir(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
        "Enlarged Krylov Subspace Conjugate Gradient Methods for Reducing
        Communication", SIAM Journal on Matrix Analysis and Applications 37(2),
        pp. 744-773, 2016.
+
+    Examples
+    --------
+    >>> from pyamg.krylov import srecg_orthodir
+    >>> from pyamg.util.linalg import norm
+    >>> import numpy as np
+    >>> from pyamg.gallery import poisson
+    >>> A = poisson((10,10))
+    >>> b = np.ones((A.shape[0],))
+    >>> (x,flag) = srecg_orthodir(A,b, t=4, maxiter=2, tol=1e-8)
+    >>> print(f'{norm(b - A@x):.6}')
+    10.3568
 
     """
     if M is not None:
