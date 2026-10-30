@@ -98,15 +98,15 @@ def srecg_orthodir_new(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
         raise ValueError('Number of iterations must be positive')
 
     # setup method
-    r = b - A * x
+    r = b - A @ x
 
     # precondition residual
-    # z = M * r
+    # z = M @ r
     res_norm = norm(r)
 
     # Append residual to list
     if residuals is not None:
-        # z = M * r
+        # z = M @ r
         # precond_norm = np.inner(r.conjugate(), z)
         # precond_norm = np.sqrt(precond_norm)
         # residuals.append(precond_norm)
@@ -143,7 +143,7 @@ def srecg_orthodir_new(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
     L = np.zeros((t, t), dtype=W.dtype)
     dtrsm = get_blas_funcs(['trsm'], [W, L])[0]
 
-    AW = A * W
+    AW = A @ W
     AW_list = []
     AW_list.append(np.zeros(AW.shape))
     while True:
@@ -163,7 +163,7 @@ def srecg_orthodir_new(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
         # x_k = X_k + W_k alpha_k
         x += W_alpha
 
-        # r = r - A * W_k * alpha_k
+        # r = r - A @ W_k * alpha_k
         r -= AW.dot(alpha)
 
         res_norm = norm(r)
@@ -191,7 +191,7 @@ def srecg_orthodir_new(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
         rho = AW2.conjugate().T.dot(AW1)
         P = AW1 - W_list[1].dot(gamma) - W_list[0].dot(rho)
 
-        AP = A * P
+        AP = A @ P
         # Do Cholesky of P^T A P
         # Z = np.linalg.cholesky(P.conjugate().T.dot(AP))
         Z = lapack.dpotrf(P.conjugate().T.dot(AP))[0]  # pylint: disable=no-member

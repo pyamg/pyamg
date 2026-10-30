@@ -95,7 +95,7 @@ def ekcg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
         raise ValueError('Number of iterations must be positive')
 
     # setup method
-    r = b - A * x
+    r = b - A @ x
     res_norm = norm(r)
 
     # Append residual to list
@@ -136,14 +136,14 @@ def ekcg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
     Z = np.zeros_like(R)
     for i in range(R.shape[1]):
         r = np.copy(R[:, i])
-        Z[:, i] = M * r
-    # Z = M * R
+        Z[:, i] = M @ r
+    # Z = M @ R
 
     # Initialize P and P_{k-1}
     P = np.zeros_like(Z, A.dtype)
     P_1 = np.zeros_like(Z, A.dtype)
 
-    # Initialize A * P and A * P_{k-1}
+    # Initialize A @ P and A @ P_{k-1}
     AP = np.zeros_like(Z, A.dtype)
     AP_1 = np.zeros_like(Z, A.dtype)
 
@@ -151,14 +151,14 @@ def ekcg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
     k = 1
     while True:
         # P_k = Z_k (Z_k^T A Z_k)^1/2
-        AZ = A * Z
+        AZ = A @ Z
         ZAZ = Z.conjugate().T.dot(AZ)
 
         u, s, vh = np.linalg.svd(ZAZ, full_matrices=True)
         uh = u.conjugate().T
         s_diag = np.diag(1.0/np.sqrt(s))
         P = Z.dot(vh.T.dot(s_diag.dot(uh)))
-        AP = A * P
+        AP = A @ P
 
         # alpha_k = P_k^T R_{k-1}
         alpha = P.conjugate().T.dot(R)
@@ -169,7 +169,7 @@ def ekcg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
         # X_k = X_{k-1} + P_k * alpha_k
         X += P_alpha
 
-        # R_k = R_{k-1} - A * P_k * alpha_k
+        # R_k = R_{k-1} - A @ P_k * alpha_k
         R -= AP.dot(alpha)
 
         # Sum columns of R
@@ -204,8 +204,8 @@ def ekcg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
         MAP = np.zeros_like(AP)
         for i in range(AP.shape[1]):
             ap = np.copy(AP[:, i])
-            MAP[:, i] = M * ap
-        # MAP = M * AP
+            MAP[:, i] = M @ ap
+        # MAP = M @ AP
 
         # Orthodir A-orthonormalization
         # gamma = (A P_k)^T * (M A P_k)

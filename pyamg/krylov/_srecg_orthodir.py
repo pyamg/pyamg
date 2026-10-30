@@ -99,15 +99,15 @@ def srecg_orthodir(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
         raise ValueError('Number of iterations must be positive')
 
     # setup method
-    r = b - A * x
+    r = b - A @ x
 
     # precondition residual
-    # z = M * r
+    # z = M @ r
     res_norm = norm(r)
 
     # Append residual to list
     if residuals is not None:
-        # z = M * r
+        # z = M @ r
         # precond_norm = np.inner(r.conjugate(), z)
         # precond_norm = np.sqrt(precond_norm)
         # residuals.append(precond_norm)
@@ -155,8 +155,8 @@ def srecg_orthodir(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
         # x_k = X_k + W_k alpha_k
         x += W_alpha
 
-        # r = r - A * W_k * alpha_k
-        r -= A * W_alpha
+        # r = r - A @ W_k * alpha_k
+        r -= A @ W_alpha
 
         res_norm = norm(r)
         k += 1
@@ -176,14 +176,14 @@ def srecg_orthodir(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
             return (x, k)
 
         # Update search directions
-        AW1 = A * W_list[1]
-        AW2 = A * W_list[0]
+        AW1 = A @ W_list[1]
+        AW2 = A @ W_list[0]
 
         gamma = AW1.conjugate().T.dot(AW1)
         rho = AW2.conjugate().T.dot(AW1)
         P = AW1 - W_list[1].dot(gamma) - W_list[0].dot(rho)
 
-        Z = P.conjugate().T.dot(A * P)
+        Z = P.conjugate().T.dot(A @ P)
         Z_half = fractional_matrix_power(Z, 0.5)
         Z_half_inv = np.linalg.inv(Z_half)
         W = P.dot(Z_half_inv)

@@ -652,14 +652,14 @@ def bcgs(A, P_list, P):
     else:
         Q = P_list[0]
 
-    # W = A * P
-    W = A * P
+    # W = A @ P
+    W = A @ P
 
     # P = P - Q * (Q^T * W)
     P = P - Q.dot(Q.conjugate().T.dot(W))
 
-    # W = A * P
-    W = A * P
+    # W = A @ P
+    W = A @ P
 
     for i in range(t):
         # P[:,i] = P[:,i] / ||P[:,i]||_A
@@ -694,7 +694,7 @@ def cgs(P, A):
     """
     t = P.shape[1]
 
-    AP = A * P
+    AP = A @ P
 
     for i in range(t):
         APi = AP[:, i]
@@ -703,7 +703,7 @@ def cgs(P, A):
             P[:, i] = P[:, i] - np.inner(P[:, j].conjugate(), APi) * P[:, j]
 
         # P[:,i] = P[:,i] / ||P[:,i]||_A
-        PAP_inner = np.inner(P[:, i].conjugate(), A * P[:, i])
+        PAP_inner = np.inner(P[:, i].conjugate(), A @ P[:, i])
         P[:, i] /= np.sqrt(PAP_inner)
 
 
