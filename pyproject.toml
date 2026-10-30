@@ -82,6 +82,10 @@ distance = "{next_version}.dev{distance}+{vcs}{rev}"
 dirty = "{base_version}+d{build_date:%Y%m%d}"
 distance-dirty = "{next_version}.dev{distance}+{vcs}{rev}.d{build_date:%Y%m%d}"
 
+[tool.meson-python.args]
+# Windows: force MSVC, even when MinGW is on PATH (issue #476); no-op elsewhere
+setup = ['--vsenv']
+
 [tool.ruff]
 line-length = 92
 indent-width = 4
