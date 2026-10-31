@@ -21,19 +21,21 @@ def make_system(A, x, b, formats=None, multivector=False):
     A : sparse-matrix
         n x n system
     x : array
-        n-vector, initial guess
+        Initial guess of size (n,) or (n, 1), or (n, s) if multivector,
+        C-contiguous.
     b : array
-        n-vector, right-hand side
+        Right-hand side, with the same size as x and C-contiguous.
     formats: {'csr', 'csc', 'bsr', 'lil', 'dok',...}
         desired sparse matrix format
         default is no change to the format of A
     multivector : bool
-        If True, then consider muliple vectors for x and b
+        If True, then allow x and b to have multiple columns.
 
     Returns
     -------
     (A,x,b), where A is in the desired sparse-matrix format
-    and x and b are "raveled", i.e. (n,) vectors.
+    and x and b are of size (n, s), with s = 1 for a single
+    vector.  Updates inplace.
 
     Notes
     -----
@@ -51,9 +53,9 @@ def make_system(A, x, b, formats=None, multivector=False):
     >>> b = np.ones((A.shape[0],1))
     >>> (A,x,b) = make_system(A,x,b,formats=['csc'])
     >>> print(x.shape)
-    (100,)
+    (100, 1)
     >>> print(b.shape)
-    (100,)
+    (100, 1)
     >>> print(A.format)
     csc
 
