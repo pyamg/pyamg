@@ -2,7 +2,6 @@
 import warnings
 
 import numpy as np
-from scipy.linalg import fractional_matrix_power
 
 from ..util import make_system
 from ..util.linalg import norm, cgs, split_residual
@@ -175,7 +174,7 @@ def srecg_orthodir(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
         rho = AW2.conjugate().T.dot(AW1)
         P = AW1 - W_list[1].dot(gamma) - W_list[0].dot(rho)
 
+        # W = P Z^{-1/2}, with Z = P^H A P Hermitian positive definite
         Z = P.conjugate().T.dot(A @ P)
-        Z_half = fractional_matrix_power(Z, 0.5)
-        Z_half_inv = np.linalg.inv(Z_half)
-        W = P.dot(Z_half_inv)
+        w, V = np.linalg.eigh(Z)
+        W = P.dot((V / np.sqrt(w)) @ V.conjugate().T)
