@@ -12,6 +12,7 @@ from .util.utils import to_type
 from .util.params import set_tol
 from .relaxation import smoothing
 from .util import upcast
+from .util.mrhs import normalize_rhs, restore_shape
 
 
 class MultilevelSolver:
@@ -550,8 +551,8 @@ class MultilevelSolver:
         # Clearly, this logic doesn't handle the case of real A and complex b
         tp = upcast(b.dtype, x.dtype, A.dtype)
         [b, x] = to_type(tp, [b, x])
-        b = np.ravel(b)
-        x = np.ravel(x)
+        b, oshape = normalize_rhs(b)
+        x, _ = normalize_rhs(x)
 
         it = 0
 
@@ -569,14 +570,16 @@ class MultilevelSolver:
                 residuals.append(normr)
 
             if callback is not None:
-                callback(x)
+                callback(restore_shape(x, oshape))
 
             if normr < tol * normb:
+                x = restore_shape(x, oshape)
                 if return_info:
                     return x, 0
                 return x
 
             if it == maxiter:
+                x = restore_shape(x, oshape)
                 if return_info:
                     return x, it
                 return x

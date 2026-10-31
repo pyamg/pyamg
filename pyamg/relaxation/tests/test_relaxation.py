@@ -13,7 +13,7 @@ from pyamg.gallery import poisson, sprand, elasticity
 from pyamg.relaxation.relaxation import gauss_seidel, jacobi, \
     block_jacobi, block_gauss_seidel, jacobi_ne, schwarz, sor, \
     gauss_seidel_indexed, polynomial, gauss_seidel_ne, \
-    gauss_seidel_nr, \
+    gauss_seidel_nr, make_system, \
     jacobi_indexed, cf_jacobi, fc_jacobi, cf_block_jacobi, fc_block_jacobi
 from pyamg.util.utils import get_block_diag
 
@@ -1955,3 +1955,52 @@ class TestJacobiIndexed(TestCase):
         x, info = ml.solve(b, x0=x0, tol=tol, maxiter=100, return_info=True)
         assert (np.linalg.norm(b - A @ x)/np.linalg.norm(b - A @ x0)) < tol
         assert info == 0
+
+
+class TestMakeSystem(TestCase):
+    def setUp(self):
+        self.A = poisson((6,), format='csr').astype('float64')
+        self.n = self.A.shape[0]
+
+    def test_default_ravels_column_vector(self):
+        x = np.zeros((self.n, 1))
+        b = np.ones((self.n, 1))
+        _, x2, b2 = make_system(self.A, x, b)
+        assert x2.shape == (self.n,)
+        assert b2.shape == (self.n,)
+
+    def test_default_rejects_multi_column(self):
+        x = np.zeros((self.n, 3))
+        b = np.ones((self.n, 3))
+        check_raises(ValueError, make_system, self.A, x, b)
+
+    def test_allow_2d_accepts_1d(self):
+        x = np.zeros(self.n)
+        b = np.ones(self.n)
+        _, x2, b2 = make_system(self.A, x, b, allow_2d=True)
+        assert x2.shape == (self.n,)
+        assert b2.shape == (self.n,)
+
+    def test_allow_2d_preserves_column_vector(self):
+        x = np.zeros((self.n, 1))
+        b = np.ones((self.n, 1))
+        _, x2, b2 = make_system(self.A, x, b, allow_2d=True)
+        assert x2.shape == (self.n, 1)
+        assert b2.shape == (self.n, 1)
+
+    def test_allow_2d_accepts_multi_column(self):
+        x = np.zeros((self.n, 4))
+        b = np.ones((self.n, 4))
+        _, x2, b2 = make_system(self.A, x, b, allow_2d=True)
+        assert x2.shape == (self.n, 4)
+        assert b2.shape == (self.n, 4)
+
+    def test_allow_2d_rejects_3d(self):
+        x = np.zeros((self.n, 2, 2))
+        b = np.ones((self.n, 2, 2))
+        check_raises(ValueError, make_system, self.A, x, b, allow_2d=True)
+
+    def test_allow_2d_rejects_row_mismatch(self):
+        x = np.zeros((self.n + 1, 3))
+        b = np.ones((self.n + 1, 3))
+        check_raises(ValueError, make_system, self.A, x, b, allow_2d=True)

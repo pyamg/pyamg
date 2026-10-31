@@ -12,7 +12,7 @@ from ..util.linalg import norm
 from .. import amg_core
 
 
-def make_system(A, x, b, formats=None):
+def make_system(A, x, b, formats=None, allow_2d=False):
     """Return A,x,b suitable for relaxation or raise an exception.
 
     Parameters
@@ -26,11 +26,16 @@ def make_system(A, x, b, formats=None):
     formats: {'csr', 'csc', 'bsr', 'lil', 'dok',...}
         desired sparse matrix format
         default is no change to A's format
+    allow_2d : bool, default False
+        If ``False``, ``x`` and ``b`` must have shape ``(n,)`` or ``(n, 1)``
+        and are returned as 1-D ``(n,)`` vectors.  If ``True``, shape
+        ``(n, k)`` with ``k >= 1`` is also accepted and returned unchanged.
 
     Returns
     -------
-    (A,x,b), where A is in the desired sparse-matrix format
-    and x and b are "raveled", i.e. (n,) vectors.
+    (A,x,b), where A is in the desired sparse-matrix format.  When
+    ``allow_2d`` is False, ``x`` and ``b`` are 1-D ``(n,)`` arrays.  When
+    ``allow_2d`` is True, ``x`` and ``b`` preserve their input shape.
 
     Notes
     -----
@@ -80,9 +85,14 @@ def make_system(A, x, b, formats=None):
     if M != N:
         raise ValueError('expected square matrix')
 
-    if x.shape not in [(M,), (M, 1)]:
+    def _valid_shape(shape):
+        if shape in [(M,), (M, 1)]:
+            return True
+        return allow_2d and len(shape) == 2 and shape[0] == M
+
+    if not _valid_shape(x.shape):
         raise ValueError('x has invalid dimensions')
-    if b.shape not in [(M,), (M, 1)]:
+    if not _valid_shape(b.shape):
         raise ValueError('b has invalid dimensions')
 
     if A.dtype != x.dtype or A.dtype != b.dtype:
@@ -91,8 +101,9 @@ def make_system(A, x, b, formats=None):
     if not x.flags.carray:
         raise ValueError('x must be contiguous in memory')
 
-    x = np.ravel(x)
-    b = np.ravel(b)
+    if not allow_2d:
+        x = np.ravel(x)
+        b = np.ravel(b)
 
     return A, x, b
 
