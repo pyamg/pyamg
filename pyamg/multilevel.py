@@ -411,9 +411,11 @@ class MultilevelSolver:
         Parameters
         ----------
         b : array
-            Right hand side.
+            Right hand side of size (n,) or (n, s).  For s > 1, the s columns
+            are solved together with block multigrid cycles; the relaxation method
+            and the coarse solver must support a block;
         x0 : array
-            Initial guess.
+            Initial guess with the same shape as b, default is zero.
         tol : float
             Stopping criteria: relative residual ||r_k|| / ||b|| < tol, for
             every column of b (the absolute residual for a column with b = 0).
@@ -430,12 +432,14 @@ class MultilevelSolver:
             with the same interface provided by the iterative solvers in SciPy.
         callback : function
             User-defined function called after each iteration.  It is
-            called as callback(xk) where xk is the k-th iterate vector.
+            called as callback(xk) where xk is the k-th iterate, with the
+            shape of b.
         residuals : list
             List to contain residual norms at each iteration.  The residuals
             will be the residuals from the Krylov iteration -- see the `accel`
             method to see verify whether this ||r|| or ||Mr|| (as in the case of
-            GMRES).
+            GMRES).  Without `accel`, these are 2-norms of the residual; for b of
+            size (n, s), each entry is an array of the s column norms.
         cycles_per_level : int, default 1
             Number of V-cycles on each level of an F-cycle.
         return_info : bool
@@ -445,9 +449,10 @@ class MultilevelSolver:
         Returns
         -------
         array
-            Approximate solution to Ax=b after k iterations.
+            Approximate solution to Ax=b after k iterations, with the shape
+            of b.
 
-        str
+        int
             Halting status::
 
                  0: successful exit
@@ -469,6 +474,14 @@ class MultilevelSolver:
         >>> ml = ruge_stuben_solver(A, max_coarse=10)
         >>> residuals = []
         >>> x = ml.solve(b, tol=1e-12, residuals=residuals) # standalone solver
+        >>> #
+        >>> # Solve for two right-hand sides together (Jacobi supports a block)
+        >>> ml = ruge_stuben_solver(A, max_coarse=10,
+        ...                         presmoother='jacobi', postsmoother='jacobi')
+        >>> B = A @ ones((A.shape[0], 2))
+        >>> X = ml.solve(B, tol=1e-8)
+        >>> print(X.shape)
+        (10000, 2)
 
         """
         A = self.levels[0].A
