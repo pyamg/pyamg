@@ -7,6 +7,7 @@ from scipy.sparse import csr_array, bsr_array, diags_array, eye_array
 from scipy.sparse import SparseEfficiencyWarning
 from scipy.linalg import solve
 
+from pyamg import amg_core
 from pyamg.classical.split import RS
 from pyamg.classical import ruge_stuben_solver
 from pyamg.gallery import poisson, sprand, elasticity
@@ -16,6 +17,8 @@ from pyamg.relaxation.relaxation import gauss_seidel, jacobi, \
     gauss_seidel_nr, \
     jacobi_indexed, cf_jacobi, fc_jacobi, cf_block_jacobi, fc_block_jacobi
 from pyamg.util.utils import get_block_diag
+
+import pytest
 
 # Ignore efficiency warnings
 warnings.simplefilter('ignore', SparseEfficiencyWarning)
@@ -1955,3 +1958,139 @@ class TestJacobiIndexed(TestCase):
         x, info = ml.solve(b, x0=x0, tol=tol, maxiter=100, return_info=True)
         assert (np.linalg.norm(b - A @ x)/np.linalg.norm(b - A @ x0)) < tol
         assert info == 0
+
+
+class TestMultiVectorJacobi(TestCase):
+    """Test multiple right-hand side Jacobi kernels against single-vector Jacobi."""
+
+    def setUp(self):
+        np.random.seed(1823041979)
+        self.s = 4
+        self.cases = []
+        for A in [poisson((6, 6), format='csr'),
+                  elasticity.linear_elasticity((4, 4))[0].tocsr()]:
+            self.cases.append(A)
+            self.cases.append(csr_array((1.0 + 1.0j) * A))
+
+    def rand(self, A):
+        n, dtype = A.shape[0], A.dtype
+        X = np.random.rand(n, self.s).astype(dtype)
+        if np.iscomplexobj(X):
+            X += 1.0j * np.random.rand(n, self.s)
+        return X
+
+    def jacobi_by_column(self, A, X, B, omega):
+        """Apply single-vector CSR Jacobi to each column."""
+        n = A.shape[0]
+        Y = X.copy()
+        for c in range(self.s):
+            y = np.ascontiguousarray(X[:, c])
+            amg_core.jacobi(A.indptr, A.indices, A.data, y,
+                            np.ascontiguousarray(B[:, c]), np.empty_like(y),
+                            0, n, 1, omega)
+            Y[:, c] = y
+        return Y
+
+    def test_jacobi_m(self):
+        for A in self.cases:
+            n = A.shape[0]
+            X0, B = self.rand(A), self.rand(A)
+            omega = np.array([2.0 / 3.0], dtype=A.dtype)
+
+            X = X0.copy()
+            amg_core.jacobi_m(A.indptr, A.indices, A.data, X, B, np.empty_like(X),
+                              0, n, 1, omega)
+            assert_allclose(X, self.jacobi_by_column(A, X0, B, omega), rtol=1e-12)
+
+    def test_bsr_jacobi_m(self):
+        for A in self.cases:
+            n = A.shape[0]
+            X0, B = self.rand(A), self.rand(A)
+            omega = np.array([2.0 / 3.0], dtype=A.dtype)
+            X_csr = self.jacobi_by_column(A, X0, B, omega)
+
+            for D in [D for D in range(1, n + 1) if n % D == 0]:
+                Ab = A.tobsr(blocksize=(D, D))
+                X = X0.copy()
+                amg_core.bsr_jacobi_m(Ab.indptr, Ab.indices, np.ravel(Ab.data), X, B,
+                                      np.empty_like(X), 0, n // D, 1, D, omega)
+                assert_allclose(X, X_csr, rtol=1e-12, err_msg=f'blocksize {D}')
+
+    def test_jacobi_m_partial_sweep(self):
+        for A in self.cases:
+            n = A.shape[0]
+            X0, B = self.rand(A), self.rand(A)
+            omega = np.array([2.0 / 3.0], dtype=A.dtype)
+            diag = A.diagonal()[:, None]
+
+            for row_start, row_stop, row_step in [(2, n - 1, 1), (n - 3, 1, -1)]:
+                X = X0.copy()
+                amg_core.jacobi_m(A.indptr, A.indices, A.data, X, B, np.empty_like(X),
+                                  row_start, row_stop, row_step, omega)
+
+                rows = np.arange(row_start, row_stop, row_step)
+                expected = X0.copy()
+                expected[rows] += omega[0] * (B - A @ X0)[rows] / diag[rows]
+                assert_allclose(X, expected, rtol=1e-12,
+                                err_msg=f'sweep {(row_start, row_stop, row_step)}')
+
+    def test_bsr_jacobi_m_partial_sweep(self):
+        for A in self.cases:
+            n, D = A.shape[0], 2
+            Ab = A.tobsr(blocksize=(D, D))
+            nb = n // D
+            X0, B = self.rand(A), self.rand(A)
+            omega = np.array([2.0 / 3.0], dtype=A.dtype)
+            diag = A.diagonal()[:, None]
+
+            for row_start, row_stop, row_step in [(2, nb - 1, 1), (nb - 3, 1, -1)]:
+                X = X0.copy()
+                amg_core.bsr_jacobi_m(Ab.indptr, Ab.indices, np.ravel(Ab.data), X, B,
+                                      np.empty_like(X), row_start, row_stop, row_step,
+                                      D, omega)
+
+                rows = np.concatenate([np.arange(i * D, (i + 1) * D)
+                                       for i in range(row_start, row_stop, row_step)])
+                expected = X0.copy()
+                expected[rows] += omega[0] * (B - A @ X0)[rows] / diag[rows]
+                assert_allclose(X, expected, rtol=1e-12,
+                                err_msg=f'sweep {(row_start, row_stop, row_step)}')
+
+    def test_jacobi_bsr(self):
+        """Check Jacobi BSR against Jacobi CSR for block input."""
+        for A in self.cases:
+            n = A.shape[0]
+            X0, B = self.rand(A), self.rand(A)
+            X_csr = X0.copy()
+            jacobi(A, X_csr, B, iterations=2, omega=2.0 / 3.0)
+
+            for D in [D for D in range(1, n + 1) if n % D == 0]:
+                X = X0.copy()
+                jacobi(A.tobsr(blocksize=(D, D)), X, B, iterations=2, omega=2.0 / 3.0)
+                assert_allclose(X, X_csr, rtol=1e-12, err_msg=f'blocksize {D}')
+
+    def test_column_mismatch(self):
+        A = self.cases[0]
+        n = A.shape[0]
+        check_raises(ValueError, jacobi, A, np.zeros((n, self.s)), np.ones((n, 1)))
+        check_raises(ValueError, jacobi, A.tobsr(blocksize=(2, 2)),
+                     np.zeros((n, 1)), np.ones((n, self.s)))
+
+        # (n,) and (n,1) are the same single column
+        x = np.zeros(n)
+        jacobi(A, x, np.ones((n, 1)))
+        assert_allclose(x, np.ones(n) / A.diagonal())
+
+    def test_vector_only_relaxation(self):
+        A = self.cases[0]
+        n = A.shape[0]
+        X, B = np.zeros((n, self.s)), np.ones((n, self.s))
+        for method, kwargs in [(gauss_seidel, {}), (sor, {'omega': 1.0}),
+                               (gauss_seidel_ne, {}), (gauss_seidel_nr, {})]:
+            match = f'{method.__name__} does not support multiple right-hand sides'
+            with pytest.raises(ValueError, match=match):
+                method(A, X, B, **kwargs)
+
+        # a wrong number of rows is still a dimension error
+        with pytest.raises(ValueError, match='invalid dimensions'):
+            gauss_seidel(A, np.zeros(n + 1), np.ones(n + 1))
