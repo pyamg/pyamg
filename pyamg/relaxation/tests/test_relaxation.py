@@ -2016,6 +2016,24 @@ class TestMultiVectorJacobi(TestCase):
                                       np.empty_like(X), 0, n // D, 1, D, omega)
                 assert_allclose(X, X_csr, rtol=1e-12, err_msg=f'blocksize {D}')
 
+    def test_jacobi_m_partial_sweep(self):
+        for A in self.cases:
+            n = A.shape[0]
+            X0, B = self.rand(A), self.rand(A)
+            omega = np.array([2.0 / 3.0], dtype=A.dtype)
+            diag = A.diagonal()[:, None]
+
+            for row_start, row_stop, row_step in [(2, n - 1, 1), (n - 3, 1, -1)]:
+                X = X0.copy()
+                amg_core.jacobi_m(A.indptr, A.indices, A.data, X, B, np.empty_like(X),
+                                  row_start, row_stop, row_step, omega)
+
+                rows = np.arange(row_start, row_stop, row_step)
+                expected = X0.copy()
+                expected[rows] += omega[0] * (B - A @ X0)[rows] / diag[rows]
+                assert_allclose(X, expected, rtol=1e-12,
+                                err_msg=f'sweep {(row_start, row_stop, row_step)}')
+
     def test_bsr_jacobi_m_partial_sweep(self):
         for A in self.cases:
             n, D = A.shape[0], 2

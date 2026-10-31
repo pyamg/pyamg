@@ -452,11 +452,8 @@ void jacobi_m(const I Ap[], const int Ap_size,
     I s = x_size1;
     std::vector<T> rsum(s);
 
-    for(I i = row_start; i != row_stop; i += row_step) {
-        for(I si = 0; si < s; si++) {
-            temp[i*s + si] = x[i*s + si];
-        }
-    }
+    // copy all of x to temp; rows outside the sweep are read as neighbors
+    std::copy(x, x + x_size0*x_size1, temp);
 
     for(I i = row_start; i != row_stop; i += row_step) {
         I start = Ap[i];
