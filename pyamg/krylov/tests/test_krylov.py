@@ -247,11 +247,11 @@ class TestKrylov(TestCase):
                 A = case['A']
                 b = case['b']
                 x0 = case['x0']
-                (xNew, flag) = method(A, b, x0=x0, tol=case['tol'],
-                                      maxiter=case['maxiter'])
+                xNew, _ = method(A, b, x0=x0, tol=case['tol'],
+                                 maxiter=case['maxiter'])
                 xNew = xNew.reshape(-1, 1)
                 soln = solve(A, b)
-                factor = case['reduction_factor'],
+                factor = case['reduction_factor']
                 assert_equal((norm(soln - xNew)/norm(soln - x0)) < factor,
                              True, err_msg='Enlarged Krylov Method Failed Test')
 
