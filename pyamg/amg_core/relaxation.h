@@ -323,9 +323,8 @@ void jacobi(const I Ap[], const int Ap_size,
     T one = 1.0;
     T omega2 = omega[0];
 
-    for(I i = row_start; i != row_stop; i += row_step) {
-        temp[i] = x[i];
-    }
+    // copy all of x to temp; rows outside the sweep are read as neighbors
+    std::copy(x, x + x_size, temp);
 
     for(I i = row_start; i != row_stop; i += row_step) {
         I start = Ap[i];
@@ -554,10 +553,8 @@ void bsr_jacobi(const I Ap[], const int Ap_size,
         step_end = blocksize;
     }
 
-    // copy x to temp
-    for(I i = 0; i < abs(row_stop-row_start)*blocksize; i += step) {
-        temp[i] = x[i];
-    }
+    // copy all of x to temp; rows outside the sweep are read as neighbors
+    std::copy(x, x + x_size, temp);
 
     for(I i = row_start; i != row_stop; i += row_step) {
         I start = Ap[i];

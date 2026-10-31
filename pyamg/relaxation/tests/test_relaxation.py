@@ -2094,3 +2094,54 @@ class TestMultiVectorJacobi(TestCase):
         # a wrong number of rows is still a dimension error
         with pytest.raises(ValueError, match='invalid dimensions'):
             gauss_seidel(A, np.zeros(n + 1), np.ones(n + 1))
+
+
+class TestJacobiSweeps(TestCase):
+    """Test single-vector Jacobi kernels on full and partial sweeps."""
+
+    def setUp(self):
+        np.random.seed(1086453802)
+        A = poisson((6, 6), format='csr')
+        self.cases = [A, csr_array((1.0 + 1.0j) * A)]
+        self.D = 2
+
+    def sweeps(self, nrows):
+        return [(0, nrows, 1), (nrows - 1, -1, -1),
+                (2, nrows - 1, 1), (nrows - 3, 1, -1)]
+
+    def expected(self, A, x0, b, omega, rows):
+        x = x0.copy()
+        x[rows] += omega * (b - A @ x0)[rows] / A.diagonal()[rows]
+        return x
+
+    def test_jacobi(self):
+        for A in self.cases:
+            n = A.shape[0]
+            x0 = np.random.rand(n).astype(A.dtype)
+            b = np.random.rand(n).astype(A.dtype)
+            omega = np.array([2.0 / 3.0], dtype=A.dtype)
+            for row_start, row_stop, row_step in self.sweeps(n):
+                x = x0.copy()
+                amg_core.jacobi(A.indptr, A.indices, A.data, x, b, np.empty_like(x),
+                                row_start, row_stop, row_step, omega)
+                rows = np.arange(row_start, row_stop, row_step)
+                assert_allclose(x, self.expected(A, x0, b, omega[0], rows), rtol=1e-12,
+                                err_msg=f'sweep {(row_start, row_stop, row_step)}')
+
+    def test_bsr_jacobi(self):
+        D = self.D
+        for A in self.cases:
+            n = A.shape[0]
+            Ab = A.tobsr(blocksize=(D, D))
+            x0 = np.random.rand(n).astype(A.dtype)
+            b = np.random.rand(n).astype(A.dtype)
+            omega = np.array([2.0 / 3.0], dtype=A.dtype)
+            for row_start, row_stop, row_step in self.sweeps(n // D):
+                x = x0.copy()
+                amg_core.bsr_jacobi(Ab.indptr, Ab.indices, np.ravel(Ab.data), x, b,
+                                    np.empty_like(x), row_start, row_stop, row_step,
+                                    D, omega)
+                rows = np.concatenate([np.arange(i * D, (i + 1) * D)
+                                       for i in range(row_start, row_stop, row_step)])
+                assert_allclose(x, self.expected(A, x0, b, omega[0], rows), rtol=1e-12,
+                                err_msg=f'sweep {(row_start, row_stop, row_step)}')
