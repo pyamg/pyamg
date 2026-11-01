@@ -174,7 +174,9 @@ def srecg_orthodir(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
         rho = AW2.conjugate().T.dot(AW1)
         P = AW1 - W_list[1].dot(gamma) - W_list[0].dot(rho)
 
-        # W = P Z^{-1/2}, with Z = P^H A P Hermitian positive definite
+        # W = P Z^{-1/2}, with Z = P^H A P Hermitian positive semi-definite;
+        # drop linearly dependent directions
         Z = P.conjugate().T.dot(A @ P)
         w, V = np.linalg.eigh(Z)
-        W = P.dot((V / np.sqrt(w)) @ V.conjugate().T)
+        keep = w > Z.shape[0] * np.finfo(w.dtype).eps * w.max()
+        W = P.dot(V[:, keep] / np.sqrt(w[keep]))
