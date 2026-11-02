@@ -143,14 +143,14 @@ def ekcg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
     # Iterations variable
     k = 1
     while True:
-        # P_k = Z_k (Z_k^T A Z_k)^1/2
+        # P_k = Z_k (Z_k^H A Z_k)^{-1/2}
+        #  Z^H A Z Hermitian positive semi-definite
         AZ = A @ Z
         ZAZ = Z.conjugate().T.dot(AZ)
-
-        u, s, vh = np.linalg.svd(ZAZ, full_matrices=True)
-        uh = u.conjugate().T
-        s_diag = np.diag(1.0/np.sqrt(s))
-        P = Z.dot(vh.T.dot(s_diag.dot(uh)))
+        w, V = np.linalg.eigh(ZAZ)
+        # drop small entries (linear dependence)
+        keep = w > ZAZ.shape[0] * np.finfo(w.dtype).eps * w.max()
+        P = Z.dot(V[:, keep] / np.sqrt(w[keep]))
         AP = A @ P
 
         # alpha_k = P_k^T R_{k-1}

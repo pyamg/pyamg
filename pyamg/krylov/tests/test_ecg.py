@@ -1,6 +1,7 @@
 """Test enlarged Krylov (ECG) methods."""
 import numpy as np
 from numpy.testing import TestCase, assert_allclose, assert_equal
+from scipy import sparse
 
 from pyamg.gallery import poisson
 from pyamg.krylov import cg, ekcg, srecg_bcgs, srecg_orthodir, srecg_orthodir_new
@@ -70,5 +71,18 @@ class TestEnlargedCG(TestCase):
         for method in self.methods:
             x, info = method(A, b, t=t, tol=self.tol)
             msg = f'Problem in {method.__name__}.'
+            assert_equal(info, 0, err_msg=msg)
+            assert np.linalg.norm(b - A @ x) <= 1.01 * self.tol * np.linalg.norm(b), msg
+
+    def test_complex(self):
+        """Complex Hermitian positive definite system."""
+        A = poisson((16, 16), format='csr')
+        n = A.shape[0]
+        phase = sparse.diags_array(np.exp(2j * np.pi * np.arange(n) / n))
+        A = (phase.conjugate() @ A @ phase).tocsr()
+        b = np.ones(n, dtype=complex)
+        for t in [1, 2, 4, 8]:
+            x, info = ekcg(A, b, t=t, tol=self.tol)
+            msg = f'Problem with complex ekcg, t={t}.'
             assert_equal(info, 0, err_msg=msg)
             assert np.linalg.norm(b - A @ x) <= 1.01 * self.tol * np.linalg.norm(b), msg
