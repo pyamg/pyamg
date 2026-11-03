@@ -76,17 +76,12 @@ def srecg(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
     10.3568
 
     """
-    # pass along **kwargs
-    if orthog == 'orthodir':
-        (x, flag) = srecg_orthodir(A, b, x0=x0, t=t, tol=tol, maxiter=maxiter,
-                                   M=M, callback=callback,
-                                   residuals=residuals, **kwargs)
-    if orthog == 'orthodir_new':
-        (x, flag) = srecg_orthodir_new(A, b, x0=x0, t=t, tol=tol, maxiter=maxiter,
-                                       M=M, callback=callback,
-                                       residuals=residuals, **kwargs)
-    elif orthog == 'bcgs':
-        (x, flag) = srecg_bcgs(A, b, x0=x0, t=t, tol=tol, maxiter=maxiter,
-                               M=M, callback=callback,
-                               residuals=residuals, **kwargs)
-    return (x, flag)
+    methods = {'bcgs': srecg_bcgs,
+               'orthodir': srecg_orthodir,
+               'orthodir_new': srecg_orthodir_new}
+
+    if orthog not in methods:
+        raise ValueError(f'orthog options: {list(methods.keys())}')
+
+    return methods[orthog](A, b, x0=x0, t=t, tol=tol, maxiter=maxiter, M=M,
+                           callback=callback, residuals=residuals, **kwargs)

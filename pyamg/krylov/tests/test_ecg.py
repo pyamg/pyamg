@@ -4,7 +4,10 @@ from numpy.testing import TestCase, assert_allclose, assert_equal
 from scipy import sparse
 
 from pyamg.gallery import poisson
-from pyamg.krylov import cg, ekcg, srecg_bcgs, srecg_orthodir, srecg_orthodir_new
+from pyamg.krylov import (cg, ekcg, srecg, srecg_bcgs, srecg_orthodir,
+                          srecg_orthodir_new)
+
+import pytest
 
 
 class TestEnlargedCG(TestCase):
@@ -79,3 +82,17 @@ class TestEnlargedCG(TestCase):
                 msg = f'Problem with complex {method.__name__}, t={t}.'
                 assert_equal(info, 0, err_msg=msg)
                 assert np.linalg.norm(b - A @ x) <= 1.01 * self.tol * np.linalg.norm(b), msg
+
+    def test_srecg_orthog(self):
+        """Check that srecg dispatches on orthog."""
+        methods = {'bcgs': srecg_bcgs,
+                   'orthodir': srecg_orthodir,
+                   'orthodir_new': srecg_orthodir_new}
+        for orthog, method in methods.items():
+            x, info = srecg(self.A, self.b, t=4, tol=self.tol, orthog=orthog)
+            x_ref, info_ref = method(self.A, self.b, t=4, tol=self.tol)
+            assert_equal(info, info_ref, err_msg=orthog)
+            assert_allclose(x, x_ref, err_msg=orthog)
+
+        with pytest.raises(ValueError, match='orthog must be one of'):
+            srecg(self.A, self.b, orthog='cholesky')
