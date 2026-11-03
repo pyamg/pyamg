@@ -1,5 +1,6 @@
 """Test diffusion example."""
 import numpy as np
+from scipy.sparse.linalg import spsolve
 from pyamg.gallery.diffusion import diffusion_stencil_2d, diffusion_variable
 from pyamg.gallery import stencil_grid
 
@@ -110,3 +111,63 @@ class TestDiffusionVariable(TestCase):
                 expected = stencil_grid(stencil, grid, format='csr')
 
                 assert_almost_equal(A[interior].toarray(), expected[interior].toarray())
+
+    def test_manufactured_solution(self):
+        """Test second-order convergence for a manufactured solution.
+
+        u = (1 - cos(2 pi x))(1 - cos(2 pi y)) has u = 0 and grad u = 0 on the
+        boundary of [0, 1]^2.
+
+        kappa = [[x+1,   xy/2],
+                 [xy/2,  y+2 ]]
+
+            c = 1 + xy
+        """
+        a = 2 * np.pi
+
+        def kappa(x, y):
+            return np.array([[x+1.0, x*y/2],
+                             [x*y/2, y+2.0]])
+
+        def c(x, y):
+            return 1.0 + x*y
+
+        def f(x, y):
+            U   = 1 - np.cos(a*x)
+            Ux  = a * np.sin(a*x)
+            Uxx = a**2 * np.cos(a*x)
+            V   = 1 - np.cos(a*y)
+            Vy  = a * np.sin(a*y)
+            Vyy = a**2 * np.cos(a*y)
+            k11, k12, k22 = 1.0 + x, x * y / 2, 2.0 + y
+
+            divkgradu = (Ux * V
+                         + k11 * Uxx * V
+                         + (y / 2) * U * Vy
+                         + 2 * k12 * Ux * Vy
+                         + (x / 2) * Ux * V
+                         + U * Vy
+                         + k22 * U * Vyy)
+            return -divkgradu + c(x, y) * U * V
+
+        def zero(x, y):
+            return np.zeros((2, 2))
+
+        def one(x, y):
+            return 1.0
+
+        errors = []
+        for n in [9, 17, 33, 65]:
+            grid = (n, 2 * n - 1)
+            A = diffusion_variable(grid, kappa=kappa, c=c, format='csc')
+            M = diffusion_variable(grid, kappa=zero, c=one)  # Q1 mass matrix
+            X, Y = np.meshgrid(np.linspace(0, 1, grid[0]),
+                               np.linspace(0, 1, grid[1]), indexing='ij')
+            X, Y = X.ravel(), Y.ravel()
+            uh = spsolve(A, M @ f(X, Y))
+            u = (1 - np.cos(a*X)) * (1 - np.cos(a*Y))
+            errors.append(np.abs(uh - u).max())
+
+        rates = np.log2(np.array(errors[:-1]) / np.array(errors[1:]))
+        assert errors[-1] < 5e-3
+        assert np.all(rates > 1.9)
