@@ -445,7 +445,7 @@ def diffusion_stencil_3d(epsilony=1.0, epsilonz=1.0, theta=0.0, phi=0.0,
     return stencil
 
 
-def diffusion_variable(grid, kappa=None, c=None):
+def diffusion_variable(grid, kappa=None, c=None, format=None):
     """Bilinear (Q1) finite element discretization with variable coefficients.
 
     Discretizes
@@ -463,10 +463,12 @@ def diffusion_variable(grid, kappa=None, c=None):
         returns a 2x2 matrix that transforms <grad u>
     c : function
         reaction term c(x,y)
+    format : str
+        Sparse array format to return, e.g. "csr", "coo", etc.
 
     Returns
     -------
-    matrix : scipy coo_matrix
+    csr_array
         A nxn matrix, where n=grid[0]*grid[1]
 
     """
@@ -524,6 +526,5 @@ def diffusion_variable(grid, kappa=None, c=None):
                                                        x3, x6, x8, x9,
                                                        x4, x7, x9, x10])
             count_data = count_data+16
-    A = sparse.coo_matrix((data, (row, col)), shape=(tot_dof, tot_dof))
-    A.sum_duplicates()
-    return A
+    A = sparse.coo_array((data, (row, col)), shape=(tot_dof, tot_dof)).tocsr()
+    return A.asformat(format)
