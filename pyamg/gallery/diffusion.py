@@ -463,7 +463,7 @@ def diffusion_variable(grid, kappa=None, c=None, format=None):
     kappa : callable, optional
         Diffusion tensor returning a symmetric 2x2 array.  The default is the identity.
     c : callable, optional
-        Reaction coefficient, returning a float.  The default is 1.
+        Reaction coefficient, returning a float.  The default is 0.
     format : str
         Sparse array format to return, e.g. "csr", "coo", etc.
 
@@ -491,7 +491,7 @@ def diffusion_variable(grid, kappa=None, c=None, format=None):
     Examples
     --------
     >>> from pyamg.gallery import diffusion_variable
-    >>> A = diffusion_variable((3, 3), c=lambda x, y: 0.0)
+    >>> A = diffusion_variable((3, 3))
     >>> (3 * A[[4], :].toarray()).reshape(3, 3)
     array([[-1., -1., -1.],
            [-1.,  8., -1.],
@@ -504,7 +504,7 @@ def diffusion_variable(grid, kappa=None, c=None, format=None):
 
     if c is None:
         def c(x, y):
-            return 1.0
+            return 0.0
 
     no_mesh_cols = grid[0]
     no_mesh_rows = grid[1]
