@@ -446,30 +446,56 @@ def diffusion_stencil_3d(epsilony=1.0, epsilonz=1.0, theta=0.0, phi=0.0,
 
 
 def diffusion_variable(grid, kappa=None, c=None, format=None):
-    """Bilinear (Q1) finite element discretization with variable coefficients.
+    """Q1 finite element discretization of variable-coefficient diffusion in 2d.
 
-    Discretizes
+    Variable-coefficient diffusion is given by
 
-        - div kappa(x,y) grad u + c(x,y) u
+        -div kappa(x,y) grad u + c(x,y) u
 
-    on the unit square.
+    on the unit square [0, 1] x [0, 1], on a uniform mesh of
+    ``grid[0] x grid[1]`` nodes with spacing ``hx = 1/(grid[0]-1)`` and
+    ``hy = 1/(grid[1]-1)``.
 
     Parameters
     ----------
-    grid : tuple of integers
-        grid dimensions in 2D, e.g. (100,100)
-    kappa : function
-        diffusion coefficient, kappa(x,y) with vector input
-        returns a 2x2 matrix that transforms <grad u>
-    c : function
-        reaction term c(x,y)
+    grid : tuple
+        Number of nodes in x and y directions.
+    kappa : callable, optional
+        Diffusion tensor returning a symmetric 2x2 array.  The default is the identity.
+    c : callable, optional
+        Reaction coefficient, returning a float.  The default is 1.
     format : str
         Sparse array format to return, e.g. "csr", "coo", etc.
 
     Returns
     -------
     csr_array
-        A nxn matrix, where n=grid[0]*grid[1]
+        Sparse array of size ``grid[0]*grid[1]``.
+
+    See Also
+    --------
+    diffusion_stencil_2d, poisson
+
+    Notes
+    -----
+    The coefficients ``kappa`` and ``c`` are evaluated once per element, at
+    the element midpoint.  Only ``kappa[0, 0]``, ``kappa[0, 1]``, and
+    ``kappa[1, 1]`` are used, so ``kappa`` is assumed to be symmetric.
+
+    No boundary conditions are applied (resulting in Neumann).
+
+    The nodes are ordered with y varying first: node ``(ix, iy)`` at
+    ``(ix*hx, iy*hy)`` has index ``ix*grid[1] + iy``.
+    See `stencil_grid`.
+
+    Examples
+    --------
+    >>> from pyamg.gallery import diffusion_variable
+    >>> A = diffusion_variable((3, 3), c=lambda x, y: 0.0)
+    >>> (3 * A[[4], :].toarray()).reshape(3, 3)
+    array([[-1., -1., -1.],
+           [-1.,  8., -1.],
+           [-1., -1., -1.]])
 
     """
     if kappa is None:
