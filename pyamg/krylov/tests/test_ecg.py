@@ -94,5 +94,5 @@ class TestEnlargedCG(TestCase):
             assert_equal(info, info_ref, err_msg=orthog)
             assert_allclose(x, x_ref, err_msg=orthog)
 
-        with pytest.raises(ValueError, match='orthog must be one of'):
+        with pytest.raises(ValueError, match='orthog options'):
             srecg(self.A, self.b, orthog='cholesky')
