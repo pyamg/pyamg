@@ -6,6 +6,7 @@ Functions
     - linear_elasticity() : Linear Elasticity using Finite Elements
     - stencil_grid() : General stencil generation from 1D, 2D, and 3D
     - diffusion_stencil_2d() : 2D rotated anisotropic FE/FD stencil
+    - diffusion_variable() : 2D Q1 bilinear FE diffusion with variable coefficients
 """
 
 from . import elasticity
@@ -19,7 +20,7 @@ from .example import load_example
 from .laplacian import poisson, gauge_laplacian
 from .stencil import stencil_grid
 from .mesh import regular_triangle_mesh
-from .diffusion import diffusion_stencil_2d
+from .diffusion import diffusion_stencil_2d, diffusion_variable
 from .advection import advection_2d
 
 from .random_sparse import sprand  # note: could use scipy.sparse.random_array
@@ -30,6 +31,7 @@ __all__ = [
     'demo',
     'diffusion',
     'diffusion_stencil_2d',
+    'diffusion_variable',
     'elasticity',
     'fem',
     'gauge_laplacian',
