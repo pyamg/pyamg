@@ -2,8 +2,7 @@
 import warnings
 
 import numpy as np
-from scipy.linalg import get_blas_funcs
-from scipy.linalg import lapack
+from scipy.linalg import cholesky, solve_triangular
 
 from ..util.linalg import norm, cgs, split_residual
 from ..util import make_system
@@ -55,9 +54,6 @@ def srecg_orthodir_new(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
 
     Notes
     -----
-    Experimental: for t > 1 this variant can break down (NaN residuals)
-    where :func:`srecg_orthodir` converges.
-
     The LinearOperator class is in scipy.sparse.linalg.
     Use this class if you prefer to define A as a mat-vec routine
     as opposed to explicitly constructing the matrix.
@@ -79,7 +75,7 @@ def srecg_orthodir_new(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
     >>> b = np.ones((A.shape[0],))
     >>> (x,flag) = srecg_orthodir_new(A,b, t=4, maxiter=2, tol=1e-8)
     >>> print(f'{norm(b - A@x):.6}')
-    10.8625
+    10.3568
 
     """
     if M is not None:
@@ -135,16 +131,12 @@ def srecg_orthodir_new(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
 
     # Initial search directions
     W = split_residual(r, t)
-    W_list.append(np.zeros(W.shape))
+    W_list.append(np.zeros_like(W))
     cgs(W, A)
-
-    # grab blas function to be used later for search directions solve
-    L = np.zeros((t, t), dtype=W.dtype)
-    dtrsm = get_blas_funcs(['trsm'], [W, L])[0]
 
     AW = A @ W
     AW_list = []
-    AW_list.append(np.zeros(AW.shape))
+    AW_list.append(np.zeros_like(AW))
     while True:
         # Append W to previous search directions
         W_list.append(W)
@@ -191,11 +183,18 @@ def srecg_orthodir_new(A, b, x0=None, t=1, tol=1e-5, maxiter=None, M=None,
         P = AW1 - W_list[1].dot(gamma) - W_list[0].dot(rho)
 
         AP = A @ P
-        # Do Cholesky of P^T A P
-        # Z = np.linalg.cholesky(P.conjugate().T.dot(AP))
-        Z = lapack.dpotrf(P.conjugate().T.dot(AP))[0]  # pylint: disable=no-member
-
-        # Solve upper triangular system for W
-        W = dtrsm(1.0, Z.T, P, side=1, lower=1, diag=0)
-        # Solve upper triangular system for AW
-        AW = dtrsm(1.0, Z.T, AP, side=1, lower=1, diag=0)
+        PAP = P.conjugate().T.dot(AP)
+        try:
+            #  W =  P Z^{-1}
+            # AW = AP Z^{-1}
+            # Z^H Z = P^H A P (Z upper tri)
+            Z = cholesky(PAP, lower=False)
+            W = solve_triangular(Z, P.T, trans='T').T
+            AW = solve_triangular(Z, AP.T, trans='T').T
+        except np.linalg.LinAlgError:
+            # P^H A P is singular; drop the dependent directions
+            w, V = np.linalg.eigh(PAP)
+            keep = w > PAP.shape[0] * np.finfo(w.dtype).eps * w.max()
+            S = V[:, keep] / np.sqrt(w[keep])
+            W = P.dot(S)
+            AW = AP.dot(S)

@@ -6,15 +6,13 @@ from scipy import sparse
 from pyamg.gallery import poisson
 from pyamg.krylov import cg, ekcg, srecg_bcgs, srecg_orthodir, srecg_orthodir_new
 
-import pytest
-
 
 class TestEnlargedCG(TestCase):
     def setUp(self):
         self.A = poisson((16, 16), format='csr')
         self.b = np.ones(self.A.shape[0])
         self.tol = 1e-8
-        self.methods = [ekcg, srecg_bcgs, srecg_orthodir]
+        self.methods = [ekcg, srecg_bcgs, srecg_orthodir, srecg_orthodir_new]
 
     def check_t_sweep(self, method):
         A, b, tol = self.A, self.b, self.tol
@@ -33,7 +31,7 @@ class TestEnlargedCG(TestCase):
         """Check that EKCG matches CG for t=1."""
         res_cg = []
         cg(self.A, self.b, tol=self.tol, residuals=res_cg)
-        for method in [*self.methods, srecg_orthodir_new]:
+        for method in self.methods:
             res = []
             _, info = method(self.A, self.b, t=1, tol=self.tol, residuals=res)
             assert_equal(info, 0, err_msg=f'Problem in {method.__name__}.')
@@ -44,12 +42,6 @@ class TestEnlargedCG(TestCase):
         """Increasing t decreases iterations."""
         for method in self.methods:
             self.check_t_sweep(method)
-
-    @pytest.mark.xfail(reason='srecg_orthodir_new breaks down (NaN) for t > 1',
-                       strict=True)
-    def test_iterations_decrease_with_t_orthodir_new(self):
-        with np.errstate(invalid='ignore'):
-            self.check_t_sweep(srecg_orthodir_new)
 
     def test_finite_termination(self):
         """Size n problem converges in at most n/t iterations."""
@@ -81,8 +73,9 @@ class TestEnlargedCG(TestCase):
         phase = sparse.diags_array(np.exp(2j * np.pi * np.arange(n) / n))
         A = (phase.conjugate() @ A @ phase).tocsr()
         b = np.ones(n, dtype=complex)
-        for t in [1, 2, 4, 8]:
-            x, info = ekcg(A, b, t=t, tol=self.tol)
-            msg = f'Problem with complex ekcg, t={t}.'
-            assert_equal(info, 0, err_msg=msg)
-            assert np.linalg.norm(b - A @ x) <= 1.01 * self.tol * np.linalg.norm(b), msg
+        for method in self.methods:
+            for t in [1, 2, 4, 8]:
+                x, info = method(A, b, t=t, tol=self.tol)
+                msg = f'Problem with complex {method.__name__}, t={t}.'
+                assert_equal(info, 0, err_msg=msg)
+                assert np.linalg.norm(b - A @ x) <= 1.01 * self.tol * np.linalg.norm(b), msg
