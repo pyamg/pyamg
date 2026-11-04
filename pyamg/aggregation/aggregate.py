@@ -476,6 +476,9 @@ def balanced_lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5,
     As an example, if pad is small and if measure='inv' is used, then C + E
     will have "long" edges for the pad.
 
+    Isolated nodes (e.g. Dirichlet nodes) are not aggregated and
+    are set as a zero row in AggOp (same as `standard_aggregation`).
+
     References
     ----------
     ..[1] Zaman, Tareq, Nicolas Nytko, Ali Taghibakhshi, Scott MacLachlan,
@@ -545,16 +548,10 @@ def balanced_lloyd_aggregation(C, ratio=0.1, measure=None, maxiter=5,
     clusters, centers = balanced_lloyd_cluster(G, naggs, maxiter=maxiter,
                                                rebalance_iters=rebalance_iters)
 
-    if np.any(clusters < 0):
-        warn('Lloyd aggregation encountered a point that is unaggregated.')
-
-    if clusters.min() < 0:
-        warn('Lloyd clustering did not cluster every point')
-
     row = (clusters >= 0).nonzero()[0].astype(C.indices.dtype)
     col = clusters[row]
     data = np.ones(len(row), dtype=np.int32)
-    AggOp = sparse.coo_array((data, (row, col)), shape=(n, naggs)).tocsr()
+    AggOp = sparse.coo_array((data, (row, col)), shape=(n, len(centers))).tocsr()
 
     return AggOp, centers
 
