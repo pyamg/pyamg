@@ -601,7 +601,7 @@ def _random_centers(G, ncenters):
     nodes = np.flatnonzero(connected)
     if len(nodes) == 0:
         nodes = np.arange(n)
-    return np.random.permutation(nodes)[:num_centers].astype(G.indptr.dtype)
+    return np.random.permutation(nodes)[:ncenters].astype(G.indptr.dtype)
 
 
 def kmeanspp_seed(G, nseeds):
