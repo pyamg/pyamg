@@ -348,6 +348,11 @@ def lloyd_aggregation(C, ratio=0.1, measure='unit', maxiter=5):
     --------
     amg_core.standard_aggregation
 
+    Notes
+    -----
+    Isolated nodes (e.g. Dirichlet nodes) are not aggregated and
+    are set as a zero row in AggOp (same as `standard_aggregation`).
+
     Examples
     --------
     >>> import pyamg
@@ -406,17 +411,11 @@ def lloyd_aggregation(C, ratio=0.1, measure='unit', maxiter=5):
 
     clusters, centers = lloyd_cluster(G, naggs, maxiter=maxiter)
 
-    if np.any(clusters < 0):
-        warn('Lloyd aggregation encountered a point that is unaggregated.')
-
-    if clusters.min() < 0:
-        warn('Lloyd clustering did not cluster every point')
-
     row = (clusters >= 0).nonzero()[0].astype(C.indices.dtype)
     col = clusters[row]
 
     data = np.ones(len(row), dtype=np.int32)
-    AggOp = sparse.coo_array((data, (row, col)), shape=(n, naggs)).tocsr()
+    AggOp = sparse.coo_array((data, (row, col)), shape=(n, len(centers))).tocsr()
 
     return AggOp, centers
 
