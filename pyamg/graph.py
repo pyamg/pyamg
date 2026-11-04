@@ -229,6 +229,10 @@ def lloyd_cluster(G, centers, maxiter=5):
 
     Only positive edge weights may be used
 
+    Isolated nodes are not clustered and have cluster id -1.
+    Otherwise, G is assumed to be connected and the centers
+    are assumed to be non-isolated nodes.
+
     """
     G = asgraph(G)
     n = G.shape[0]
@@ -241,10 +245,16 @@ def lloyd_cluster(G, centers, maxiter=5):
         if G.data.min() < 0:
             raise ValueError('Lloyd Clustering is defined only for positive weights.')
 
+    # cluster only the nodes with edges; isolated nodes (e.g., Dirichlet nodes) are set -1
+    rows = np.repeat(np.arange(n), np.diff(G.indptr))
+    idx = np.unique(rows[G.indices != rows])  # only non-isolated
+    G = G[idx][:, idx]  # connected submatrix
+    n_all, n = n, len(idx)
+
     if np.isscalar(centers):
-        centers = _random_centers(G, centers)
+        centers = np.random.permutation(n)[:centers].astype(G.indptr.dtype)
     else:
-        centers = np.asarray(centers, dtype=G.indptr.dtype)
+        centers = np.searchsorted(idx, centers).astype(G.indptr.dtype)
 
     num_clusters = len(centers)
 
@@ -283,7 +293,9 @@ def lloyd_cluster(G, centers, maxiter=5):
 
         it += 1
 
-    return clusters, centers
+    clusters_all = np.full(n_all, -1, dtype=clusters.dtype)
+    clusters_all[idx] = clusters
+    return clusters_all, idx[centers].astype(centers.dtype)
 
 
 def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5, tiebreaking=True):
@@ -325,6 +337,9 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5, tiebreaking
       in different centers.  This is due to the tie-breaker based on aggregate
       size in bellman_ford_balanced().  Alternatively, the graph can be seeded
       with a small random number to make the edge lengths (and distances) unique.
+    - Isolated nodes are not clustered and have cluster id -1.
+      Otherwise, G is assumed to be connected and the centers
+      are assumed to be non-isolated nodes.
 
     """
     G = asgraph(G)
@@ -338,10 +353,16 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5, tiebreaking
         if G.data.min() < 0:
             raise ValueError('Lloyd Clustering is defined only for positive weights.')
 
+    # cluster only the nodes with edges; isolated nodes (e.g., Dirichlet nodes) are set to -1
+    rows = np.repeat(np.arange(n), np.diff(G.indptr))
+    idx = np.unique(rows[G.indices != rows])  # only non-isolated
+    G = G[idx][:, idx]
+    n_all, n = n, len(idx)
+
     if np.isscalar(centers):
-        centers = _random_centers(G, centers)
+        centers = np.random.permutation(n)[:centers].astype(G.indptr.dtype)
     else:
-        centers = np.asarray(centers, dtype=G.indptr.dtype)
+        centers = np.searchsorted(idx, centers).astype(G.indptr.dtype)
 
     num_clusters = len(centers)
 
@@ -428,7 +449,9 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5, tiebreaking
         if not rebalance_change:
             break
 
-    return m, centers
+    clusters = np.full(n_all, -1, dtype=m.dtype)
+    clusters[idx] = m
+    return clusters, idx[centers].astype(centers.dtype)
 
 
 def _rebalance(G, c, m, d, dist_all, num_clusters):
@@ -572,36 +595,6 @@ def _choice(p):
         if np.random.rand() < a[i]:
             break
     return i
-
-
-def _random_centers(G, ncenters):
-    """Select random cluster centers.
-
-    Avoiding selecting isolated nodes, such as Dirichlet nodes.
-
-    Parameters
-    ----------
-    G : csr_array, csc_array
-        Sparse graph.
-    ncenters : int
-        Number of centers.
-
-    Returns
-    -------
-    int array
-        Unique center indices.  Fewer than ncenters are returned
-        if there are not enough nodes with edges
-        (isolated nodes).
-
-    """
-    n = G.shape[0]
-    rows = np.repeat(np.arange(n, dtype=G.indptr.dtype), np.diff(G.indptr))
-    connected = np.zeros(n, dtype=bool)
-    connected[rows[G.indices != rows]] = True
-    nodes = np.flatnonzero(connected)
-    if len(nodes) == 0:
-        nodes = np.arange(n)
-    return np.random.permutation(nodes)[:ncenters].astype(G.indptr.dtype)
 
 
 def kmeanspp_seed(G, nseeds):

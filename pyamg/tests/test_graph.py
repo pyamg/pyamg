@@ -165,6 +165,9 @@ class TestGraph(TestCase):
         np.random.seed(3125088753)
 
         for G in self.cases:
+            if G.nnz == 0:  # no edges to cluster
+                continue
+
             G.data = np.random.rand(G.nnz)
 
             for n_clusters in [5]:

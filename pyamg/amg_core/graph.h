@@ -1025,20 +1025,12 @@ bool most_interior_nodes(const I num_nodes,
   //   then i is a boundary node
   std::fill(d, d+d_size, std::numeric_limits<T>::infinity());
   for(I i = 0; i < num_nodes; i++){
-    bool has_edge = false;
     for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
       I j = Aj[jj];
-      if( j == i ){
-        continue;
-      }
-      has_edge = true;
       if( m[i] != m[j] ){
         d[i] = 0;
         break;
       }
-    }
-    if( !has_edge ){
-      d[i] = 0;
     }
   }
 
