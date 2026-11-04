@@ -210,7 +210,8 @@ def lloyd_cluster(G, centers, maxiter=5):
         between nodes i and j.
     centers : int array
         If centers is an integer, then its value determines the number of
-        clusters.  Otherwise, centers is an array of unique integers between 0
+        clusters, with initial centers chosen at random from nodes that are not
+        isolated.  Otherwise, centers is an array of unique integers between 0
         and n-1 that will be used as the initial centers for clustering.
     maxiter : int
         Maximum number of iterations.
@@ -241,8 +242,7 @@ def lloyd_cluster(G, centers, maxiter=5):
             raise ValueError('Lloyd Clustering is defined only for positive weights.')
 
     if np.isscalar(centers):
-        centers = np.random.permutation(n)[:centers]
-        centers = centers.astype(G.indptr.dtype)
+        centers = _random_centers(G, centers)
     else:
         centers = np.asarray(centers, dtype=G.indptr.dtype)
 
@@ -296,7 +296,8 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5, tiebreaking
         between nodes i and j.
     centers : int array
         If centers is an integer, then its value determines the number of
-        clusters.  Otherwise, centers is an array of unique integers between 0
+        clusters, with initial centers chosen at random from nodes that are not
+        isolated.  Otherwise, centers is an array of unique integers between 0
         and n-1 that will be used as the initial centers for clustering.
     maxiter : int
         Number of bellman_ford_balanced->center_nodes iterations to run within
@@ -338,8 +339,7 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5, tiebreaking
             raise ValueError('Lloyd Clustering is defined only for positive weights.')
 
     if np.isscalar(centers):
-        centers = np.random.permutation(n)[:centers]  # same as np.random.choice()
-        centers = centers.astype(G.indptr.dtype)
+        centers = _random_centers(G, centers)
     else:
         centers = np.asarray(centers, dtype=G.indptr.dtype)
 
@@ -572,6 +572,36 @@ def _choice(p):
         if np.random.rand() < a[i]:
             break
     return i
+
+
+def _random_centers(G, ncenters):
+    """Select random cluster centers.
+
+    Avoiding selecting isolated nodes, such as Dirichlet nodes.
+
+    Parameters
+    ----------
+    G : csr_array, csc_array
+        Sparse graph.
+    ncenters : int
+        Number of centers.
+
+    Returns
+    -------
+    int array
+        Unique center indices.  Fewer than ncenters are returned
+        if there are not enough nodes with edges
+        (isolated nodes).
+
+    """
+    n = G.shape[0]
+    rows = np.repeat(np.arange(n, dtype=G.indptr.dtype), np.diff(G.indptr))
+    connected = np.zeros(n, dtype=bool)
+    connected[rows[G.indices != rows]] = True
+    nodes = np.flatnonzero(connected)
+    if len(nodes) == 0:
+        nodes = np.arange(n)
+    return np.random.permutation(nodes)[:num_centers].astype(G.indptr.dtype)
 
 
 def kmeanspp_seed(G, nseeds):
