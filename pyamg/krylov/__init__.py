@@ -40,6 +40,11 @@ from ._cgne import cgne
 from ._bicgstab import bicgstab
 from ._steepest_descent import steepest_descent
 from ._minimal_residual import minimal_residual
+from ._ekcg import ekcg
+from ._srecg import srecg
+from ._srecg_bcgs import srecg_bcgs
+from ._srecg_orthodir import srecg_orthodir
+from ._srecg_orthodir_new import srecg_orthodir_new
 
 __all__ = [
     'bicgstab',
@@ -47,10 +52,15 @@ __all__ = [
     'cgne',
     'cgnr',
     'cr',
+    'ekcg',
     'fgmres',
     'gmres',
     'gmres_householder',
     'gmres_mgs',
     'minimal_residual',
-    'steepest_descent'
+    'srecg',
+    'srecg_bcgs',
+    'srecg_orthodir',
+    'srecg_orthodir_new',
+    'steepest_descent',
 ]

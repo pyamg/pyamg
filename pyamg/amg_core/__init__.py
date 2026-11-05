@@ -19,7 +19,7 @@ from .krylov import (apply_householders, householder_hornerscheme, apply_givens)
 from .linalg import (pinv_array, csc_scale_columns, csc_scale_rows, filter_matrix_rows)
 from .relaxation import (gauss_seidel, sor_gauss_seidel, bsr_gauss_seidel,
                          gauss_seidel_indexed,
-                         jacobi, bsr_jacobi,
+                         jacobi, jacobi_m, bsr_jacobi, bsr_jacobi_m,
                          jacobi_ne, gauss_seidel_ne, gauss_seidel_nr,
                          block_jacobi, block_gauss_seidel,
                          extract_subblocks, overlapping_schwarz_csr,
@@ -87,7 +87,9 @@ __all__ = [
     'sor_gauss_seidel',
     'bsr_gauss_seidel',
     'jacobi',
+    'jacobi_m',
     'bsr_jacobi',
+    'bsr_jacobi_m',
     'gauss_seidel_indexed',
     'jacobi_ne',
     'gauss_seidel_ne',
