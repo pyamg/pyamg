@@ -275,8 +275,6 @@ def lloyd_cluster(G, centers, maxiter=5):
     changed = True
     it = 0
 
-    _dist, _near, _pred = bellman_ford(G, centers, method='standard')
-
     while changed and it < maxiter:
         if it > 0:
             distances.fill(np.inf)
