@@ -91,9 +91,9 @@ References
 import numpy as np
 from scipy.sparse import csr_array, issparse
 
-from pyamg.graph import vertex_coloring
-from pyamg import amg_core
-from pyamg.util.utils import remove_diagonal
+from ..graph import vertex_coloring
+from .. import amg_core
+from ..util.utils import remove_diagonal
 
 
 def RS(S, second_pass=False):

@@ -3,7 +3,7 @@
 
 import numpy as np
 from scipy.sparse import issparse, bsr_array
-from pyamg import amg_core
+from .. import amg_core
 
 
 def fit_candidates(AggOp, B, tol=1e-10):

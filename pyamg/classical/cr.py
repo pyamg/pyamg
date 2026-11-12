@@ -5,7 +5,7 @@ import numpy as np
 from scipy.linalg import norm
 from scipy.sparse import issparse, diags_array
 
-from pyamg import amg_core
+from .. import amg_core
 from ..relaxation.relaxation import gauss_seidel, gauss_seidel_indexed
 
 
