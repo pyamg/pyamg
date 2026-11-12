@@ -850,8 +850,10 @@ void bellman_ford(const I num_nodes,
       for(I jj = Ap[i]; jj < Ap[i+1]; jj++){
         const I j = Aj[jj];
         const T Aij = Ax[jj];
-        if(d[i] + Aij < d[j]){
-          d[j] = d[i] + Aij;
+        // force rounding to T with `volatile`
+        volatile T dist = d[i] + Aij;
+        if(dist < d[j]){
+          d[j] = dist;
           m[j] = m[i];
           p[j] = i;
           done = false; // found a change, keep going
