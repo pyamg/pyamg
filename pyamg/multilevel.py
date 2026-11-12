@@ -634,7 +634,6 @@ class MultilevelSolver:
             beta = np.zeros((nAMLI, nAMLI), dtype=coarse_b.dtype)
             for k in range(nAMLI):
                 # New search direction --> M^{-1}@residual
-                p[k, :] = 1
                 self.__solve(lvl + 1, p[k, :].reshape(coarse_b.shape),
                              coarse_b, cycle)
 
@@ -646,8 +645,10 @@ class MultilevelSolver:
 
                 # Compute step size
                 Ap = Ac @ p[k, :]
-                alpha = np.inner(p[k, :].conj(), np.ravel(coarse_b)) /\
-                        np.inner(p[k, :].conj(), Ap)
+                denom = np.inner(p[k, :].conj(), Ap)
+                if denom == 0:
+                    break
+                alpha = np.inner(p[k, :].conj(), np.ravel(coarse_b)) / denom
 
                 # Update solution
                 coarse_x += alpha * p[k, :].reshape(coarse_x.shape)

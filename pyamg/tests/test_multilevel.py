@@ -1,8 +1,11 @@
 """Test MultilevelSolver class."""
 import numpy as np
-from numpy.testing import TestCase, assert_almost_equal, assert_equal
+import pytest
+from numpy.testing import TestCase, assert_allclose, assert_almost_equal, assert_equal
 from scipy import sparse
 
+from pyamg import smoothed_aggregation_solver
+from pyamg.aggregation.pairwise import pairwise_solver
 from pyamg.gallery import poisson
 from pyamg.multilevel import coarse_grid_solver, MultilevelSolver
 
@@ -159,3 +162,56 @@ class TestComplexMultilevel(TestCase):
                 # subsequent calls use cached data
                 x = s(A, b)
                 assert_almost_equal(A@x, b)
+
+
+@pytest.fixture(params=[(pairwise_solver, np.float64),
+                       (pairwise_solver, np.float32),
+                       (smoothed_aggregation_solver, np.complex128)],
+                ids=['pairwise-float64', 'pairwise-float32', 'smoothed-complex128'])
+def amli_solver(request):
+    solver, dtype = request.param
+    A = poisson((100,), dtype=dtype, format='csr')
+    smoother = ('gauss_seidel', {'sweep': 'symmetric'})
+    return A, solver(A, presmoother=smoother, postsmoother=smoother)
+
+
+@pytest.mark.parametrize('scale', [1e-8, 1e8])
+def test_amli_rhs_scaling(amli_solver, scale):
+    A, ml = amli_solver
+    rng = np.random.default_rng(362)
+    b = rng.standard_normal(A.shape[0]).astype(A.dtype)
+    if np.iscomplexobj(b):
+        b += 1j * rng.standard_normal(A.shape[0])
+
+    M = ml.aspreconditioner(cycle='AMLI')
+    correction = M @ b
+    tol = max(1e-10, 1000 * np.finfo(A.dtype).eps)
+    assert np.linalg.norm((M @ (scale * b)) / scale - correction) < (
+        tol * np.linalg.norm(correction))
+
+
+def test_amli_convergence(amli_solver):
+    A, ml = amli_solver
+    rng = np.random.default_rng(0)
+    x0 = rng.random(A.shape[0]).astype(A.dtype)
+    exact = rng.random(A.shape[0]).astype(A.dtype)
+    if np.iscomplexobj(exact):
+        x0 += 1j * rng.random(A.shape[0])
+        exact += 1j * rng.random(A.shape[0])
+    b = A @ exact
+
+    tol = max(1e-10, 100 * np.finfo(A.dtype).eps)
+    x = ml.solve(b, x0=x0, maxiter=200, tol=tol, cycle='AMLI')
+    assert np.linalg.norm(b - A @ x) < tol * np.linalg.norm(b)
+
+
+def test_amli_zero_coarse_residual(amli_solver):
+    A, ml = amli_solver
+    exact = np.zeros(A.shape[0], dtype=A.dtype)
+    exact[0] = 1
+    b = A @ exact
+
+    # The fine-grid smoother solves this right-hand side exactly.
+    with np.errstate(divide='raise', invalid='raise'):
+        x = ml.solve(b, maxiter=1, cycle='AMLI')
+    assert_allclose(x, exact, rtol=0, atol=0)
