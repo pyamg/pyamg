@@ -296,7 +296,8 @@ def lloyd_cluster(G, centers, maxiter=5):
     return clusters_all, idx[centers].astype(centers.dtype)
 
 
-def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5, tiebreaking=True):
+def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5, tiebreaking=True,
+                           lloyd_max_size=None):
     """Perform Lloyd clustering on graph with weighted edges.
 
     Parameters
@@ -316,6 +317,9 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5, tiebreaking
         Number of post-Lloyd rebalancing iterations to run.
     tiebreaking : bool, default True
         Flag for triggering tiebreaking.
+    lloyd_max_size : int, optional
+        Maximum cluster size.  In Floyd-Warshall, the workspace is O(max cluster size**2).
+        Default None (no limit).
 
     Returns
     -------
@@ -373,9 +377,15 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5, tiebreaking
     if centers.max() >= n:
         raise ValueError(f'invalid center index {centers.max()}')
 
+    if lloyd_max_size is not None and lloyd_max_size < 1:
+        raise ValueError('lloyd_max_size must be a positive integer')
+
     # create work arrays for C++
     # empty() values are initialized in the kernel
+    # FW workspace (P, q) starts at a guess and is grown if a cluster is larger
     maxsize = int(12*np.ceil(n / num_clusters))
+    if lloyd_max_size is not None:
+        maxsize = min(maxsize, int(lloyd_max_size))
 
     d = np.full(n, np.inf, dtype=G.dtype)               # distance to cluster center (inf)
     m = np.full(n, -1, dtype=G.indptr.dtype)            # cluster membership or index (-1)
@@ -412,8 +422,13 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5, tiebreaking
             changed1 = amg_core.bellman_ford_balanced(n, G.indptr, G.indices, G.data,
                                                       centers, d, m, p, pc, s, tiebreaking)
 
-            if s.max() > maxsize:
-                raise ValueError('maxsize (maximum cluster size) is too small')
+            smax = int(s.max())
+            if lloyd_max_size is not None and smax > lloyd_max_size:
+                raise ValueError(f'cluster size {smax} exceeds {lloyd_max_size=}')
+            if smax > maxsize:
+                maxsize = smax
+                P = np.empty(maxsize*maxsize, dtype=G.indptr.dtype)
+                q = np.empty(maxsize, dtype=G.dtype)
 
             if m.min() < 0 or d.min() < 0:
                 raise ValueError('Encountered a disconnected nodes from m or d:  '
