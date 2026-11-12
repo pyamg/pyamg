@@ -28,6 +28,15 @@ def construct_graph_laplacian():
     return G
 
 
+@pytest.fixture
+def construct_1dfd_dirichlet_graph():
+    u = np.ones(9, dtype=np.float64)
+    G = np.diag(2 * u, k=0) + np.diag(u[1:], k=1) + np.diag(u[1:], k=-1)
+    G[[0, 8], :] = 0
+    G[[0, 8], [0, 8]] = 1
+    return G
+
+
 def _check_pc(p):
     p = np.array(p)
     c = np.bincount(p[p > -1], minlength=len(p))
@@ -158,6 +167,28 @@ def test_balanced_lloyd_laplacian(construct_graph_laplacian):
                                                     rebalance_iters=0)
     assert_array_equal(m, [0, 0, 0, 0, 1, 1, 1, 1])
     assert_array_equal(centers, [1, 5])
+
+
+def test_lloyd_dirichlet(construct_1dfd_dirichlet_graph):
+    G = construct_1dfd_dirichlet_graph
+
+    centers = np.array([2, 6])
+    m, centers = pyamg.graph.lloyd_cluster(G, centers)
+    assert_array_equal(m, [-1, 0, 0, 0, 0, 1, 1, 1, -1])
+    assert_array_equal(centers, [1, 7])
+
+    centers = np.array([2, 6])
+    m, centers = pyamg.graph.balanced_lloyd_cluster(G, centers)
+    assert_array_equal(m, [-1, 0, 0, 0, 0, 1, 1, 1, -1])
+    assert_array_equal(centers, [2, 6])
+
+    np.random.seed(1925173548)
+    for _ in range(10):
+        for cluster in [pyamg.graph.lloyd_cluster, pyamg.graph.balanced_lloyd_cluster]:
+            m, centers = cluster(G, 3)
+            assert_array_equal(m[[0, 8]], [-1, -1])
+            assert np.all(m[1:8] >= 0)
+            assert not np.any(np.isin(centers, [0, 8]))
 
 
 def test_balanced_lloyd_laplacian_bystep(construct_graph_laplacian):
