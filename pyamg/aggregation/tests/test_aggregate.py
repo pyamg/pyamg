@@ -91,7 +91,7 @@ class TestAggregate(TestCase):
     def test_lloyd_aggregation_dirichlet(self):
         np.random.seed(1306432687)
 
-        A = poisson((10, 10), format='csr')
+        A0 = poisson((10, 10), format='csr')
         bc = np.arange(10)
         interior = np.ones(100)
         interior[bc] = 0
@@ -100,7 +100,7 @@ class TestAggregate(TestCase):
         B = sparse.diags_array(1 - interior, format='csr')
         B.eliminate_zeros()
 
-        for A in [(P @ A + B).tocsr(), (P @ A @ P + B).tocsr()]:
+        for A in [(P @ A0 + B).tocsr(), (P @ A0 @ P + B).tocsr()]:
             S = symmetric_strength_of_connection(A)
 
             for aggregate in [lloyd_aggregation, balanced_lloyd_aggregation]:

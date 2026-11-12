@@ -353,7 +353,7 @@ def balanced_lloyd_cluster(G, centers, maxiter=5, rebalance_iters=5, tiebreaking
         if G.data.min() < 0:
             raise ValueError('Lloyd Clustering is defined only for positive weights.')
 
-    # cluster only the nodes with edges; isolated nodes (e.g., Dirichlet nodes) are set to -1
+    # cluster only the nodes with edges; isolated nodes (e.g., Dirichlet nodes) are set -1
     rows = np.repeat(np.arange(n), np.diff(G.indptr))
     idx = np.unique(rows[G.indices != rows])  # only non-isolated
     G = G[idx][:, idx]
