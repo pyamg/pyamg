@@ -5,9 +5,9 @@ from warnings import warn
 import numpy as np
 from scipy.sparse import csr_array, issparse, SparseEfficiencyWarning
 
-from pyamg.multilevel import MultilevelSolver
-from pyamg.relaxation.smoothing import change_smoothers
-from pyamg.util.utils import get_blocksize, levelize_strength_or_aggregation, asfptype
+from ..multilevel import MultilevelSolver
+from ..relaxation.smoothing import change_smoothers
+from ..util.utils import get_blocksize, levelize_strength_or_aggregation, asfptype
 from .aggregate import pairwise_aggregation
 
 

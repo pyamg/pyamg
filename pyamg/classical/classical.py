@@ -5,13 +5,13 @@ from warnings import warn
 from scipy.sparse import csr_array, issparse, SparseEfficiencyWarning
 import numpy as np
 
-from pyamg.multilevel import MultilevelSolver
-from pyamg.relaxation.smoothing import change_smoothers
-from pyamg.strength import classical_strength_of_connection, \
+from ..multilevel import MultilevelSolver
+from ..relaxation.smoothing import change_smoothers
+from ..strength import classical_strength_of_connection, \
     symmetric_strength_of_connection, evolution_strength_of_connection, \
     distance_strength_of_connection, energy_based_strength_of_connection, \
     algebraic_distance, affinity_distance
-from pyamg.classical.interpolate import direct_interpolation, classical_interpolation
+from .interpolate import direct_interpolation, classical_interpolation
 from . import split
 from .cr import CR
 from ..util.utils import asfptype

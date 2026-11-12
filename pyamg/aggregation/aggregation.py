@@ -5,11 +5,11 @@ from warnings import warn
 import numpy as np
 from scipy.sparse import csr_array, issparse, SparseEfficiencyWarning
 
-from pyamg.multilevel import MultilevelSolver
-from pyamg.relaxation.smoothing import change_smoothers
-from pyamg.util.utils import eliminate_diag_dom_nodes, get_blocksize, asfptype, \
+from ..multilevel import MultilevelSolver
+from ..relaxation.smoothing import change_smoothers
+from ..util.utils import eliminate_diag_dom_nodes, get_blocksize, asfptype, \
     levelize_strength_or_aggregation, levelize_smooth_or_improve_candidates
-from pyamg.strength import classical_strength_of_connection, \
+from ..strength import classical_strength_of_connection, \
     symmetric_strength_of_connection, evolution_strength_of_connection, \
     energy_based_strength_of_connection, distance_strength_of_connection, \
     algebraic_distance, affinity_distance
