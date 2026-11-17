@@ -178,6 +178,13 @@ def naive_aggregation(C):
     return sparse.csr_array((Tx, Tj, Tp), shape=shape), Cpts
 
 
+def _nodal_to_bsr(T, blocksize):
+    """Expand a nodal CSR aggregation matrix to BSR with identity blocks."""
+    data = np.tile(np.identity(blocksize[0], dtype=T.dtype), (T.nnz, 1, 1))
+    shape = (T.shape[0]*blocksize[0], T.shape[1]*blocksize[1])
+    return sparse.bsr_array((data, T.indices, T.indptr), blocksize=blocksize, shape=shape)
+
+
 def pairwise_aggregation(A, matchings=2, theta=0.25,
                          norm='min', compute_P=False):
     """Compute the sparsity pattern of the tentative prolongator.
@@ -195,7 +202,8 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
         Norm type used in computing classical SOC.
     compute_P : bool; default False
         Compute pairwise interpolation directly; if False, return
-        integer aggregation matrix for smoothed_aggregation_solver.
+        the integer nodal aggregation matrix (CSR, one row per block
+        row of A) for smoothed_aggregation_solver.
         If True, return float interpolation P, converting to BSR
         form with identity of size bsize x bsize on each aggregate
         if A is BSR.
@@ -241,6 +249,7 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
         except Exception as e:
             raise TypeError('Invalid matrix type, must be CSR or BSR.') from e
 
+    is_bsr = A.format == 'bsr'
     index_type = A.indptr.dtype
     Ac = A      # Let Ac reference A for loop purposes
     T = None
@@ -273,22 +282,13 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
             T_temp = sparse.csr_array((num_rows, 1), dtype=np.int32)
             warn('No pairwise aggregates found, T = 0.')
         else:
-            shape = (num_rows, num_aggregates)
+            Tx = np.ones(len(Tj), dtype=np.int32)
             Tp = np.arange(num_rows+1, dtype=index_type)
-            # If A is not BSR
-            if not sparse.issparse(A) or A.format != 'bsr':
-                Tx = np.ones(len(Tj), dtype=np.int32)
-                T_temp = sparse.csr_array((Tx, Tj, Tp), shape=shape)
-            else:
-                shape = (shape[0]*A.blocksize[0], shape[1]*A.blocksize[1])
-                Tx = np.array(len(Tj)*[np.identity(A.blocksize[0])], dtype=np.int32)
-                T_temp = sparse.bsr_array((Tx, Tj, Tp), blocksize=A.blocksize, shape=shape)
+            T_temp = sparse.csr_array((Tx, Tj, Tp), shape=(num_rows, num_aggregates))
 
         # Form aggregation matrix, need to make sure is CSR/BSR
         if i == 0:
             T = T_temp
-        elif sparse.issparse(A) and A.format == 'bsr':
-            T = sparse.bsr_array(T @ T_temp)
         else:
             T = sparse.csr_array(T @ T_temp)
 
@@ -298,13 +298,16 @@ def pairwise_aggregation(A, matchings=2, theta=0.25,
 
         # Form coarse grid operator for next matching
         if i < (matchings-1):
-            if sparse.issparse(T_temp) and T_temp.format == 'csr':
-                Ac = T_temp.T.tocsr() @ Ac @ T_temp
+            if is_bsr:
+                T_blk = _nodal_to_bsr(T_temp, A.blocksize)
+                Ac = T_blk.T @ Ac @ T_blk
             else:
-                Ac = T_temp.T @ Ac @ T_temp
+                Ac = T_temp.T.tocsr() @ Ac @ T_temp
 
     # Convert T to dtype int if only used for aggregation
     if compute_P:
+        if is_bsr:
+            T = _nodal_to_bsr(T, A.blocksize)
         T = T.astype(A.dtype, copy=False)
 
     return T, Cpts

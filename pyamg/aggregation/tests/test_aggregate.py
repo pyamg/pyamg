@@ -3,7 +3,7 @@ import numpy as np
 from numpy.testing import TestCase, assert_equal
 from scipy import sparse
 
-from pyamg.gallery import poisson, load_example
+from pyamg.gallery import poisson, load_example, linear_elasticity
 from pyamg.strength import (symmetric_strength_of_connection,
                             classical_strength_of_connection)
 from pyamg.aggregation.aggregate import (standard_aggregation, naive_aggregation,
@@ -87,6 +87,20 @@ class TestAggregate(TestCase):
         expected = np.eye(4)
         assert_equal(result.todense(), expected)
         assert_equal(Cpts.shape[0], 4)
+
+    def test_pairwise_aggregation_bsr(self):
+        A = linear_elasticity((7, 7), format='bsr')[0]
+        for matchings in [1, 2]:
+            AggOp, _ = pairwise_aggregation(A, matchings=matchings)
+            assert AggOp.format == 'csr'
+            assert AggOp.shape[0] == A.shape[0] // A.blocksize[0]
+            assert_equal(AggOp.sum(axis=1), 1)
+
+            P, _ = pairwise_aggregation(A, matchings=matchings, compute_P=True)
+            assert P.format == 'bsr'
+            assert P.blocksize == A.blocksize
+            assert P.shape == (A.shape[0], AggOp.shape[1] * A.blocksize[1])
+            assert_equal(P.toarray(), sparse.kron(AggOp, np.eye(A.blocksize[0])).toarray())
 
     def test_lloyd_aggregation_dirichlet(self):
         np.random.seed(1306432687)

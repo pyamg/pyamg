@@ -40,7 +40,8 @@ class TestParameters(TestCase):
             self.run_cases({'strength': strength})
 
     def test_aggregation_method(self):
-        for aggregate in ['standard', 'lloyd', 'balanced lloyd']:
+        for aggregate in ['standard', 'lloyd', 'balanced lloyd', 'pairwise',
+                          ('pairwise', {'matchings': 1, 'theta': 0.1})]:
             self.run_cases({'aggregate': aggregate})
 
     def test_prolongation_smoother(self):
