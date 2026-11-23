@@ -613,3 +613,124 @@ def pinv_array(a, tol=None):
             gelssoutput = gelss(a[kk], RHS, cond=tol, lwork=lwork,
                                 overwrite_a=True, overwrite_b=False)
             a[kk] = gelssoutput[1]
+
+
+def bcgs(A, P_list, P):
+    """Block classical Gram-Schmidt A-orthonormalization against previous blocks.
+
+    Parameters
+    ----------
+    A : array_like, sparse matrix, LinearOperator
+        Hermitian positive definite matrix of size (n,n).
+    P_list : list of array_like
+        Previous blocks, each of size (n,t), that are A-orthonormal.
+    P : array_like
+        Block of size (n,t) of search directions to A-orthonormalize.
+
+    Returns
+    -------
+    array_like
+        Block of size (n,t), A-orthogonal to the blocks in P_list and with
+        columns of unit A-norm.  The input P is not modified.
+
+    References
+    ----------
+    .. [1] Grigori, Laura, Sophie Moufawad, and Frederic Nataf.
+       "Enlarged Krylov Subspace Conjugate Gradient Methods for Reducing
+       Communication", SIAM Journal on Matrix Analysis and Applications 37(2),
+       pp. 744-773, 2016.
+
+    """
+    Q = np.concatenate(P_list, axis=1)
+
+    # P = P - Q (Q^H A P)
+    W = A @ P
+    P = P - Q @ (Q.conjugate().T @ W)
+
+    # P[:,i] = P[:,i] / ||P[:,i]||_A
+    W = A @ P
+    P = P / np.sqrt(np.sum(P.conjugate() * W, axis=0))
+
+    return P
+
+
+def cgs(P, A):
+    """Classical Gram-Schmidt A-orthonormalization of the columns of P.
+
+    Algorithm 19 in the appendix of [1].
+
+    Parameters
+    ----------
+    P : array_like
+        Block of size (n,t) of search directions, modified in place.
+    A : array_like, sparse matrix, LinearOperator
+        Hermitian positive definite matrix of size (n,n).
+
+    Returns
+    -------
+    None
+        The columns of P are A-orthonormalized in place.
+
+    References
+    ----------
+    .. [1] Grigori, Laura, Sophie Moufawad, and Frederic Nataf.
+       "Enlarged Krylov Subspace Conjugate Gradient Methods for Reducing
+       Communication", SIAM Journal on Matrix Analysis and Applications 37(2),
+       pp. 744-773, 2016.
+
+    """
+    t = P.shape[1]
+
+    # AP[:, i] = A @ P[:, i] as P when P updates
+    AP = A @ P
+
+    for i in range(t):
+        # P[:,i] = P[:,i] - sum_j <P[:,j], A P[:,i]> P[:,j],  j < i
+        c = P[:, :i].conjugate().T @ AP[:, i]
+        P[:, i] -= P[:, :i] @ c
+        AP[:, i] -= AP[:, :i] @ c
+
+        # P[:,i] = P[:,i] / ||P[:,i]||_A
+        pnorm = np.sqrt(np.inner(P[:, i].conjugate(), AP[:, i]))
+        P[:, i] /= pnorm
+        AP[:, i] /= pnorm
+
+
+def split_residual(v, t):
+    """Split vector v into t columns.
+
+    The rows of v are divided into t contiguous blocks.
+
+    Parameters
+    ----------
+    v : array_like
+        Vector of size (n,) or (n,1).
+    t : int
+        Number of columns (subdomains) to split v into.
+
+    Returns
+    -------
+    array_like
+        Array of size (n,t). Column k holds block k of v; otherwise zero.
+        Row sums equal v.
+
+    References
+    ----------
+    .. [1] Grigori, Laura, Sophie Moufawad, and Frederic Nataf.
+       "Enlarged Krylov Subspace Conjugate Gradient Methods for Reducing
+       Communication", SIAM Journal on Matrix Analysis and Applications 37(2),
+       pp. 744-773, 2016.
+
+    """
+    v = np.ravel(v)
+    n = v.shape[0]
+
+    # Make sure z is given the same type as v -- could be complex
+    z = np.zeros((n, t), dtype=v.dtype)
+
+    # Contiguous row blocks whose sizes differ by at most one
+    bounds = np.linspace(0, n, t + 1).astype(int)
+    for col in range(t):
+        z[bounds[col]:bounds[col + 1], col] = v[bounds[col]:bounds[col + 1]]
+
+    return z

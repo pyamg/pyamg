@@ -373,6 +373,12 @@ class MultilevelSolver:
         MultilevelSolver.solve
         scipy.sparse.linalg.LinearOperator
 
+        Notes
+        -----
+        For a block X of size (n, s), ``M @ X`` performs one block cycle
+        on all s columns.  If a component of the hierarchy does not support
+        this then a ValueError is raised.
+
         Examples
         --------
         >>> from pyamg.aggregation import smoothed_aggregation_solver
@@ -393,7 +399,10 @@ class MultilevelSolver:
         def matvec(b):
             return self.solve(b, maxiter=1, cycle=cycle, tol=1e-12)
 
-        return LinearOperator(shape, matvec, dtype=dtype)
+        def matmat(B):
+            return self.solve(np.ascontiguousarray(B), maxiter=1, cycle=cycle, tol=1e-12)
+
+        return LinearOperator(shape, matvec, matmat=matmat, dtype=dtype)
 
     def solve(self, b, x0=None, tol=1e-5, maxiter=100, cycle='V', accel=None,
               callback=None, residuals=None, cycles_per_level=1, return_info=False):
@@ -402,11 +411,14 @@ class MultilevelSolver:
         Parameters
         ----------
         b : array
-            Right hand side.
+            Right hand side of size (n,) or (n, s).  For s > 1, the s columns
+            are solved together with block multigrid cycles; the relaxation method
+            and the coarse solver must support a block;
         x0 : array
-            Initial guess.
+            Initial guess with the same shape as b, default is zero.
         tol : float
-            Stopping criteria: relative residual r[k]/||b|| tolerance.
+            Stopping criteria: relative residual ||r_k|| / ||b|| < tol, for
+            every column of b (the absolute residual for a column with b = 0).
             If `accel` is used, the stopping criteria is set by the Krylov method.
         maxiter : int
             Stopping criteria: maximum number of allowable iterations.
@@ -420,12 +432,14 @@ class MultilevelSolver:
             with the same interface provided by the iterative solvers in SciPy.
         callback : function
             User-defined function called after each iteration.  It is
-            called as callback(xk) where xk is the k-th iterate vector.
+            called as callback(xk) where xk is the k-th iterate, with the
+            shape of b.
         residuals : list
             List to contain residual norms at each iteration.  The residuals
             will be the residuals from the Krylov iteration -- see the `accel`
             method to see verify whether this ||r|| or ||Mr|| (as in the case of
-            GMRES).
+            GMRES).  Without `accel`, these are 2-norms of the residual; for b of
+            size (n, s), each entry is an array of the s column norms.
         cycles_per_level : int, default 1
             Number of V-cycles on each level of an F-cycle.
         return_info : bool
@@ -435,9 +449,10 @@ class MultilevelSolver:
         Returns
         -------
         array
-            Approximate solution to Ax=b after k iterations.
+            Approximate solution to Ax=b after k iterations, with the shape
+            of b.
 
-        str
+        int
             Halting status::
 
                  0: successful exit
@@ -459,14 +474,34 @@ class MultilevelSolver:
         >>> ml = ruge_stuben_solver(A, max_coarse=10)
         >>> residuals = []
         >>> x = ml.solve(b, tol=1e-12, residuals=residuals) # standalone solver
+        >>> #
+        >>> # Solve for two right-hand sides together (Jacobi supports a block)
+        >>> ml = ruge_stuben_solver(A, max_coarse=10,
+        ...                         presmoother='jacobi', postsmoother='jacobi')
+        >>> B = A @ ones((A.shape[0], 2))
+        >>> X = ml.solve(B, tol=1e-8)
+        >>> print(X.shape)
+        (10000, 2)
 
         """
+        A = self.levels[0].A
+
+        # b is (n,) or (n, s), and x0 has the same shape; x is returned in that shape
+        b = np.asarray(b)
+        n = A.shape[0]
+        if b.ndim not in (1, 2) or b.shape[0] != n:
+            raise ValueError(f'b must have shape ({n},) or ({n}, s): b is {b.shape}')
+        if x0 is not None and np.shape(x0) != b.shape:
+            raise ValueError('x0 and b must have the same shape: '
+                             f'x0 is {np.shape(x0)}, b is {b.shape}')
+
+        # C-ordered copies, as required by the relaxation methods
+        b = np.ascontiguousarray(b)
         if x0 is None:
             x = np.zeros_like(b)
         else:
-            x = np.array(x0)  # copy
-
-        A = self.levels[0].A
+            x0 = np.ascontiguousarray(x0)
+            x = x0.copy()
 
         cycle = str(cycle).upper()
 
@@ -512,13 +547,13 @@ class MultilevelSolver:
                 # history is desired
 
                 if residuals is not None:
-                    residuals[:] = [np.linalg.norm(b - A @ x)]
+                    residuals[:] = [np.linalg.norm(b - A @ x, axis=0)]
 
                     def callback_wrapper(x):
                         if np.isscalar(x):
                             residuals.append(x)
                         else:
-                            residuals.append(np.linalg.norm(b - A @ x))
+                            residuals.append(np.linalg.norm(b - A @ x, axis=0))
                         if callback is not None:
                             callback(x)
                 else:
@@ -537,12 +572,12 @@ class MultilevelSolver:
         else:
             # Scale tol by normb
             # Don't scale tol earlier. The accel routine should also scale tol
-            normb = np.linalg.norm(b)
-            if normb == 0.0:
-                normb = 1.0  # set so that we have an absolute tolerance
+            # one norm per column of b; use an absolute tolerance where b = 0
+            normb = np.linalg.norm(b, axis=0)
+            normb = np.where(normb == 0.0, 1.0, normb)
 
         # Start cycling (no acceleration)
-        normr = np.linalg.norm(b - A @ x)
+        normr = np.linalg.norm(b - A @ x, axis=0)
         if residuals is not None:
             residuals[:] = [normr]  # initial residual
 
@@ -550,8 +585,6 @@ class MultilevelSolver:
         # Clearly, this logic doesn't handle the case of real A and complex b
         tp = upcast(b.dtype, x.dtype, A.dtype)
         [b, x] = to_type(tp, [b, x])
-        b = np.ravel(b)
-        x = np.ravel(x)
 
         it = 0
 
@@ -564,14 +597,14 @@ class MultilevelSolver:
 
             it += 1
 
-            normr = np.linalg.norm(b - A @ x)
+            normr = np.linalg.norm(b - A @ x, axis=0)
             if residuals is not None:
                 residuals.append(normr)
 
             if callback is not None:
                 callback(x)
 
-            if normr < tol * normb:
+            if np.all(normr < tol * normb):
                 if return_info:
                     return x, 0
                 return x
@@ -626,6 +659,9 @@ class MultilevelSolver:
             for _ in range(0, cycles_per_level):
                 self.__solve(lvl + 1, coarse_x, coarse_b, 'V', 1)
         elif cycle == 'AMLI':
+            if np.squeeze(coarse_b).ndim != 1:
+                raise ValueError('AMLI is not compatible multiple right-hand sides')
+
             # Run nAMLI AMLI cycles, which compute "optimal" corrections by
             # orthogonalizing the coarse-grid corrections in the A-norm
             nAMLI = 2
@@ -747,7 +783,7 @@ def coarse_grid_solver(solver):
                 self.LU = sp.sparse.linalg.splu(Acsc, **kwargs)
                 self.LU_Map = Map
 
-            return self.LU_Map @ self.LU.solve(np.ravel(self.LU_Map.T @ b))
+            return self.LU_Map @ self.LU.solve(self.LU_Map.T @ b)
 
     elif solver in ['bicg', 'bicgstab', 'cg', 'cgs', 'gmres', 'qmr', 'minres']:
         if hasattr(krylov, solver):
@@ -756,6 +792,10 @@ def coarse_grid_solver(solver):
             fn = getattr(sla, solver)
 
         def solve(_, A, b):
+            if np.squeeze(b).ndim != 1:
+                raise ValueError('Krylov coarse solves are not compatible '
+                                 'with multiple right-hand sides')
+
             if 'tol' not in kwargs:
                 kwargs['tol'] = set_tol(A.dtype)
 

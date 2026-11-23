@@ -1,5 +1,6 @@
 """Relaxation methods for linear systems."""
 
+from functools import wraps
 from warnings import warn
 
 import numpy as np
@@ -12,25 +13,29 @@ from ..util.linalg import norm
 from .. import amg_core
 
 
-def make_system(A, x, b, formats=None):
-    """Return A,x,b suitable for relaxation or raise an exception.
+def make_system(A, x, b, formats=None, multivector=False):
+    """Make a system from common inputs.
 
     Parameters
     ----------
     A : sparse-matrix
         n x n system
     x : array
-        n-vector, initial guess
+        Initial guess of size (n,) or (n, 1), or (n, s) if multivector,
+        C-contiguous.
     b : array
-        n-vector, right-hand side
+        Right-hand side, with the same size as x and C-contiguous.
     formats: {'csr', 'csc', 'bsr', 'lil', 'dok',...}
         desired sparse matrix format
-        default is no change to A's format
+        default is no change to the format of A
+    multivector : bool
+        If True, then allow x and b to have multiple columns.
 
     Returns
     -------
     (A,x,b), where A is in the desired sparse-matrix format
-    and x and b are "raveled", i.e. (n,) vectors.
+    and x and b are of size (n, s), with s = 1 for a single
+    vector.  Updates inplace.
 
     Notes
     -----
@@ -48,9 +53,9 @@ def make_system(A, x, b, formats=None):
     >>> b = np.ones((A.shape[0],1))
     >>> (A,x,b) = make_system(A,x,b,formats=['csc'])
     >>> print(x.shape)
-    (100,)
+    (100, 1)
     >>> print(b.shape)
-    (100,)
+    (100, 1)
     >>> print(A.format)
     csc
 
@@ -80,23 +85,54 @@ def make_system(A, x, b, formats=None):
     if M != N:
         raise ValueError('expected square matrix')
 
-    if x.shape not in [(M,), (M, 1)]:
+    if (not multivector and x.shape not in [(M,), (M, 1)]) \
+            or (multivector and x.shape[0] != M):
         raise ValueError('x has invalid dimensions')
-    if b.shape not in [(M,), (M, 1)]:
+    if (not multivector and b.shape not in [(M,), (M, 1)]) \
+            or (multivector and b.shape[0] != M):
         raise ValueError('b has invalid dimensions')
+    if multivector and x.size != b.size:
+        raise ValueError('x and b must have the same size: '
+                         f'x is {x.shape}, b is {b.shape}')
 
     if A.dtype != x.dtype or A.dtype != b.dtype:
         raise TypeError('arguments A, x, and b must have the same dtype')
 
     if not x.flags.carray:
         raise ValueError('x must be contiguous in memory')
+    if not b.flags.carray:
+        raise ValueError('b must be contiguous in memory')
 
-    x = np.ravel(x)
-    b = np.ravel(b)
+    x = x.reshape((M, -1))
+    b = b.reshape((M, -1))
 
     return A, x, b
 
 
+def single_vector(method):
+    """Mark a methods that support only a single right-hand side.
+
+    Parameters
+    ----------
+    method : function
+        Method with signature ``method(A, x, b, ...)``.
+
+    Returns
+    -------
+    function
+        The method, raising a ValueError if x or b has more than one column.
+
+    """
+    @wraps(method)
+    def wrapper(A, x, b, *args, **kwargs):
+        if any(np.ndim(v) == 2 and np.shape(v)[1] > 1 for v in (x, b)):
+            raise ValueError(f'{method.__name__} does not support multiple right-hand '
+                             f'sides: x is {np.shape(x)}, b is {np.shape(b)}')
+        return method(A, x, b, *args, **kwargs)
+    return wrapper
+
+
+@single_vector
 def sor(A, x, b, omega, iterations=1, sweep='forward'):
     """Perform SOR iteration on the linear system Ax=b.
 
@@ -154,6 +190,7 @@ def sor(A, x, b, omega, iterations=1, sweep='forward'):
         gauss_seidel(A, x, b, iterations=1, sweep=sweep, omega=omega)
 
 
+@single_vector
 def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
             inv_subblock=None, inv_subblock_ptr=None, sweep='forward'):
     """Perform Overlapping multiplicative Schwarz on the linear system Ax=b.
@@ -169,17 +206,17 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
     iterations : int
         Number of iterations to perform
     subdomain : int array
-        Linear array containing each subdomain's elements
+        Linear array containing every element of each subdomain
     subdomain_ptr : int array
         Pointer in subdomain, such that
-        subdomain[subdomain_ptr[i]:subdomain_ptr[i+1]]]
+        subdomain[subdomain_ptr[i]:subdomain_ptr[i+1]]
         contains the _sorted_ indices in subdomain i
     inv_subblock : int_array
-        Linear array containing each subdomain's
+        Linear array containing each subdomains
         inverted diagonal block of A
     inv_subblock_ptr : int array
         Pointer in inv_subblock, such that
-        inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]]]
+        inv_subblock[inv_subblock_ptr[i]:inv_subblock_ptr[i+1]]
         contains the inverted diagonal block of A for the
         i-th subdomain in _row_ major order
     sweep : {'forward','backward','symmetric'}
@@ -192,7 +229,7 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
     Notes
     -----
     If subdomains is None, then a point-wise iteration takes place,
-    with the overlapping region defined by each degree-of-freedom's
+    with the overlapping region defined by each degree-of-freedoms
     neighbors in the matrix graph.
 
     If subdomains is not None, but subblocks is, then the subblocks
@@ -262,6 +299,7 @@ def schwarz(A, x, b, iterations=1, subdomain=None, subdomain_ptr=None,
                                          row_start, row_stop, row_step)
 
 
+@single_vector
 def gauss_seidel(A, x, b, iterations=1, sweep='forward', omega=1.0):
     """Perform Gauss-Seidel iteration on the linear system Ax=b.
 
@@ -351,12 +389,15 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
 
     Parameters
     ----------
-    A : csr_array
-        Sparse NxN matrix
+    A : csr_array, bsr_array
+        Sparse NxN matrix.  BSR blocks must be square; relaxation is
+        point-wise, not block-wise.
     x : ndarray
-        Approximate solution (length N)
+        Approximate solution of size (N,) or (N, s), C-contiguous.  For
+        s > 1, the s columns are relaxed together.
     b : ndarray
-        Right-hand side (length N)
+        Right-hand side of size (N,) or (N, s), with the same number of
+        columns as x.
     iterations : int
         Number of iterations to perform
     omega : scalar
@@ -380,6 +421,14 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     >>> print(f'{norm(b-A@x0):2.4}')
     5.835
     >>> #
+    >>> # Relax two right-hand sides together
+    >>> X = np.zeros((A.shape[0], 2))
+    >>> B = np.ones((A.shape[0], 2))
+    >>> B[:, 1] = 2
+    >>> jacobi(A, X, B, iterations=10, omega=1.0)
+    >>> print(np.round(np.linalg.norm(B - A @ X, axis=0), 3))
+    [ 5.835 11.67 ]
+    >>> #
     >>> # Use Jacobi as the Multigrid Smoother
     >>> from pyamg import smoothed_aggregation_solver
     >>> sa = smoothed_aggregation_solver(A, B=np.ones((A.shape[0],1)),
@@ -391,7 +440,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
     >>> x = sa.solve(b, x0=x0, tol=1e-8, residuals=residuals)
 
     """
-    A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
+    A, x, b = make_system(A, x, b, formats=['csr', 'bsr'], multivector=True)
 
     sweep = slice(None)
     (row_start, row_stop, row_step) = sweep.indices(A.shape[0])
@@ -406,8 +455,8 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
 
     if A.format == 'csr':
         for _iter in range(iterations):
-            amg_core.jacobi(A.indptr, A.indices, A.data, x, b, temp,
-                            row_start, row_stop, row_step, omega)
+            amg_core.jacobi_m(A.indptr, A.indices, A.data, x, b, temp,
+                              row_start, row_stop, row_step, omega)
     else:
         R, C = A.blocksize
         if R != C:
@@ -415,11 +464,12 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
         row_start = int(row_start / R)
         row_stop = int(row_stop / R)
         for _iter in range(iterations):
-            amg_core.bsr_jacobi(A.indptr, A.indices, np.ravel(A.data),
-                                x, b, temp, row_start, row_stop,
-                                row_step, R, omega)
+            amg_core.bsr_jacobi_m(A.indptr, A.indices, np.ravel(A.data),
+                                  x, b, temp, row_start, row_stop,
+                                  row_step, R, omega)
 
 
+@single_vector
 def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
     """Perform block Jacobi iteration on the linear system Ax=b.
 
@@ -499,6 +549,7 @@ def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
                               omega, blocksize)
 
 
+@single_vector
 def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
                        Dinv=None):
     """Perform block Gauss-Seidel iteration on the linear system Ax=b.
@@ -582,6 +633,7 @@ def block_gauss_seidel(A, x, b, iterations=1, sweep='forward', blocksize=1,
                                     row_start, row_stop, row_step, blocksize)
 
 
+@single_vector
 def polynomial(A, x, b, coefficients, iterations=1):
     """Apply a polynomial smoother to the system Ax=b.
 
@@ -617,7 +669,7 @@ def polynomial(A, x, b, coefficients, iterations=1):
     - Quadratic smoother p(A) = c_2*A^2 + c_1*A + c_0:
         polynomial_smoother(A, x, b, [c_2, c_1, c_0])
 
-    Here, Horner's Rule is applied to avoid computing A^k directly.
+    Here, Horners Rule is applied to avoid computing A^k directly.
 
     For efficience, the method detects the case x = 0 one matrix-vector
     product is avoided (since (b - A@x) is b).
@@ -659,6 +711,7 @@ def polynomial(A, x, b, coefficients, iterations=1):
         x += h
 
 
+@single_vector
 def gauss_seidel_indexed(A, x, b, indices, iterations=1, sweep='forward'):
     """Perform indexed Gauss-Seidel iteration on the linear system Ax=b.
 
@@ -731,6 +784,7 @@ def gauss_seidel_indexed(A, x, b, indices, iterations=1, sweep='forward'):
                                       row_start, row_stop, row_step)
 
 
+@single_vector
 def jacobi_ne(A, x, b, iterations=1, omega=1.0):
     """Perform Jacobi iterations on the linear system A A.H x = A.H b.
 
@@ -755,7 +809,7 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
 
     References
     ----------
-    .. [1] Brandt, Ta'asan.
+    .. [1] Brandt, Taasan.
        "Multigrid Method For Nearly Singular And Slightly Indefinite Problems."
        1985.  NASA Technical Report Numbers: ICASE-85-57; NAS 1.26:178026;
        NASA-CR-178026;
@@ -812,6 +866,7 @@ def jacobi_ne(A, x, b, iterations=1, omega=1.0):
                            row_stop, row_step, omega)
 
 
+@single_vector
 def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
                     Dinv=None):
     """Perform Gauss-Seidel iterations on the linear system A A.H y = b, where x = A.H y.
@@ -901,6 +956,7 @@ def gauss_seidel_ne(A, x, b, iterations=1, sweep='forward', omega=1.0,
                                  row_stop, row_step, Dinv, omega)
 
 
+@single_vector
 def gauss_seidel_nr(A, x, b, iterations=1, sweep='forward', omega=1.0,
                     Dinv=None):
     """Perform Gauss-Seidel iterations on the linear system A.H A x = A.H b.
@@ -1078,6 +1134,7 @@ def schwarz_parameters(A, subdomain=None, subdomain_ptr=None,
     return A.schwarz_parameters
 
 
+@single_vector
 def jacobi_indexed(A, x, b, indices, iterations=1, omega=1.0):
     """Perform indexed Jacobi iteration on the linear system Ax=b.
 
@@ -1138,6 +1195,7 @@ def jacobi_indexed(A, x, b, indices, iterations=1, omega=1.0):
                                         indices, R, omega)
 
 
+@single_vector
 def cf_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
               c_iterations=1, omega=1.0):
     """Perform CF Jacobi iteration on the linear system Ax=b.
@@ -1203,6 +1261,7 @@ def cf_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
                                             x, b, Fpts, R, omega)
 
 
+@single_vector
 def fc_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
               c_iterations=1, omega=1.0):
     """Perform FC Jacobi iteration on the linear system Ax=b.
@@ -1268,6 +1327,7 @@ def fc_jacobi(A, x, b, Cpts, Fpts, iterations=1, f_iterations=1,
                                             x, b, Cpts, R, omega)
 
 
+@single_vector
 def cf_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
                     f_iterations=1, c_iterations=1, omega=1.0):
     """Perform CF block Jacobi iteration on the linear system Ax=b.
@@ -1339,6 +1399,7 @@ def cf_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
                                           blocksize)
 
 
+@single_vector
 def fc_block_jacobi(A, x, b, Cpts, Fpts, Dinv=None, blocksize=1, iterations=1,
                     f_iterations=1, c_iterations=1, omega=1.0):
     """Perform FC block Jacobi iteration on the linear system Ax=b.

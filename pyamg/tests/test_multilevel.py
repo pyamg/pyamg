@@ -3,14 +3,17 @@ import numpy as np
 from numpy.testing import TestCase, assert_almost_equal, assert_equal
 from scipy import sparse
 
+from pyamg import smoothed_aggregation_solver
 from pyamg.gallery import poisson
 from pyamg.multilevel import coarse_grid_solver, MultilevelSolver
+
+import pytest
 
 
 def precon_norm(v, ml):
     """Calculate preconditioner norm of v."""
     v = np.ravel(v)
-    w = ml.aspreconditioner()*v
+    w = ml.aspreconditioner() @ v
     return np.sqrt(np.dot(v.conjugate(), w))
 
 
@@ -41,6 +44,20 @@ class TestMultilevel(TestCase):
                 # subsequent calls use cached data
                 x = s(A, b)
                 assert_almost_equal(A@x, b)
+
+    def test_coarse_grid_solver_block(self):
+        A = poisson((4, 4), format='csr')
+        B = np.arange(3 * A.shape[0], dtype=A.dtype).reshape(A.shape[0], 3)
+
+        # direct solvers support a block right-hand side
+        for solver in ['splu', 'pinv', 'lu', 'cholesky']:
+            X = coarse_grid_solver(solver)(A, B)
+            assert_equal(X.shape, B.shape)
+            assert_almost_equal(A @ X, B)
+
+        # Krylov coarse solvers do not support multiple rhs
+        with pytest.raises(ValueError, match='multiple right-hand sides'):
+            coarse_grid_solver('cg')(A, B)
 
     def test_aspreconditioner(self):
         from pyamg import smoothed_aggregation_solver
@@ -89,6 +106,101 @@ class TestMultilevel(TestCase):
             x = ml.solve(b, maxiter=30, tol=1e-8, residuals=residuals, accel=accel)
             assert np.linalg.norm(b - A@x) < 1e-8*np.linalg.norm(b)
             assert_almost_equal(np.linalg.norm(b - A@x), residuals[-1])
+
+    def test_multiple_rhs(self):
+
+        # Poisson with 4 right-hand sides
+        s = 4
+        A = poisson((50, 50), format='csr')
+        b = np.random.rand(A.shape[0], s)
+
+        # Any AMG hierarchy -- rhs independent
+        ml = smoothed_aggregation_solver(A,
+                                         max_coarse=10,
+                                         presmoother='jacobi',
+                                         postsmoother='jacobi')
+
+        # initial guess
+        residuals = []
+        x0 = np.random.rand(A.shape[0], s)
+
+        # block solve
+        x = ml.solve(b, x0=x0, maxiter=50, tol=1e-8, residuals=residuals)
+        print(residuals)
+
+        # check each
+        r = b - A @ x
+        for i in range(s):
+            assert precon_norm(r[:, i], ml) < 1e-8 * precon_norm(b[:, i], ml)
+
+    def test_solve_shapes(self):
+        A = poisson((10, 10), format='csr')
+        n = A.shape[0]
+        ml = smoothed_aggregation_solver(A, max_coarse=10,
+                                         presmoother='jacobi', postsmoother='jacobi')
+        np.random.seed(1504262891)
+        B = np.random.rand(n, 3)
+
+        # x has the shape of b
+        for shape in [(n,), (n, 1), (n, 3)]:
+            b = np.ones(shape)
+            assert_equal(ml.solve(b, maxiter=2).shape, shape)
+            assert_equal(ml.solve(b, x0=np.zeros(shape), maxiter=2).shape, shape)
+
+        # x0 must have the shape of b
+        for b, x0 in [(np.ones(n), np.zeros((n, 1))),
+                      (np.ones((n, 1)), np.zeros(n)),
+                      (B, np.zeros((n, 1)))]:
+            with pytest.raises(ValueError, match='x0 and b must have the same shape'):
+                ml.solve(b, x0=x0)
+
+        # b must have n rows and at most two dimensions
+        for b in [np.ones(n + 1), np.ones((n, 2, 2))]:
+            with pytest.raises(ValueError, match='b must have shape'):
+                ml.solve(b)
+
+        # non-contiguous and F-ordered input
+        assert_equal(ml.solve(B[:, 0], maxiter=2),
+                     ml.solve(np.ascontiguousarray(B[:, 0]), maxiter=2))
+        assert_equal(ml.solve(np.asfortranarray(B), maxiter=2), ml.solve(B, maxiter=2))
+
+    def test_solve_tol_per_column(self):
+        A = poisson((20, 20), format='csr')
+        ml = smoothed_aggregation_solver(A, max_coarse=10,
+                                         presmoother='jacobi', postsmoother='jacobi')
+        np.random.seed(611372893)
+        B = np.random.rand(A.shape[0], 2)
+        B[:, 1] *= 1e-6
+        X0 = np.random.rand(A.shape[0], 2)
+
+        # check each column meets the relative tolerance
+        tol = 1e-8
+        X, info = ml.solve(B, x0=X0, tol=tol, maxiter=200, return_info=True)
+        assert_equal(info, 0)
+        relres = np.linalg.norm(B - A @ X, axis=0) / np.linalg.norm(B, axis=0)
+        assert np.all(relres < tol), relres
+
+    def test_aspreconditioner_block(self):
+        A = poisson((20, 20), format='csr')
+        np.random.seed(2125791836)
+        B = np.random.rand(A.shape[0], 4)
+
+        # Jacobi supports a block solve
+        ml = smoothed_aggregation_solver(A, max_coarse=10,
+                                         presmoother='jacobi', postsmoother='jacobi')
+        M = ml.aspreconditioner()
+        X_cols = np.column_stack([M @ np.ascontiguousarray(B[:, i]) for i in range(4)])
+        assert_almost_equal(M @ B, X_cols)
+        assert_almost_equal(M @ np.asfortranarray(B), X_cols)
+
+        # Gauss-Seidel does not
+        ml = smoothed_aggregation_solver(A, max_coarse=10,
+                                         presmoother='gauss_seidel',
+                                         postsmoother='gauss_seidel')
+        M = ml.aspreconditioner()
+        match = 'gauss_seidel does not support multiple right-hand sides'
+        with pytest.raises(ValueError, match=match):
+            M @ B
 
     def test_cycle_complexity(self):
         # four levels
